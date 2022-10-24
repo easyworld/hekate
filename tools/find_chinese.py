@@ -13,7 +13,9 @@ for filename in os.listdir("../nyx/nyx_gui/frontend"):
             for w in ll:
                 allChineseWords.add(w)
 
-allChineseWords.update(set(list("识别大气层侦安卓怀旧提醒大家软件完全免费不要付费购买")))
-for w in allChineseWords:
+# allChineseWords.update(set(list("识别大气层侦安卓怀旧提醒大家软件完全免费不要付费购买")))
+wordList = list(allChineseWords)
+wordList.sort()
+for w in wordList:
     print(w, end="")
 print("\n")

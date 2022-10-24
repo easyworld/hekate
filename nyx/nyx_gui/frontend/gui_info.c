@@ -49,7 +49,7 @@ static lv_res_t _create_window_dump_done(int error, char *dump_filenames)
 	char *txt_buf = (char *)malloc(SZ_4K);
 
 	if (error)
-		s_printf(txt_buf, "#FFDD00 提取到# %s#FFDD00 失败!#\n错误: %d", dump_filenames, error);
+		s_printf(txt_buf, "#FFDD00 提取到# %s#FFDD00 失敗!#\n錯誤: %d", dump_filenames, error);
 	else
 	{
 		char *sn = emmcsn_path_impl(NULL, NULL, NULL, NULL);
@@ -243,12 +243,12 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-	static const char * mbox_btn_map[] = { "\251", "\222提取", "\222关闭", "\251", "" };
+	static const char * mbox_btn_map[] = { "\251", "\222提取", "\222關閉", "\251", "" };
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 5);
 
-	lv_mbox_set_text(mbox, "#C7EA46 CAL0 信息#");
+	lv_mbox_set_text(mbox, "#C7EA46 CAL0 訊息#");
 
 	char *txt_buf = (char *)malloc(SZ_16K);
 	txt_buf[0] = 0;
@@ -264,7 +264,7 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 	// Init eMMC.
 	if (!emmc_initialize(false))
 	{
-		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失败!#");
+		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失敗!#");
 
 		goto out;
 	}
@@ -299,7 +299,7 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 		// Clear EKS keys.
 		hos_eks_clear(KB_FIRMWARE_VERSION_MAX);
 
-		lv_label_set_text(lb_desc, "#FFDD00 CAL0 被污染或错误的keys!#\n");
+		lv_label_set_text(lb_desc, "#FFDD00 CAL0 被汙染或錯誤的keys!#\n");
 		goto out;
 	}
 
@@ -388,9 +388,9 @@ out:
 
 static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 {
-	lv_obj_t *win = nyx_create_standard_window(SYMBOL_CHIP" 硬件和缓存的Fuses信息");
-	lv_win_add_btn(win, NULL, SYMBOL_DOWNLOAD" 提取fuses信息", _fuse_dump_window_action);
-	lv_win_add_btn(win, NULL, SYMBOL_INFO" CAL0 信息", _create_mbox_cal0);
+	lv_obj_t *win = nyx_create_standard_window(SYMBOL_CHIP" 硬體和快取的Fuses訊息");
+	lv_win_add_btn(win, NULL, SYMBOL_DOWNLOAD" 提取fuses訊息", _fuse_dump_window_action);
+	lv_win_add_btn(win, NULL, SYMBOL_INFO" CAL0 訊息", _create_mbox_cal0);
 
 	lv_obj_t *desc = lv_cont_create(win, NULL);
 	lv_obj_set_size(desc, LV_HOR_RES / 2 / 5 * 2, LV_VER_RES - (LV_DPI * 11 / 7) - 5);
@@ -998,7 +998,7 @@ static void _ipatch_process(u32 offset, u32 value)
 
 static lv_res_t _create_window_bootrom_info_status(lv_obj_t *btn)
 {
-	lv_obj_t *win = nyx_create_standard_window(SYMBOL_CHIP" Bootrom 信息");
+	lv_obj_t *win = nyx_create_standard_window(SYMBOL_CHIP" Bootrom 訊息");
 	lv_win_add_btn(win, NULL, SYMBOL_DOWNLOAD" 提取 Bootrom", _bootrom_dump_window_action);
 
 	lv_obj_t *desc = lv_cont_create(win, NULL);
@@ -1053,12 +1053,12 @@ static lv_res_t _create_mbox_lockpick(lv_obj_t *btn)
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-	static const char * mbox_btn_map[] = { "\251", "\222继续", "\222关闭", "\251", "" };
+	static const char * mbox_btn_map[] = { "\251", "\222繼續", "\222關閉", "\251", "" };
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 
-	lv_mbox_set_text(mbox, "#FF8000 Lockpick RCM#\n\n这将启动Lockpick RCM.\n你要继续吗?\n\n"
-		"想从lockpick返回请使用\n#96FF00 Reboot to hekate#.");
+	lv_mbox_set_text(mbox, "#FF8000 Lockpick RCM#\n\n這將啟動Lockpick RCM.\n你要繼續嗎?\n\n"
+		"想從lockpick返回請使用\n#96FF00 Reboot to hekate#.");
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, _launch_lockpick_action);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 5);
@@ -1080,12 +1080,12 @@ static lv_res_t _create_mbox_emmc_sandisk_report(lv_obj_t * btn)
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-	static const char * mbox_btn_map[] = { "\251", "\222关闭", "\251", "" };
+	static const char * mbox_btn_map[] = { "\251", "\222關閉", "\251", "" };
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 8);
 
-	lv_mbox_set_text(mbox, "#C7EA46 闪迪设备报告#");
+	lv_mbox_set_text(mbox, "#C7EA46 閃迪設備報告#");
 
 	u8 *buf = calloc(512, 1);
 	char *txt_buf = (char *)malloc(SZ_32K);
@@ -1117,7 +1117,7 @@ static lv_res_t _create_mbox_emmc_sandisk_report(lv_obj_t * btn)
 
 	if (!emmc_initialize(false))
 	{
-		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失败!#");
+		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失敗!#");
 
 		goto out;
 	}
@@ -1127,7 +1127,7 @@ static lv_res_t _create_mbox_emmc_sandisk_report(lv_obj_t * btn)
 
 	if (!res)
 	{
-		lv_label_set_text(lb_desc, "#FFDD00 不支持设备报告!#");
+		lv_label_set_text(lb_desc, "#FFDD00 不支持設備報告!#");
 		lv_label_set_text(lb_desc2, " ");
 
 		goto out;
@@ -1274,7 +1274,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 
 	char *txt_buf = (char *)malloc(SZ_16K);
 
-	s_printf(txt_buf, "#FF8000 %s 性能测试#\n[Raw读取] 中断: 音量- 和 音量+",
+	s_printf(txt_buf, "#FF8000 %s 性能測試#\n[Raw讀取] 中斷: 音量- 和 音量+",
 		sd_bench ? "SD卡" : "eMMC");
 
 	lv_mbox_set_text(mbox, txt_buf);
@@ -1320,7 +1320,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 
 	if (res)
 	{
-		lv_mbox_set_text(mbox, "#FFDD00 初始化存储失败!#");
+		lv_mbox_set_text(mbox, "#FFDD00 初始化儲存失敗!#");
 		goto out;
 	}
 
@@ -1494,9 +1494,9 @@ error:
 	if (error)
 	{
 		if (error == -1)
-			s_printf(txt_buf + strlen(txt_buf), "\n#FFDD00 中断!#");
+			s_printf(txt_buf + strlen(txt_buf), "\n#FFDD00 中斷!#");
 		else
-			s_printf(txt_buf + strlen(txt_buf), "\n#FFDD00 发生IO错误!#");
+			s_printf(txt_buf + strlen(txt_buf), "\n#FFDD00 發生IO錯誤!#");
 
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_obj_align(lbl_status, NULL, LV_ALIGN_CENTER, 0, 0);
@@ -1534,8 +1534,8 @@ static lv_res_t _create_mbox_sd_bench(lv_obj_t * btn)
 
 static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 {
-	lv_obj_t *win = nyx_create_standard_window(SYMBOL_CHIP" 内部eMMC信息");
-	lv_win_add_btn(win, NULL, SYMBOL_CHIP" 性能测试", _create_mbox_emmc_bench);
+	lv_obj_t *win = nyx_create_standard_window(SYMBOL_CHIP" 內部eMMC訊息");
+	lv_win_add_btn(win, NULL, SYMBOL_CHIP" 性能測試", _create_mbox_emmc_bench);
 
 	lv_obj_t *desc = lv_cont_create(win, NULL);
 	lv_obj_set_size(desc, LV_HOR_RES / 2 / 6 * 2, LV_VER_RES - (LV_DPI * 11 / 7) - 5);
@@ -1550,7 +1550,7 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 
 	if (!emmc_initialize(false))
 	{
-		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失败!#");
+		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失敗!#");
 		lv_obj_set_width(lb_desc, lv_obj_get_width(desc));
 
 		goto out;
@@ -1788,8 +1788,8 @@ out:
 
 static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 {
-	lv_obj_t *win = nyx_create_standard_window(SYMBOL_SD" microSD卡信息");
-	lv_win_add_btn(win, NULL, SYMBOL_SD" 性能测试", _create_mbox_sd_bench);
+	lv_obj_t *win = nyx_create_standard_window(SYMBOL_SD" microSD卡訊息");
+	lv_win_add_btn(win, NULL, SYMBOL_SD" 性能測試", _create_mbox_sd_bench);
 
 	lv_obj_t *desc = lv_cont_create(win, NULL);
 	lv_obj_set_size(desc, LV_HOR_RES / 2 / 5 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
@@ -1798,7 +1798,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	lv_label_set_long_mode(lb_desc, LV_LABEL_LONG_BREAK);
 	lv_label_set_recolor(lb_desc, true);
 
-	lv_label_set_text(lb_desc, "#D4FF00 请等待...#");
+	lv_label_set_text(lb_desc, "#D4FF00 請等待...#");
 	lv_obj_set_width(lb_desc, lv_obj_get_width(desc));
 
 	// Disable buttons.
@@ -1807,7 +1807,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	manual_system_maintenance(true);
 
 	if (!sd_mount())
-		lv_label_set_text(lb_desc, "#FFDD00 初始化SD卡失败!#");
+		lv_label_set_text(lb_desc, "#FFDD00 初始化SD卡失敗!#");
 	else
 	{
 		lv_label_set_text(lb_desc,
@@ -2107,8 +2107,8 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 
 static lv_res_t _create_window_battery_status(lv_obj_t *btn)
 {
-	lv_obj_t *win = nyx_create_standard_window(SYMBOL_BATTERY_FULL" 电池信息");
-	lv_win_add_btn(win, NULL, SYMBOL_DOWNLOAD" 提取电池信息", _battery_dump_window_action);
+	lv_obj_t *win = nyx_create_standard_window(SYMBOL_BATTERY_FULL" 電池訊息");
+	lv_win_add_btn(win, NULL, SYMBOL_DOWNLOAD" 提取電池訊息", _battery_dump_window_action);
 
 	lv_obj_t *desc = lv_cont_create(win, NULL);
 	lv_obj_set_size(desc, LV_HOR_RES / 2 / 4 * 2, LV_VER_RES - (LV_DPI * 11 / 7) - 5);
@@ -2406,7 +2406,7 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	lv_label_set_static_text(label_sep, "");
 
 	lv_obj_t *label_txt = lv_label_create(h1, NULL);
-	lv_label_set_static_text(label_txt, "SoC和硬件信息");
+	lv_label_set_static_text(label_txt, "SoC和硬體訊息");
 	lv_obj_set_style(label_txt, th->label.prim);
 	lv_obj_align(label_txt, label_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, 0);
 
@@ -2446,14 +2446,14 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	if (lockpick_found)
 	{
 		lv_label_set_static_text(label_txt2,
-			"查看Ipatches和提取未打补丁和打补丁的\nBootROM信息.\n"
-			"或通过 #C7EA46 Lockpick RCM# 转储每个key信息.\n");
+			"查看Ipatches和提取未修補和修補的\nBootROM訊息.\n"
+			"或通過 #C7EA46 Lockpick RCM# 轉儲每個key訊息.\n");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt2,
-			"查看Ipatches和提取未打补丁和打补丁的\nBootROM信息. 或通过 #C7EA46 Lockpick RCM# 转储每个key信息.\n"
-			"#FFDD00 bootloader/payloads/Lockpick_RCM.bin 丢失或已过时!#\n");
+			"查看Ipatches和提取未修補和修補的\nBootROM訊息. 或通過 #C7EA46 Lockpick RCM# 轉儲每個key訊息.\n"
+			"#FFDD00 bootloader/payloads/Lockpick_RCM.bin 遺失或已過時!#\n");
 	}
 
 	lv_obj_set_style(label_txt2, &hint_small_style);
@@ -2471,7 +2471,7 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	lv_obj_t *btn3 = lv_btn_create(h1, btn);
 	label_btn = lv_label_create(btn3, NULL);
 	lv_btn_set_fit(btn3, true, true);
-	lv_label_set_static_text(label_btn, SYMBOL_CIRCUIT"  硬件和Fuses");
+	lv_label_set_static_text(label_btn, SYMBOL_CIRCUIT"  硬體和Fuses");
 	lv_obj_align(btn3, line_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, LV_DPI / 2);
 	lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, _create_window_fuses_info_status);
 
@@ -2485,9 +2485,9 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	lv_obj_t *label_txt4 = lv_label_create(h1, NULL);
 	lv_label_set_recolor(label_txt4, true);
 	lv_label_set_static_text(label_txt4,
-		"查看和提取缓存的 #C7EA46 Fuses# 和 #C7EA46 KFuses#信息.\n"
-		"Fuses包含了SoC/SKU和KFuses HDCP的keys信息.\n"
-		"你也可以查看#C7EA46 DRAM#, #C7EA46 Screen# 和 #C7EA46 Touch panel#的信息.");
+		"查看和提取快取的 #C7EA46 Fuses# 和 #C7EA46 KFuses#訊息.\n"
+		"Fuses包含了SoC/SKU和KFuses HDCP的keys訊息.\n"
+		"你也可以查看#C7EA46 DRAM#, #C7EA46 Screen# 和 #C7EA46 Touch panel#的訊息.");
 	lv_obj_set_style(label_txt4, &hint_small_style);
 	lv_obj_align(label_txt4, btn3, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 
@@ -2504,7 +2504,7 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	lv_label_set_static_text(label_sep, "");
 
 	lv_obj_t *label_txt3 = lv_label_create(h2, NULL);
-	lv_label_set_static_text(label_txt3, "存储和电池信息");
+	lv_label_set_static_text(label_txt3, "儲存和電池訊息");
 	lv_obj_set_style(label_txt3, th->label.prim);
 	lv_obj_align(label_txt3, label_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, 0);
 
@@ -2535,8 +2535,8 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	lv_obj_t *label_txt5 = lv_label_create(h2, NULL);
 	lv_label_set_recolor(label_txt5, true);
 	lv_label_set_static_text(label_txt5,
-		"查看有关 eMMC 或 microSD 及其分区列表的信息.\n"
-		"此外, 您可以对读取速度进行基准测试.");
+		"查看有關 eMMC 或 microSD 及其分區列表的訊息.\n"
+		"此外, 您可以對讀取速度進行基準測試.");
 	lv_obj_set_style(label_txt5, &hint_small_style);
 	lv_obj_align(label_txt5, btn5, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 
@@ -2553,15 +2553,15 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	}
 	label_btn = lv_label_create(btn7, NULL);
 	lv_btn_set_fit(btn7, true, true);
-	lv_label_set_static_text(label_btn, SYMBOL_BATTERY_FULL"  电池");
+	lv_label_set_static_text(label_btn, SYMBOL_BATTERY_FULL"  電池");
 	lv_obj_align(btn7, line_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, LV_DPI / 2);
 	lv_btn_set_action(btn7, LV_BTN_ACTION_CLICK, _create_window_battery_status);
 
 	lv_obj_t *label_txt6 = lv_label_create(h2, NULL);
 	lv_label_set_recolor(label_txt6, true);
 	lv_label_set_static_text(label_txt6,
-		"查看电池和电池充电器相关信息.\n"
-		"此外, 您可以提取电池充电器的寄存器信息.\n");
+		"查看電池和電池充電器相關訊息.\n"
+		"此外, 您可以提取電池充電器的暫存器訊息.\n");
 	lv_obj_set_style(label_txt6, &hint_small_style);
 	lv_obj_align(label_txt6, btn7, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 }

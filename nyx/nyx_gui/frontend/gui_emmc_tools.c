@@ -53,7 +53,7 @@ static void _create_window_backup_restore(emmcPartType_t type, const char* win_l
 
 	char win_label_full[80];
 
-	s_printf(win_label_full, "%s%s", emmc_btn_ctxt.restore ? SYMBOL_DOWNLOAD"  恢复 " : SYMBOL_UPLOAD"  备份 ", win_label+3);
+	s_printf(win_label_full, "%s%s", emmc_btn_ctxt.restore ? SYMBOL_DOWNLOAD"  恢復 " : SYMBOL_UPLOAD"  備份 ", win_label+3);
 
 	lv_obj_t *win = nyx_create_standard_window(win_label_full);
 
@@ -271,13 +271,13 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	lv_obj_t *win;
 
 	emmc_btn_ctxt.restore = false;
-	if (strcmp(lv_label_get_text(lv_obj_get_child(btn, NULL)), SYMBOL_UPLOAD"  备份 eMMC"))
+	if (strcmp(lv_label_get_text(lv_obj_get_child(btn, NULL)), SYMBOL_UPLOAD"  備份 eMMC"))
 		emmc_btn_ctxt.restore = true;
 
 	if (!emmc_btn_ctxt.restore)
-		win = nyx_create_standard_window(SYMBOL_SD" 备份");
+		win = nyx_create_standard_window(SYMBOL_SD" 備份");
 	else
-		win = nyx_create_standard_window(SYMBOL_SD" 恢复");
+		win = nyx_create_standard_window(SYMBOL_SD" 恢復");
 
 	static lv_style_t h_style;
 	lv_style_copy(&h_style, &lv_style_transp);
@@ -325,16 +325,16 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您备份 BOOT 物理分区.\n"
-			"包含BCT, keys和package1中的各种变量.\n"
-			"#FF8000 需要与RAW GPP备份数据配对.#");
+			"允許您備份 BOOT 物理分區.\n"
+			"包含BCT, keys和package1中的各種變數.\n"
+			"#FF8000 需要與RAW GPP備份數據配對.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您恢复 BOOT 物理分区.\n"
-			"包含BCT, keys和各种package1.\n"
-			"#FF8000 需要与RAW GPP恢复数据配对.#");
+			"允許您恢復 BOOT 物理分區.\n"
+			"包含BCT, keys和各種package1.\n"
+			"#FF8000 需要與RAW GPP恢復數據配對.#");
 	}
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn1, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
@@ -355,16 +355,16 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您备份 GPP 物理分区.\n"
-			"它包含CAL0, 各种package2, SYSTEM, USER, 等等.\n"
-			"#FF8000 需要与BOOT0/1备份数据配对.#");
+			"允許您備份 GPP 物理分區.\n"
+			"它包含CAL0, 各種package2, SYSTEM, USER, 等等.\n"
+			"#FF8000 需要與BOOT0/1備份數據配對.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您恢复 GPP 物理分区.\n"
-			"它包含CAL0, 各种package2, SYSTEM, USER, 等等.\n"
-			"#FF8000 需要与BOOT0/1恢复数据配对.#");
+			"允許您恢復 GPP 物理分區.\n"
+			"它包含CAL0, 各種package2, SYSTEM, USER, 等等.\n"
+			"#FF8000 需要與BOOT0/1恢復數據配對.#");
 	}
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
@@ -406,14 +406,14 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt4,
-			"允许您从 RAW GPP 备份分区, 除了USER.\n"
-			"它包含CAL0, 各种package2, SYSTEM, 等等.\n"
-			"#FF8000 这是一个不完整的备份.#");
+			"允許您從 RAW GPP 備份分區, 除了USER.\n"
+			"它包含CAL0, 各種package2, SYSTEM, 等等.\n"
+			"#FF8000 這是一個不完整的備份.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt4,
-			"允许您从 RAW GPP 恢复分区\n"
+			"允許您從 RAW GPP 恢復分區\n"
 			"它包含CAL0, various package2, SYSTEM, USER, 等等.\n");
 	}
 
@@ -433,8 +433,8 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 		label_txt4 = lv_label_create(h2, NULL);
 		lv_label_set_recolor(label_txt4, true);
 		lv_label_set_static_text(label_txt4,
-			"允许您从 RAW GPP 备份 USER 分区.\n"
-			"#FF8000 这是一个不完整的备份.#\n");
+			"允許您從 RAW GPP 備份 USER 分區.\n"
+			"#FF8000 這是一個不完整的備份.#\n");
 		lv_obj_set_style(label_txt4, &hint_small_style);
 		lv_obj_align(label_txt4, btn4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 	}
