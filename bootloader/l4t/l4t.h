@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2018 Rajko Stojadinovic
- * Copyright (c) 2018 CTCaer
+ * L4T Loader for Tegra X1
+ *
+ * Copyright (c) 2020-2022 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -15,16 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _FE_EMMC_TOOLS_H_
-#define _FE_EMMC_TOOLS_H_
+#ifndef _L4T_H_
+#define _L4T_H_
 
-void dump_emmc_system();
-void dump_emmc_user();
-void dump_emmc_boot();
-void dump_emmc_rawnand();
-
-void restore_emmc_boot();
-void restore_emmc_rawnand();
-void restore_emmc_gpp_parts();
+void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b01);
 
 #endif

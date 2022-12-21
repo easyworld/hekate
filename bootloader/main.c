@@ -26,12 +26,12 @@
 #include "gfx/tui.h"
 #include "hos/hos.h"
 #include "hos/secmon_exo.h"
+#include "l4t/l4t.h"
 #include <ianos/ianos.h>
 #include <libs/compr/blz.h>
 #include <libs/fatfs/ff.h>
 #include "storage/emummc.h"
 
-#include "frontend/fe_emmc_tools.h"
 #include "frontend/fe_tools.h"
 #include "frontend/fe_info.h"
 
@@ -93,10 +93,25 @@ void check_power_off_from_hos()
 		{
 			render_static_bootlogo();
 
-			display_backlight_brightness(10,  5000);
-			display_backlight_brightness(100, 25000);
-			msleep(600);
-			display_backlight_brightness(0,   20000);
+			if (display_get_decoded_panel_id() != PANEL_SAM_AMS699VC01)
+			{
+				// Slow fading for LCD panels.
+				display_backlight_brightness(10,  5000);
+				display_backlight_brightness(100, 25000);
+				msleep(600);
+				display_backlight_brightness(0,   20000);
+			}
+			else
+			{
+				// Blink 3 times for OLED panel.
+				for (u32 i = 0; i < 3; i++)
+				{
+					msleep(150);
+					display_backlight_brightness(100, 0);
+					msleep(150);
+					display_backlight_brightness(0,   0);
+				}
+			}
 		}
 		power_set_state(POWER_OFF_RESET);
 	}
@@ -116,7 +131,7 @@ void check_power_off_from_hos()
 
 static void *coreboot_addr;
 
-void reloc_patcher(u32 payload_dst, u32 payload_src, u32 payload_size)
+static void _reloc_patcher(u32 payload_dst, u32 payload_src, u32 payload_size)
 {
 	memcpy((u8 *)payload_src, (u8 *)IPL_LOAD_ADDR, PATCHED_RELOC_SZ);
 
@@ -172,7 +187,7 @@ bool is_ipl_updated(void *buf, char *path, bool force)
 	return true;
 }
 
-void launch_payload(char *path, bool update, bool clear_screen)
+static void _launch_payload(char *path, bool update, bool clear_screen)
 {
 	if (clear_screen)
 		gfx_clear_grey(0x1B);
@@ -227,13 +242,13 @@ void launch_payload(char *path, bool update, bool clear_screen)
 		if (update)
 			memcpy((u8 *)(RCM_PAYLOAD_ADDR + PATCHED_RELOC_SZ), &b_cfg, sizeof(boot_cfg_t)); // Transfer boot cfg.
 		else
-			reloc_patcher(PATCHED_RELOC_ENTRY, EXT_PAYLOAD_ADDR, ALIGN(size, 0x10));
+			_reloc_patcher(PATCHED_RELOC_ENTRY, EXT_PAYLOAD_ADDR, ALIGN(size, 0x10));
 
 		hw_reinit_workaround(false, byte_swap_32(*(u32 *)(buf + size - sizeof(u32))));
 	}
 	else
 	{
-		reloc_patcher(PATCHED_RELOC_ENTRY, EXT_PAYLOAD_ADDR, 0x7000);
+		_reloc_patcher(PATCHED_RELOC_ENTRY, EXT_PAYLOAD_ADDR, 0x7000);
 
 		// Get coreboot seamless display magic.
 		u32 magic = 0;
@@ -266,7 +281,7 @@ out:
 	}
 }
 
-void launch_tools()
+static void _launch_payloads()
 {
 	u8 max_entries = 61;
 	char *filelist = NULL;
@@ -338,7 +353,7 @@ void launch_tools()
 		memcpy(dir + strlen(dir), "/", 2);
 		memcpy(dir + strlen(dir), file_sec, strlen(file_sec) + 1);
 
-		launch_payload(dir, false, true);
+		_launch_payload(dir, false, true);
 	}
 
 failed_sd_mount:
@@ -348,10 +363,10 @@ failed_sd_mount:
 	btn_wait();
 }
 
-void ini_list_launcher()
+static void _launch_ini_list()
 {
 	u8 max_entries = 61;
-	char *payload_path = NULL;
+	char *special_path = NULL;
 	char *emummc_path  = NULL;
 	ini_sec_t *cfg_sec = NULL;
 
@@ -405,9 +420,9 @@ void ini_list_launcher()
 
 		cfg_sec = (ini_sec_t *)tui_do_menu(&menu);
 
-		payload_path = ini_check_payload_section(cfg_sec);
+		special_path = ini_check_special_section(cfg_sec);
 
-		if (cfg_sec && !payload_path)
+		if (cfg_sec && !special_path)
 		{
 			LIST_FOREACH_ENTRY(ini_kv_t, kv, &cfg_sec->kvs, link)
 			{
@@ -439,10 +454,24 @@ parse_failed:
 	if (!cfg_sec)
 		goto out;
 
-	if (payload_path)
+	if (special_path)
 	{
-		// Try to launch Payload.
-		launch_payload(payload_path, false, true);
+		// Try to launch Payload or L4T.
+		if (special_path != (char *)-1)
+			_launch_payload(special_path, false, true);
+		else
+		{
+			u32 entry_idx = 0;
+			for (u32 i = 0; i < sec_idx; i++)
+			{
+				if (ments[i].data == cfg_sec)
+				{
+					entry_idx = i;
+					break;
+				}
+			}
+			launch_l4t(cfg_sec, entry_idx, 1, h_cfg.t210b01);
+		}
 	}
 	else if (!hos_launch(cfg_sec))
 	{
@@ -459,10 +488,10 @@ out:
 	btn_wait();
 }
 
-void launch_firmware()
+static void _launch_config()
 {
 	u8 max_entries = 61;
-	char *payload_path = NULL;
+	char *special_path = NULL;
 	char *emummc_path = NULL;
 
 	ini_sec_t *cfg_sec = NULL;
@@ -492,11 +521,11 @@ void launch_firmware()
 
 	ments[2].type    = MENT_HANDLER;
 	ments[2].caption = "Payloads...";
-	ments[2].handler = launch_tools;
+	ments[2].handler = _launch_payloads;
 
 	ments[3].type    = MENT_HANDLER;
 	ments[3].caption = "More configs...";
-	ments[3].handler = ini_list_launcher;
+	ments[3].handler = _launch_ini_list;
 
 	ments[4].type    = MENT_CHGLINE;
 
@@ -535,9 +564,9 @@ void launch_firmware()
 
 	cfg_sec = (ini_sec_t *)tui_do_menu(&menu);
 
-	payload_path = ini_check_payload_section(cfg_sec);
+	special_path = ini_check_special_section(cfg_sec);
 
-	if (cfg_sec && !payload_path)
+	if (cfg_sec && !special_path)
 	{
 		LIST_FOREACH_ENTRY(ini_kv_t, kv, &cfg_sec->kvs, link)
 		{
@@ -570,10 +599,24 @@ parse_failed:
 		goto out;
 	}
 
-	if (payload_path)
+	if (special_path)
 	{
-		// Try to launch Payload.
-		launch_payload(payload_path, false, true);
+		// Try to launch Payload or L4T.
+		if (special_path != (char *)-1)
+			_launch_payload(special_path, false, true);
+		else
+		{
+			u32 entry_idx = 0;
+			for (u32 i = 0; i < sec_idx; i++)
+			{
+				if (ments[i].data == cfg_sec)
+				{
+					entry_idx = i;
+					break;
+				}
+			}
+			launch_l4t(cfg_sec, entry_idx, 0, h_cfg.t210b01);
+		}
 	}
 	else if (!hos_launch(cfg_sec))
 	{
@@ -595,7 +638,7 @@ out:
 
 #define NYX_VER_OFF 0x9C
 
-void nyx_load_run()
+static void _nyx_load_run()
 {
 	u8 *nyx = sd_file_read("bootloader/sys/nyx.bin", NULL);
 	if (!nyx)
@@ -662,7 +705,7 @@ void nyx_load_run()
 	(*nyx_ptr)();
 }
 
-static ini_sec_t *get_ini_sec_from_id(ini_sec_t *ini_sec, char **bootlogoCustomEntry, char **emummc_path)
+static ini_sec_t *_get_ini_sec_from_id(ini_sec_t *ini_sec, char **bootlogoCustomEntry, char **emummc_path)
 {
 	ini_sec_t *cfg_sec = NULL;
 
@@ -704,7 +747,7 @@ static void _bootloader_corruption_protect()
 	}
 }
 
-void auto_launch_update()
+static void _check_for_updated_bootloader()
 {
 	// Check if already chainloaded update and clear flag. Otherwise check for updates.
 	if (EMC(EMC_SCRATCH0) & EMC_HEKA_UPD)
@@ -713,7 +756,7 @@ void auto_launch_update()
 	{
 		// Check if update.bin exists and is newer and launch it. Otherwise create it.
 		if (!f_stat("bootloader/update.bin", NULL))
-			launch_payload("bootloader/update.bin", true, false);
+			_launch_payload("bootloader/update.bin", true, false);
 		else
 		{
 			u8 *buf = calloc(0x200, 1);
@@ -723,7 +766,7 @@ void auto_launch_update()
 	}
 }
 
-static void _auto_launch_firmware()
+static void _auto_launch()
 {
 	struct _bmp_data
 	{
@@ -741,7 +784,7 @@ static void _auto_launch_firmware()
 	char *bootlogoCustomEntry = NULL;
 	bool  config_entry_found  = false;
 
-	auto_launch_update();
+	_check_for_updated_bootloader();
 
 	bool boot_from_id = (b_cfg.boot_cfg & BOOT_CFG_FROM_ID) && (b_cfg.boot_cfg & BOOT_CFG_AUTOBOOT_EN);
 	if (boot_from_id)
@@ -755,9 +798,6 @@ static void _auto_launch_firmware()
 
 	// Load emuMMC configuration.
 	emummc_load_cfg();
-
-	if (f_stat("bootloader/hekate_ipl.ini", NULL))
-		create_config_entry();
 
 	// Parse hekate main configuration.
 	if (!ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false))
@@ -819,7 +859,7 @@ static void _auto_launch_firmware()
 			}
 
 			if (boot_from_id)
-				cfg_sec = get_ini_sec_from_id(ini_sec, &bootlogoCustomEntry, &emummc_path);
+				cfg_sec = _get_ini_sec_from_id(ini_sec, &bootlogoCustomEntry, &emummc_path);
 			else if (h_cfg.autoboot == boot_entry_id && config_entry_found)
 			{
 				cfg_sec = ini_sec;
@@ -863,7 +903,7 @@ static void _auto_launch_firmware()
 				continue;
 
 			if (boot_from_id)
-				cfg_sec = get_ini_sec_from_id(ini_sec_list, &bootlogoCustomEntry, &emummc_path);
+				cfg_sec = _get_ini_sec_from_id(ini_sec_list, &bootlogoCustomEntry, &emummc_path);
 			else if (h_cfg.autoboot == boot_entry_id)
 			{
 				h_cfg.emummc_force_disable = false;
@@ -885,14 +925,14 @@ static void _auto_launch_firmware()
 	}
 
 skip_list:
-	// Add missing configuration entry.
-	if (!config_entry_found)
-		create_config_entry();
-
 	if (!cfg_sec)
 		goto out; // No configurations or auto boot is disabled.
 
-	if (!(b_cfg.boot_cfg & BOOT_CFG_FROM_LAUNCH) && h_cfg.bootwait)
+	// Check if entry is payload or l4t special case.
+	char *special_path = ini_check_special_section(cfg_sec);
+
+	if ((!(b_cfg.boot_cfg & BOOT_CFG_FROM_LAUNCH) && h_cfg.bootwait) || // Conditional for HOS/Payload.
+		(special_path && special_path == (char *)-1))                   // Always show for L4T.
 	{
 		u32 fsize;
 		u8 *logo_buf = NULL;
@@ -970,12 +1010,13 @@ skip_list:
 	else if (btn_read_vol() == BTN_VOL_DOWN) // 0s bootwait VOL- check.
 		goto out;
 
-	char *payload_path = ini_check_payload_section(cfg_sec);
-
-	if (payload_path)
+	if (special_path)
 	{
-		// Try to launch Payload.
-		launch_payload(payload_path, false, false);
+		// Try to launch Payload or L4T.
+		if (special_path != (char *)-1)
+			_launch_payload(special_path, false, false);
+		else
+			launch_l4t(cfg_sec, h_cfg.autoboot, h_cfg.autoboot_list, h_cfg.t210b01);
 		goto error;
 	}
 	else
@@ -1017,7 +1058,7 @@ out:
 	// L4T: Clear custom boot mode flags from PMC_SCRATCH0.
 	PMC(APBDEV_PMC_SCRATCH0) &= ~PMC_SCRATCH0_MODE_CUSTOM_ALL;
 
-	nyx_load_run();
+	_nyx_load_run();
 }
 
 #define EXCP_EN_ADDR   0x4003FFFC
@@ -1172,15 +1213,15 @@ static void _check_low_battery()
 	bq24193_get_property(BQ24193_ChargeStatus, &charge_status);
 	max17050_get_property(MAX17050_AvgVCELL,   &batt_volt);
 
-	enough_battery = charge_status ? 3250 : 3000;
+	enough_battery = charge_status ? 3300 : 3100;
 
 	// If battery voltage is enough, exit.
 	if (batt_volt > enough_battery || !batt_volt)
 		goto out;
 
 	// Prepare battery icon resources.
-	u8 *battery_res = malloc(ALIGN(SZ_BATTERY_EMPTY, SZ_4K));
-	blz_uncompress_srcdest(BATTERY_EMPTY_BLZ, SZ_BATTERY_EMPTY_BLZ, battery_res, SZ_BATTERY_EMPTY);
+	u8 *battery_res = malloc(ALIGN(BATTERY_EMPTY_SIZE, SZ_4K));
+	blz_uncompress_srcdest(battery_icons_blz, BATTERY_EMPTY_BLZ_SIZE, battery_res, BATTERY_EMPTY_SIZE);
 
 	u8 *battery_icon     = malloc(0x95A); // 21x38x3
 	u8 *charging_icon    = malloc(0x2F4); // 21x12x3
@@ -1189,8 +1230,8 @@ static void _check_low_battery()
 	memcpy(charging_icon, battery_res, 0x2F4);
 	memcpy(battery_icon, battery_res + 0x2F4, 0x95A);
 
-	u32 battery_icon_y_pos  = 1280 - 16 - Y_BATTERY_EMPTY_BATT;
-	u32 charging_icon_y_pos = 1280 - 16 - Y_BATTERY_EMPTY_BATT - 12 - Y_BATTERY_EMPTY_CHRG;
+	u32 battery_icon_y_pos  = 1280 - 16 - BATTERY_EMPTY_BATT_HEIGHT;
+	u32 charging_icon_y_pos = 1280 - 16 - BATTERY_EMPTY_BATT_HEIGHT - 12 - BATTERY_EMPTY_CHRG_HEIGHT;
 	free(battery_res);
 
 	charge_status = !charge_status;
@@ -1205,7 +1246,7 @@ static void _check_low_battery()
 		int current_charge_status = 0;
 		bq24193_get_property(BQ24193_ChargeStatus, &current_charge_status);
 		max17050_get_property(MAX17050_AvgVCELL, &batt_volt);
-		enough_battery = current_charge_status ? 3250 : 3000;
+		enough_battery = current_charge_status ? 3300 : 3100;
 
 		// If battery voltage is enough, exit.
 		if (batt_volt > enough_battery)
@@ -1215,9 +1256,9 @@ static void _check_low_battery()
 		if (screen_on && (charge_status != current_charge_status))
 		{
 			if (current_charge_status)
-				gfx_set_rect_rgb(charging_icon,    X_BATTERY_EMPTY, Y_BATTERY_EMPTY_CHRG, 16, charging_icon_y_pos);
+				gfx_set_rect_rgb(charging_icon,    BATTERY_EMPTY_WIDTH, BATTERY_EMPTY_CHRG_HEIGHT, 16, charging_icon_y_pos);
 			else
-				gfx_set_rect_rgb(no_charging_icon, X_BATTERY_EMPTY, Y_BATTERY_EMPTY_CHRG, 16, charging_icon_y_pos);
+				gfx_set_rect_rgb(no_charging_icon, BATTERY_EMPTY_WIDTH, BATTERY_EMPTY_CHRG_HEIGHT, 16, charging_icon_y_pos);
 		}
 
 		// Check if it's time to turn off display.
@@ -1246,11 +1287,11 @@ static void _check_low_battery()
 				u32 *fb = display_init_framebuffer_pitch();
 				gfx_init_ctxt(fb, 720, 1280, 720);
 
-				gfx_set_rect_rgb(battery_icon,         X_BATTERY_EMPTY, Y_BATTERY_EMPTY_BATT, 16, battery_icon_y_pos);
+				gfx_set_rect_rgb(battery_icon,         BATTERY_EMPTY_WIDTH, BATTERY_EMPTY_BATT_HEIGHT, 16, battery_icon_y_pos);
 				if (current_charge_status)
-					gfx_set_rect_rgb(charging_icon,    X_BATTERY_EMPTY, Y_BATTERY_EMPTY_CHRG, 16, charging_icon_y_pos);
+					gfx_set_rect_rgb(charging_icon,    BATTERY_EMPTY_WIDTH, BATTERY_EMPTY_CHRG_HEIGHT, 16, charging_icon_y_pos);
 				else
-					gfx_set_rect_rgb(no_charging_icon, X_BATTERY_EMPTY, Y_BATTERY_EMPTY_CHRG, 16, charging_icon_y_pos);
+					gfx_set_rect_rgb(no_charging_icon, BATTERY_EMPTY_WIDTH, BATTERY_EMPTY_CHRG_HEIGHT, 16, charging_icon_y_pos);
 
 				display_backlight_pwm_init();
 				display_backlight_brightness(100, 1000);
@@ -1280,7 +1321,45 @@ out:
 	max77620_low_battery_monitor_config(true);
 }
 
-void ipl_reload()
+static void _r2p_get_config_t210b01()
+{
+	rtc_reboot_reason_t rr;
+	if (!max77620_rtc_get_reboot_reason(&rr))
+		return;
+
+	// Check if reason is actually set.
+	if (rr.dec.reason != REBOOT_REASON_NOP)
+	{
+		// Clear boot storage.
+		memset(&b_cfg, 0, sizeof(boot_cfg_t));
+
+		// Enable boot storage.
+		b_cfg.boot_cfg |= BOOT_CFG_AUTOBOOT_EN;
+	}
+
+	switch (rr.dec.reason)
+	{
+	case REBOOT_REASON_NOP:
+		break;
+	case REBOOT_REASON_REC:
+		PMC(APBDEV_PMC_SCRATCH0) |= PMC_SCRATCH0_MODE_RECOVERY;
+	case REBOOT_REASON_SELF:
+		b_cfg.autoboot      = rr.dec.autoboot_idx;
+		b_cfg.autoboot_list = rr.dec.autoboot_list;
+		break;
+	case REBOOT_REASON_MENU:
+		break;
+	case REBOOT_REASON_UMS:
+		b_cfg.extra_cfg |= EXTRA_CFG_NYX_UMS;
+		b_cfg.ums = rr.dec.ums_idx;
+		break;
+	case REBOOT_REASON_PANIC:
+		PMC(APBDEV_PMC_SCRATCH37) = PMC_SCRATCH37_KERNEL_PANIC_MAGIC;
+		break;
+	}
+}
+
+static void _ipl_reload()
 {
 	hw_reinit_workaround(false, 0);
 
@@ -1346,9 +1425,7 @@ ment_t ment_cinfo[] = {
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("---- SoC Info ----", TXT_CLR_CYAN_L),
-	//MDEF_HANDLER("Ipatches & bootrom", bootrom_ipatches_info),
 	MDEF_HANDLER("Fuses", print_fuseinfo),
-	//MDEF_HANDLER("Print kfuse info", print_kfuseinfo),
 	MDEF_CHGLINE(),
 	MDEF_CAPTION("-- Storage Info --", TXT_CLR_CYAN_L),
 	MDEF_HANDLER("eMMC",    print_mmc_info),
@@ -1361,45 +1438,9 @@ ment_t ment_cinfo[] = {
 
 menu_t menu_cinfo = { ment_cinfo, "Console Info", 0, 0 };
 
-ment_t ment_restore[] = {
-	MDEF_BACK(),
-	MDEF_CHGLINE(),
-	MDEF_CAPTION("------ Full --------", TXT_CLR_CYAN_L),
-	MDEF_HANDLER("Restore eMMC BOOT0/1", restore_emmc_boot),
-	MDEF_HANDLER("Restore eMMC RAW GPP", restore_emmc_rawnand),
-	MDEF_CHGLINE(),
-	MDEF_CAPTION("-- GPP Partitions --", TXT_CLR_CYAN_L),
-	MDEF_HANDLER("Restore GPP partitions", restore_emmc_gpp_parts),
-	MDEF_END()
-};
-
-menu_t menu_restore = { ment_restore, "Restore Options", 0, 0 };
-
-ment_t ment_backup[] = {
-	MDEF_BACK(),
-	MDEF_CHGLINE(),
-	MDEF_CAPTION("------ Full --------", TXT_CLR_CYAN_L),
-	MDEF_HANDLER("Backup eMMC BOOT0/1", dump_emmc_boot),
-	MDEF_HANDLER("Backup eMMC RAW GPP", dump_emmc_rawnand),
-	MDEF_CHGLINE(),
-	MDEF_CAPTION("-- GPP Partitions --", TXT_CLR_CYAN_L),
-	MDEF_HANDLER("Backup eMMC SYS",  dump_emmc_system),
-	MDEF_HANDLER("Backup eMMC USER", dump_emmc_user),
-	MDEF_END()
-};
-
-menu_t menu_backup = { ment_backup, "Backup Options", 0, 0 };
-
 ment_t ment_tools[] = {
 	MDEF_BACK(),
 	MDEF_CHGLINE(),
-	//MDEF_CAPTION("-- Backup & Restore --", TXT_CLR_CYAN_L),
-	//MDEF_MENU("Backup", &menu_backup),
-	//MDEF_MENU("Restore", &menu_restore),
-	//MDEF_CHGLINE(),
-	//MDEF_CAPTION("-------- Misc --------", TXT_CLR_CYAN_L),
-	//MDEF_HANDLER("Dump package1/2", dump_packages12),
-	//MDEF_CHGLINE(),
 	MDEF_CAPTION("-------- Other -------", TXT_CLR_WARNING),
 	MDEF_HANDLER("AutoRCM", menu_autorcm),
 	MDEF_END()
@@ -1412,12 +1453,12 @@ power_state_t STATE_REBOOT_RCM          = REBOOT_RCM;
 power_state_t STATE_REBOOT_BYPASS_FUSES = REBOOT_BYPASS_FUSES;
 
 ment_t ment_top[] = {
-	MDEF_HANDLER("Launch", launch_firmware),
+	MDEF_HANDLER("Launch", _launch_config),
 	MDEF_CAPTION("---------------", TXT_CLR_GREY_DM),
 	MDEF_MENU("Tools",        &menu_tools),
 	MDEF_MENU("Console info", &menu_cinfo),
 	MDEF_CAPTION("---------------", TXT_CLR_GREY_DM),
-	MDEF_HANDLER("Reload", ipl_reload),
+	MDEF_HANDLER("Reload", _ipl_reload),
 	MDEF_HANDLER_EX("Reboot (OFW)", &STATE_REBOOT_BYPASS_FUSES, power_set_state_ex),
 	MDEF_HANDLER_EX("Reboot (RCM)", &STATE_REBOOT_RCM,          power_set_state_ex),
 	MDEF_HANDLER_EX("Power off",    &STATE_POWER_OFF,           power_set_state_ex),
@@ -1426,7 +1467,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v5.9.0", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.0.0", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 
@@ -1451,6 +1492,9 @@ void ipl_main()
 
 	// Set bootloader's default configuration.
 	set_default_configuration();
+
+	// Prep RTC regs for read. Needed for T210B01 R2P.
+	max77620_rtc_prep_read();
 
 	// Initialize display.
 	display_init();
@@ -1489,12 +1533,16 @@ skip_lp0_minerva_config:
 	// Overclock BPMP.
 	bpmp_clk_rate_set(h_cfg.t210b01 ? BPMP_CLK_DEFAULT_BOOST : BPMP_CLK_LOWER_BOOST);
 
+	// Get R2P config from RTC.
+	if (h_cfg.t210b01)
+		_r2p_get_config_t210b01();
+
 	// Show exceptions, HOS errors, library errors and L4T kernel panics.
 	_show_errors();
 
 	// Load saved configuration and auto boot if enabled.
 	if (!(h_cfg.errors & ERR_SD_BOOT_EN))
-		_auto_launch_firmware();
+		_auto_launch();
 
 	// Failed to launch Nyx, unmount SD Card.
 	sd_end();

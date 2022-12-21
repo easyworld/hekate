@@ -289,6 +289,9 @@ static void _config_regulators(bool tegra_t210)
 	max7762x_regulator_enable(REGULATOR_LDO2, false);
 	sd_power_cycle_time_start = get_tmr_ms();
 
+	// Disable LCD DVDD.
+	max7762x_regulator_enable(REGULATOR_LDO0, false);
+
 	i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_CNFGBBC, MAX77620_CNFGBBC_RESISTOR_1K);
 	i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_ONOFFCNFG1,
 		MAX77620_ONOFFCNFG1_RSVD | (3 << MAX77620_ONOFFCNFG1_MRT_SHIFT)); // PWR delay for forced shutdown off.
@@ -395,9 +398,6 @@ void hw_init()
 	// Initialize various regulators based on Erista/Mariko platform.
 	_config_regulators(tegra_t210);
 
-	// Enable charger in case it's disabled.
-	bq24193_enable_charger();
-
 	_config_pmc_scratch(); // Missing from 4.x+
 
 	// Set BPMP/SCLK to PLLP_OUT (408MHz).
@@ -415,6 +415,9 @@ void hw_init()
 	sdram_init();
 
 	bpmp_mmu_enable();
+
+	// Enable HOST1X used by every display module (DC, VIC, NVDEC, NVENC, TSEC, etc).
+	clock_enable_host1x();
 }
 
 void hw_reinit_workaround(bool coreboot, u32 bl_magic)
@@ -468,8 +471,12 @@ void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 		gpio_config(GPIO_PORT_V, GPIO_PIN_0, GPIO_MODE_GPIO);
 		display_backlight_brightness(brightness, 0);
 		break;
+	case BL_MAGIC_L4TLDR_SLD:
+		// Do not disable backlight at all.
+		break;
 	default:
 		display_end();
+		clock_disable_host1x();
 	}
 
 	// Enable clock to USBD and init SDMMC1 to avoid hangs with bad hw inits.
