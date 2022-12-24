@@ -768,7 +768,7 @@ static lv_res_t _create_window_usb_tools(lv_obj_t *parent)
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
 		"允許你掛載 eMMC/emuMMC.\n"
-		"#C7EA46 默認訪問權限為# #FF8000 只讀.#");
+		"#C7EA46 默認訪問權限為# #FF8000 唯讀.#");
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn_emu_gpp, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 
@@ -783,7 +783,7 @@ static lv_res_t _create_window_usb_tools(lv_obj_t *parent)
 	// Create read/write access button.
 	lv_obj_t *btn_write_access = lv_btn_create(h_write, NULL);
 	nyx_create_onoff_button(lv_theme_get_current(), h_write,
-		btn_write_access, SYMBOL_EDIT" 只讀", _emmc_read_only_toggle, false);
+		btn_write_access, SYMBOL_EDIT" 唯讀", _emmc_read_only_toggle, false);
 	if (!n_cfg.ums_emmc_rw)
 		lv_btn_set_state(btn_write_access, LV_BTN_STATE_TGL_REL);
 	_emmc_read_only_toggle(btn_write_access);
@@ -946,7 +946,7 @@ static lv_res_t _create_window_unset_abit_tool(lv_obj_t *btn)
 	}
 	else
 	{
-		lv_label_set_text(lb_desc, "#00DDFF 遍歷SD卡所有文件!#\n這可能需要一些時間...");
+		lv_label_set_text(lb_desc, "#00DDFF 讀取SD卡所有文件!#\n這可能需要一些時間...");
 		lv_obj_set_width(lb_desc, lv_obj_get_width(desc));
 
 		lv_obj_t *val = lv_cont_create(win, NULL);
@@ -975,7 +975,7 @@ static lv_res_t _create_window_unset_abit_tool(lv_obj_t *btn)
 		if (!total[0] && !total[1])
 			s_printf(txt_buf, "#96FF00 完成! 無需更改.#");
 		else
-			s_printf(txt_buf, "#96FF00 完成! 歸檔位修復:# #FF8000 %d 未設置 and %d 已設置!#", total[1], total[0]);
+			s_printf(txt_buf, "#96FF00 完成! 歸檔位修復:# #FF8000 %d 未設定 and %d 已設定!#", total[1], total[0]);
 
 		// Check errors.
 		if (total[2] || total[3])
@@ -1095,7 +1095,7 @@ static lv_res_t _create_mbox_fix_touchscreen(lv_obj_t *btn)
 
 		}
 		s_printf(txt_buf + strlen(txt_buf), " (%d), Chn: %d#\n\n", err[0], err[1]);
-		strcat(txt_buf, "#FFFF00 觸摸屏校準失敗!");
+		strcat(txt_buf, "#FFFF00 觸控螢幕校正失敗!");
 		lv_mbox_set_text(mbox, txt_buf);
 		goto out2;
 	}
@@ -1105,9 +1105,9 @@ ito_failed:
 
 out:
 	if (res)
-		lv_mbox_set_text(mbox, "#C7EA46 觸摸屏校準完成!");
+		lv_mbox_set_text(mbox, "#C7EA46 觸控螢幕校正完成!");
 	else
-		lv_mbox_set_text(mbox, "#FFFF00 觸摸屏校準失敗!");
+		lv_mbox_set_text(mbox, "#FFFF00 觸控螢幕校正失敗!");
 
 out2:
 	lv_mbox_add_btns(mbox, mbox_btn_map, mbox_action);
@@ -1259,7 +1259,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 		emmcsn_path_impl(path, "/pkg1", "pkg1_decr.bin", &emmc_storage);
 		if (sd_save_to_file(pkg1, SZ_256K, path))
 			goto out_free;
-		strcat(txt_buf, "pkg1 提取到了 pkg1_decr.bin\n");
+		strcat(txt_buf, "pkg1 提取到 pkg1_decr.bin\n");
 		lv_label_set_text(lb_desc, txt_buf);
 		manual_system_maintenance(true);
 
@@ -1267,7 +1267,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 		emmcsn_path_impl(path, "/pkg1", "nxloader.bin", &emmc_storage);
 		if (sd_save_to_file(loader, hdr_pk11->ldr_size, path))
 			goto out_free;
-		strcat(txt_buf, "NX Bootloader 提取到了 nxloader.bin\n");
+		strcat(txt_buf, "NX Bootloader 提取到 nxloader.bin\n");
 		lv_label_set_text(lb_desc, txt_buf);
 		manual_system_maintenance(true);
 
@@ -1275,7 +1275,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 		emmcsn_path_impl(path, "/pkg1", "secmon.bin", &emmc_storage);
 		if (sd_save_to_file(secmon, hdr_pk11->sm_size, path))
 			goto out_free;
-		strcat(txt_buf, "Secure Monitor 提取到了 secmon.bin\n");
+		strcat(txt_buf, "Secure Monitor 提取到 secmon.bin\n");
 		lv_label_set_text(lb_desc, txt_buf);
 		manual_system_maintenance(true);
 
@@ -1294,7 +1294,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 			if (sd_save_to_file(warmboot, hdr_pk11->wb_size, path))
 				goto out_free;
 		}
-		strcat(txt_buf, "Warmboot 提取到了 warmboot.bin\n\n");
+		strcat(txt_buf, "Warmboot 提取到 warmboot.bin\n\n");
 		lv_label_set_text(lb_desc, txt_buf);
 		manual_system_maintenance(true);
 	}
@@ -1335,7 +1335,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 
 		if (!res)
 		{
-			strcat(txt_buf, "\n加密的 pkg2 提取到了 pkg2_encr.bin\n");
+			strcat(txt_buf, "\n加密的 pkg2 提取到 pkg2_encr.bin\n");
 			lv_label_set_text(lb_desc, txt_buf);
 			manual_system_maintenance(true);
 		}
@@ -1359,7 +1359,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 	emmcsn_path_impl(path, "/pkg2", "pkg2_decr.bin", &emmc_storage);
 	if (sd_save_to_file(pkg2, pkg2_hdr->sec_size[PKG2_SEC_KERNEL] + pkg2_hdr->sec_size[PKG2_SEC_INI1], path))
 		goto out;
-	strcat(txt_buf, "pkg2 提取到了 pkg2_decr.bin\n");
+	strcat(txt_buf, "pkg2 提取到 pkg2_decr.bin\n");
 	lv_label_set_text(lb_desc, txt_buf);
 	manual_system_maintenance(true);
 
@@ -1367,7 +1367,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 	emmcsn_path_impl(path, "/pkg2", "kernel.bin", &emmc_storage);
 	if (sd_save_to_file(pkg2_hdr->data, pkg2_hdr->sec_size[PKG2_SEC_KERNEL], path))
 		goto out;
-	strcat(txt_buf, "Kernel 提取到了 kernel.bin\n");
+	strcat(txt_buf, "Kernel 提取到 kernel.bin\n");
 	lv_label_set_text(lb_desc, txt_buf);
 	manual_system_maintenance(true);
 
@@ -1392,7 +1392,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 	if (sd_save_to_file(ini1, ini1_size, path))
 		goto out;
 
-	strcat(txt_buf, "INI1 提取到了 ini1.bin\n\n");
+	strcat(txt_buf, "INI1 提取到 ini1.bin\n\n");
 	lv_label_set_text(lb_desc, txt_buf);
 	manual_system_maintenance(true);
 
@@ -1422,7 +1422,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 			goto out;
 		}
 
-		s_printf(txt_buf + strlen(txt_buf), "%s kip 提取到了 %s.kip1\n", kip1->name, kip1->name);
+		s_printf(txt_buf + strlen(txt_buf), "%s kip 提取到 %s.kip1\n", kip1->name, kip1->name);
 		lv_label_set_text(lb_desc, txt_buf);
 		manual_system_maintenance(true);
 
@@ -1616,15 +1616,15 @@ static void _create_tab_tools_arc_autorcm(lv_theme_t *th, lv_obj_t *parent)
 	// Create Fix touch calibration button.
 	lv_obj_t *btn2 = lv_btn_create(h1, btn);
 	label_btn = lv_label_create(btn2, NULL);
-	lv_label_set_static_text(label_btn, SYMBOL_KEYBOARD"  校準觸摸屏");
+	lv_label_set_static_text(label_btn, SYMBOL_KEYBOARD"  校正觸控螢幕");
 	lv_obj_align(btn2, label_txt2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 	lv_btn_set_action(btn2, LV_BTN_ACTION_CLICK, _create_mbox_fix_touchscreen);
 
 	label_txt2 = lv_label_create(h1, NULL);
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
-		"允許您校準觸摸屏模組.\n"
-		"#FF8000 這可以解決Nyx和HOS中觸摸屏的任何問題.#");
+		"允許您校正觸控螢幕模組.\n"
+		"#FF8000 這可以解決Nyx和HOS中觸控螢幕的任何問題.#");
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 
@@ -1682,7 +1682,7 @@ static void _create_tab_tools_arc_autorcm(lv_theme_t *th, lv_obj_t *parent)
 		"#FF3C28 您將無法啟動.#");
 
 	if (h_cfg.rcm_patched)
-		strcat(txt_buf, " #FF8000 由於本機為補丁機, 本選項禁用!#");
+		strcat(txt_buf, " #FF8000 由於本機為硬破, 本選項禁用!#");
 
 	lv_obj_t *label_txt4 = lv_label_create(h2, NULL);
 	lv_label_set_recolor(label_txt4, true);
@@ -1733,8 +1733,7 @@ void create_tab_tools(lv_theme_t *th, lv_obj_t *parent)
 	lv_tabview_set_btns_pos(tv, LV_TABVIEW_BTNS_POS_BOTTOM);
 
 	lv_obj_t *tab1= lv_tabview_add_tab(tv, "eMMC "SYMBOL_DOT" SD 分區 "SYMBOL_DOT" USB");
-	lv_obj_t *tab2 = lv_tabview_add_tab(tv, "歸檔位 "SYMBOL_DOT" RCM "SYMBOL_DOT" 觸摸 "SYMBOL_DOT" Pkg1/2");
-
+	lv_obj_t *tab2 = lv_tabview_add_tab(tv, "歸檔位 "SYMBOL_DOT" RCM "SYMBOL_DOT" 觸控 "SYMBOL_DOT" Pkg1/2");
 	lv_obj_t *line_sep = lv_line_create(tv, NULL);
 	static const lv_point_t line_pp[] = { {0, 0}, { 0, LV_DPI / 4} };
 	lv_line_set_points(line_sep, line_pp, 2);

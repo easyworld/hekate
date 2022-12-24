@@ -807,7 +807,7 @@ bool nyx_emmc_check_battery_enough()
 			"#FF8000 電量檢查#\n\n"
 			"#FFDD00 電量不足無法繼續#\n"
 			"#FFDD00 指定的操作!#\n\n"
-			"請至少沖電到 #C7EA46 3650 mV#, 並重試!");
+			"請至少充電到 #C7EA46 3650 mV#, 並重試!");
 
 		lv_mbox_add_btns(mbox, mbox_btn_map, mbox_action);
 		lv_obj_set_width(mbox, LV_HOR_RES / 9 * 5);
@@ -1127,7 +1127,7 @@ static lv_res_t _create_mbox_poweroff(lv_obj_t *btn)
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES * 4 / 10);
 
-	lv_mbox_set_text(mbox, "#FF8000 你真的想#\n#FF8000 關機嗎?#");
+	lv_mbox_set_text(mbox, "#FF8000 你真的要#\n#FF8000 關機嗎?#");
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, _poweroff_action);
 
@@ -2056,10 +2056,10 @@ static void _create_tab_home(lv_theme_t *th, lv_obj_t *parent)
 	_create_text_button(th, NULL, btn_power_off, SYMBOL_POWER" 關機", _create_mbox_poweroff);
 	lv_obj_align(btn_power_off, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -LV_DPI / 4, -LV_DPI / 12);
 
-	_create_text_button(th, NULL, btn_reboot, SYMBOL_REBOOT" 重啟", _create_mbox_reboot);
+	_create_text_button(th, NULL, btn_reboot, SYMBOL_REBOOT" 重新開機", _create_mbox_reboot);
 	lv_obj_align(btn_reboot, btn_power_off, LV_ALIGN_OUT_LEFT_MID, 0, 0);
 
-	_create_text_button(th, NULL, btn_reload, SYMBOL_REFRESH" 重載", _create_mbox_reload);
+	_create_text_button(th, NULL, btn_reload, SYMBOL_REFRESH" 重新載入", _create_mbox_reload);
 	lv_obj_align(btn_reload, btn_reboot, LV_ALIGN_OUT_LEFT_MID, 0, 0);
 }
 

@@ -1102,7 +1102,7 @@ static lv_res_t _create_mbox_emmc_sandisk_report(lv_obj_t * btn)
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 8);
 
-	lv_mbox_set_text(mbox, "#C7EA46 閃迪設備報告#");
+	lv_mbox_set_text(mbox, "#C7EA46 SanDisk設備報告#");
 
 	u8 *buf = calloc(512, 1);
 	char *txt_buf = (char *)malloc(SZ_32K);
@@ -1824,8 +1824,6 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	manual_system_maintenance(true);
 
 	if (!sd_mount())
-		lv_label_set_text(lb_desc, "#FFDD00 初始化SD卡失敗!#");
-	else
 	{
 		lv_label_set_text(lb_desc, "#FFDD00 初始化SD卡失敗!#");
 		goto failed;

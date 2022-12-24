@@ -1216,7 +1216,7 @@ error:
 	if (boot_recovery)
 	{
 		// If a Recovery partition was found, ask user if rebooting into it is wanted.
-		strcat(txt_buf,"\n\n是否需要重啟進入Recovery\n以完成 Android 安裝?");
+		strcat(txt_buf,"\n\n是否重新開機進入Recovery\n以完成 Android 安裝?");
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_mbox_add_btns(mbox, mbox_btn_map2, _action_reboot_recovery);
 	}
@@ -1250,7 +1250,7 @@ static lv_res_t _action_flash_android(lv_obj_t *btn)
 	lv_label_set_recolor(lbl_status, true);
 	lv_label_set_text(lbl_status,
 		"本操作將會刷寫 #C7EA46 Kernel#, #C7EA46 DTB# 和 #C7EA46 Recovery#.\n"
-		"如果刷寫成功這些將會被刪除.\n"
+		"刷機成功後這些會被刪除.\n"
 		"你要繼續嗎?");
 
 	lv_mbox_add_btns(mbox, mbox_btn_map,  _action_flash_android_data);
