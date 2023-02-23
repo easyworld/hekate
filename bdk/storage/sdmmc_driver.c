@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -233,7 +233,7 @@ static void _sdmmc_autocal_execute(sdmmc_t *sdmmc, u32 power)
 	// Disable E_INPUT to conserve power.
 	sdmmc->regs->sdmemcmppadctl &= ~TEGRA_MMC_SDMEMCOMPPADCTRL_PAD_E_INPUT_PWRD;
 
-	if(should_enable_sd_clock)
+	if (should_enable_sd_clock)
 		sdmmc->regs->clkcon |= SDHCI_CLOCK_CARD_EN;
 }
 
@@ -521,7 +521,7 @@ static int _sdmmc_wait_cmd_data_inhibit(sdmmc_t *sdmmc, bool wait_dat)
 	_sdmmc_commit_changes(sdmmc);
 
 	u32 timeout = get_tmr_ms() + 2000;
-	while(sdmmc->regs->prnsts & SDHCI_CMD_INHIBIT)
+	while (sdmmc->regs->prnsts & SDHCI_CMD_INHIBIT)
 		if (get_tmr_ms() > timeout)
 		{
 			_sdmmc_reset(sdmmc);
@@ -1151,12 +1151,11 @@ static int _sdmmc_config_sdmmc1(bool t210b01)
 	// Configure SD card detect.
 	PINMUX_AUX(PINMUX_AUX_GPIO_PZ1) = PINMUX_INPUT_ENABLE | PINMUX_PULL_UP | 2; // GPIO control, pull up.
 	APB_MISC(APB_MISC_GP_VGPIO_GPIO_MUX_SEL) = 0;
-	gpio_config(GPIO_PORT_Z, GPIO_PIN_1, GPIO_MODE_GPIO);
-	gpio_output_enable(GPIO_PORT_Z, GPIO_PIN_1, GPIO_OUTPUT_DISABLE);
+	gpio_direction_input(GPIO_PORT_Z, GPIO_PIN_1);
 	usleep(100);
 
 	// Check if SD card is inserted.
-	if(!sdmmc_get_sd_inserted())
+	if (!sdmmc_get_sd_inserted())
 		return 0;
 
 	/*
@@ -1192,16 +1191,14 @@ static int _sdmmc_config_sdmmc1(bool t210b01)
 	PMC(APBDEV_PMC_NO_IOPOWER) &= ~(PMC_NO_IOPOWER_SDMMC1_IO_EN);
 	(void)PMC(APBDEV_PMC_NO_IOPOWER); // Commit write.
 
+	// Set enable SD card power.
+	PINMUX_AUX(PINMUX_AUX_DMIC3_CLK) = PINMUX_PULL_DOWN | 2;
+	gpio_direction_output(GPIO_PORT_E, GPIO_PIN_4, GPIO_HIGH);
+	usleep(10000);
+
 	// Inform IO pads that voltage is gonna be 3.3V.
 	PMC(APBDEV_PMC_PWR_DET_VAL) |= PMC_PWR_DET_SDMMC1_IO_EN;
 	(void)PMC(APBDEV_PMC_PWR_DET_VAL); // Commit write.
-
-	// Set enable SD card power.
-	PINMUX_AUX(PINMUX_AUX_DMIC3_CLK) = PINMUX_PULL_DOWN | 2;
-	gpio_config(GPIO_PORT_E, GPIO_PIN_4, GPIO_MODE_GPIO);
-	gpio_write(GPIO_PORT_E, GPIO_PIN_4, GPIO_HIGH);
-	gpio_output_enable(GPIO_PORT_E, GPIO_PIN_4, GPIO_OUTPUT_ENABLE);
-	usleep(10000);
 
 	// Enable SD card IO power.
 	max7762x_regulator_set_voltage(REGULATOR_LDO2, 3300000);
@@ -1425,7 +1422,7 @@ int sdmmc_execute_cmd(sdmmc_t *sdmmc, sdmmc_cmd_t *cmd, sdmmc_req_t *req, u32 *b
 
 int sdmmc_enable_low_voltage(sdmmc_t *sdmmc)
 {
-	if(sdmmc->id != SDMMC_1)
+	if (sdmmc->id != SDMMC_1)
 		return 0;
 
 	if (!sdmmc_setup_clock(sdmmc, SDHCI_TIMING_UHS_SDR12))

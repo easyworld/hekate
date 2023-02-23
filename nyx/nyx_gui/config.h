@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -37,6 +37,7 @@ typedef struct _hekate_config
 	bool t210b01;
 	bool emummc_force_disable;
 	bool rcm_patched;
+	bool autorcm_enabled;
 	u32  errors;
 	hos_eks_mbr_t *eks;
 } hekate_config;

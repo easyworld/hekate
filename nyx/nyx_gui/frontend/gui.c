@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -643,7 +643,7 @@ void manual_system_maintenance(bool refresh)
 	for (u32 task_idx = 0; task_idx < (sizeof(system_maintenance_tasks_t) / sizeof(lv_task_t *)); task_idx++)
 	{
 		lv_task_t *task = system_tasks.tasks[task_idx];
-		if(task && (lv_tick_elaps(task->last_run) >= task->period))
+		if (task && (lv_tick_elaps(task->last_run) >= task->period))
 		{
 			task->last_run = lv_tick_get();
 			task->task(task->param);
@@ -1101,6 +1101,7 @@ static lv_res_t _create_mbox_reboot(lv_obj_t *btn)
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
 	static const char * mbox_btn_map[] = { "\221原系統", "\221RCM", "\221取消", "" };
+	static const char * mbox_btn_map_autorcm[] = { "\261原系統", "\221RCM", "\221取消", "" };
 	static const char * mbox_btn_map_patched[] = { "\221原系統", "\221硬破", "\221取消", "" };
 	lv_obj_t *mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
@@ -1108,7 +1109,10 @@ static lv_res_t _create_mbox_reboot(lv_obj_t *btn)
 
 	lv_mbox_set_text(mbox, "#FF8000 選擇重啟後載入什麼系統:#");
 
-	lv_mbox_add_btns(mbox, h_cfg.rcm_patched ? mbox_btn_map_patched : mbox_btn_map, _reboot_action);
+	if (h_cfg.rcm_patched)
+		lv_mbox_add_btns(mbox, mbox_btn_map_patched, _reboot_action);
+	else
+		lv_mbox_add_btns(mbox, !h_cfg.autorcm_enabled ? mbox_btn_map : mbox_btn_map_autorcm, _reboot_action);
 
 	lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
 	lv_obj_set_top(mbox, true);
@@ -2279,6 +2283,7 @@ void first_time_bpmp_clock(void *param)
 	// Remove task.
 	lv_task_del(task_bpmp_clock);
 
+	// Max clock seems fine. Save it.
 	n_cfg.bpmp_clock = 1;
 	create_nyx_config_entry(false);
 }
@@ -2402,7 +2407,7 @@ static void _nyx_main_menu(lv_theme_t * th)
 	}
 
 	if (!n_cfg.bpmp_clock)
-		task_bpmp_clock = lv_task_create(first_time_bpmp_clock, 5000, LV_TASK_PRIO_LOWEST, NULL);
+		task_bpmp_clock = lv_task_create(first_time_bpmp_clock, 10000, LV_TASK_PRIO_LOWEST, NULL);
 }
 
 void nyx_load_and_run()

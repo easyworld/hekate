@@ -1,7 +1,7 @@
 /*
  * VIC driver for Tegra X1
  *
- * Copyright (c) 2018-2019 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -374,7 +374,7 @@ static void _vic_write_priv(u32 addr, u32 data)
 		VIC(PVIC_FALCON_ADDR) = 0;
 }
 
-int _vic_wait_idle()
+static int _vic_wait_idle()
 {
 	u32 timeout_count = 15000; // 150ms.
 

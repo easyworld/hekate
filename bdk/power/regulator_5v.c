@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 CTCaer
+ * Copyright (c) 2019-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -34,18 +34,14 @@ void regulator_5v_enable(u8 dev)
 	{
 		// Fan and Rail power from battery 5V regulator.
 		PINMUX_AUX(PINMUX_AUX_SATA_LED_ACTIVE) = 1;
-		gpio_config(GPIO_PORT_A, GPIO_PIN_5, GPIO_MODE_GPIO);
-		gpio_output_enable(GPIO_PORT_A, GPIO_PIN_5, GPIO_OUTPUT_ENABLE);
-		gpio_write(GPIO_PORT_A, GPIO_PIN_5, GPIO_HIGH);
+		gpio_direction_output(GPIO_PORT_A, GPIO_PIN_5, GPIO_HIGH);
 
 		// Only Icosa has USB 5V VBUS rails.
 		if (tegra_t210)
 		{
 			// Fan and Rail power from USB 5V VBUS.
 			PINMUX_AUX(PINMUX_AUX_USB_VBUS_EN0) = PINMUX_LPDR | 1;
-			gpio_config(GPIO_PORT_CC, GPIO_PIN_4, GPIO_MODE_GPIO);
-			gpio_output_enable(GPIO_PORT_CC, GPIO_PIN_4, GPIO_OUTPUT_ENABLE);
-			gpio_write(GPIO_PORT_CC, GPIO_PIN_4, GPIO_LOW);
+			gpio_direction_output(GPIO_PORT_CC, GPIO_PIN_4, GPIO_LOW);
 		}
 
 		// Make sure GPIO IO power is enabled.
@@ -57,15 +53,6 @@ void regulator_5v_enable(u8 dev)
 		(void)PMC(APBDEV_PMC_PWR_DET_VAL); // Commit write.
 
 		usb_src = false;
-
-		// VBUS/Fan regulator 5V for Iowa/Hoag/Aula.
-		if (!tegra_t210)
-		{
-			PINMUX_AUX(PINMUX_AUX_ALS_PROX_INT) = PINMUX_PULL_DOWN;
-			gpio_config(GPIO_PORT_X, GPIO_PIN_3, GPIO_MODE_GPIO);
-			gpio_output_enable(GPIO_PORT_X, GPIO_PIN_3, GPIO_OUTPUT_ENABLE);
-			gpio_write(GPIO_PORT_X, GPIO_PIN_3, GPIO_HIGH);
-		}
 	}
 	reg_5v_dev |= dev;
 }
@@ -89,10 +76,6 @@ void regulator_5v_disable(u8 dev)
 			usb_src = false;
 
 		}
-
-		// VBUS/Fan regulator 5V for Hoag/Aula.
-		if (!tegra_t210)
-			gpio_write(GPIO_PORT_X, GPIO_PIN_3, GPIO_LOW);
 	}
 }
 

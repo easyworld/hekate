@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -101,42 +101,33 @@ static void _config_gpios(bool nx_hoag)
 
 	if (!nx_hoag)
 	{
-		// Turn Joy-Con detect on. (GPIO mode for UARTB/C TX pins.)
+		// Turn Joy-Con detect on. (GPIO mode and input logic for UARTB/C TX pins.)
 		PINMUX_AUX(PINMUX_AUX_UART2_TX) = 0;
 		PINMUX_AUX(PINMUX_AUX_UART3_TX) = 0;
-		gpio_config(GPIO_PORT_G, GPIO_PIN_0, GPIO_MODE_GPIO);
-		gpio_config(GPIO_PORT_D, GPIO_PIN_1, GPIO_MODE_GPIO);
-
-		// Enable input logic for UARTB/C TX pins.
-		gpio_output_enable(GPIO_PORT_G, GPIO_PIN_0, GPIO_OUTPUT_DISABLE);
-		gpio_output_enable(GPIO_PORT_D, GPIO_PIN_1, GPIO_OUTPUT_DISABLE);
+		gpio_direction_input(GPIO_PORT_G, GPIO_PIN_0);
+		gpio_direction_input(GPIO_PORT_D, GPIO_PIN_1);
 	}
 
 	// Set Joy-Con IsAttached pinmux. Shared with UARTB/UARTC TX.
 	PINMUX_AUX(PINMUX_AUX_GPIO_PE6) = PINMUX_INPUT_ENABLE | PINMUX_TRISTATE;
 	PINMUX_AUX(PINMUX_AUX_GPIO_PH6) = PINMUX_INPUT_ENABLE | PINMUX_TRISTATE;
 
-	// Set Joy-Con IsAttached mode. Shared with UARTB/UARTC TX.
-	gpio_config(GPIO_PORT_E, GPIO_PIN_6, GPIO_MODE_GPIO);
-	gpio_config(GPIO_PORT_H, GPIO_PIN_6, GPIO_MODE_GPIO);
-
-	// Enable input logic for Joy-Con IsAttached pins.
-	gpio_output_enable(GPIO_PORT_E, GPIO_PIN_6, GPIO_OUTPUT_DISABLE);
-	gpio_output_enable(GPIO_PORT_H, GPIO_PIN_6, GPIO_OUTPUT_DISABLE);
+	// Configure Joy-Con IsAttached pins. Shared with UARTB/UARTC TX.
+	gpio_direction_input(GPIO_PORT_E, GPIO_PIN_6);
+	gpio_direction_input(GPIO_PORT_H, GPIO_PIN_6);
 
 	pinmux_config_i2c(I2C_1);
 	pinmux_config_i2c(I2C_5);
 	pinmux_config_uart(UART_A);
 
 	// Configure volume up/down as inputs.
-	gpio_config(GPIO_PORT_X, GPIO_PIN_6, GPIO_MODE_GPIO);
-	gpio_config(GPIO_PORT_X, GPIO_PIN_7, GPIO_MODE_GPIO);
-	gpio_output_enable(GPIO_PORT_X, GPIO_PIN_6, GPIO_OUTPUT_DISABLE);
-	gpio_output_enable(GPIO_PORT_X, GPIO_PIN_7, GPIO_OUTPUT_DISABLE);
+	gpio_direction_input(GPIO_PORT_X, GPIO_PIN_6 | GPIO_PIN_7);
 
-	// Configure HOME as inputs. (Shared with UARTB RTS).
+	// Configure HOME as input. (Shared with UARTB RTS).
 	PINMUX_AUX(PINMUX_AUX_BUTTON_HOME) = PINMUX_INPUT_ENABLE | PINMUX_TRISTATE;
-	gpio_config(GPIO_PORT_Y, GPIO_PIN_1, GPIO_MODE_GPIO);
+	gpio_direction_input(GPIO_PORT_Y, GPIO_PIN_1);
+
+	// Power button can be configured for hoag here. Only SKU where it's connected.
 }
 
 static void _config_pmc_scratch()
@@ -328,7 +319,7 @@ static void _config_regulators(bool tegra_t210)
 
 void hw_init()
 {
-	// Get Chip ID.
+	// Get Chip ID and SKU.
 	bool tegra_t210 = hw_get_chip_id() == GP_HIDREV_MAJOR_T210;
 	bool nx_hoag = fuse_read_hw_type() == FUSE_NX_HW_TYPE_HOAG;
 
@@ -385,7 +376,7 @@ void hw_init()
 	// Initialize I2C5, mandatory for PMIC.
 	i2c_init(I2C_5);
 
-	// Power up Joycon MCU (Sio) on Hoag as it's required for I2C1 communication.
+	// Enable LDO8 on HOAG as it also powers I2C1 IO pads.
 	if (nx_hoag)
 	{
 		max7762x_regulator_set_voltage(REGULATOR_LDO8, 2800000);
@@ -422,7 +413,9 @@ void hw_init()
 
 void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 {
-	// Disable BPMP max clock.
+	bool tegra_t210 = hw_get_chip_id() == GP_HIDREV_MAJOR_T210;
+
+	// Scale down BPMP clock.
 	bpmp_clk_rate_set(BPMP_CLK_NORMAL);
 
 #ifdef BDK_HW_EXTRA_DEINIT
@@ -435,14 +428,19 @@ void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 	regulator_5v_disable(REGULATOR_5V_ALL);
 #endif
 
-	// Flush/disable MMU cache and set DRAM clock to 204MHz.
-	bpmp_mmu_disable();
+	// set DRAM clock to 204MHz.
 	minerva_change_freq(FREQ_204);
 	nyx_str->mtc_cfg.init_done = 0;
 
+	// Flush/disable MMU cache.
+	bpmp_mmu_disable();
+
 	// Re-enable clocks to Audio Processing Engine as a workaround to hanging.
-	CLOCK(CLK_RST_CONTROLLER_CLK_OUT_ENB_V) |= BIT(CLK_V_AHUB);
-	CLOCK(CLK_RST_CONTROLLER_CLK_OUT_ENB_Y) |= BIT(CLK_Y_APE);
+	if (tegra_t210)
+	{
+		CLOCK(CLK_RST_CONTROLLER_CLK_OUT_ENB_V) |= BIT(CLK_V_AHUB);
+		CLOCK(CLK_RST_CONTROLLER_CLK_OUT_ENB_Y) |= BIT(CLK_Y_APE);
+	}
 
 	// Do coreboot mitigations.
 	if (coreboot)
@@ -451,11 +449,9 @@ void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 
 		clock_disable_cl_dvfs();
 
-		// Disable Joy-con GPIOs.
+		// Disable Joy-con detect in order to restore UART TX.
 		gpio_config(GPIO_PORT_G, GPIO_PIN_0, GPIO_MODE_SPIO);
 		gpio_config(GPIO_PORT_D, GPIO_PIN_1, GPIO_MODE_SPIO);
-		gpio_config(GPIO_PORT_E, GPIO_PIN_6, GPIO_MODE_SPIO);
-		gpio_config(GPIO_PORT_H, GPIO_PIN_6, GPIO_MODE_SPIO);
 
 		// Reinstate SD controller power.
 		PMC(APBDEV_PMC_NO_IOPOWER) &= ~(PMC_NO_IOPOWER_SDMMC1_IO_EN);
@@ -472,20 +468,10 @@ void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 		display_backlight_brightness(brightness, 0);
 		break;
 	case BL_MAGIC_L4TLDR_SLD:
-		// Do not disable backlight at all.
+		// Do not disable display or backlight at all.
 		break;
 	default:
 		display_end();
 		clock_disable_host1x();
-	}
-
-	// Enable clock to USBD and init SDMMC1 to avoid hangs with bad hw inits.
-	if (bl_magic == BL_MAGIC_BROKEN_HWI)
-	{
-		CLOCK(CLK_RST_CONTROLLER_CLK_ENB_L_SET) = BIT(CLK_L_USBD);
-		sdmmc_init(&sd_sdmmc, SDMMC_1, SDMMC_POWER_3_3, SDMMC_BUS_WIDTH_1, SDHCI_TIMING_SD_ID, 0);
-		clock_disable_cl_dvfs();
-
-		msleep(200);
 	}
 }

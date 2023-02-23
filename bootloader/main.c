@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018 naehrwert
  *
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -85,9 +85,9 @@ void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t
 
 void check_power_off_from_hos()
 {
-	// Power off on AutoRCM wakeup from HOS shutdown. For modchips/dongles.
-	u8 hosWakeup = i2c_recv_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_IRQTOP);
-	if (hosWakeup & MAX77620_IRQ_TOP_RTC_MASK)
+	// Power off on alarm wakeup from HOS shutdown. For modchips/dongles.
+	u8 hos_wakeup = i2c_recv_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_IRQTOP);
+	if (hos_wakeup & MAX77620_IRQ_TOP_RTC_MASK)
 	{
 		if (h_cfg.autohosoff == 1)
 		{
@@ -144,7 +144,7 @@ static void _reloc_patcher(u32 payload_dst, u32 payload_src, u32 payload_size)
 
 	if (payload_size == 0x7000)
 	{
-		memcpy((u8 *)(payload_src + ALIGN(PATCHED_RELOC_SZ, 0x10)), coreboot_addr, 0x7000); //Bootblock
+		memcpy((u8 *)(payload_src + ALIGN(PATCHED_RELOC_SZ, 0x10)), coreboot_addr, 0x7000); // Bootblock.
 		*(vu32 *)CBFS_DRAM_EN_ADDR = CBFS_DRAM_MAGIC;
 	}
 }
@@ -311,6 +311,7 @@ static void _launch_payloads()
 		// Build configuration menu.
 		ments[0].type    = MENT_BACK;
 		ments[0].caption = "Back";
+
 		ments[1].type    = MENT_CHGLINE;
 
 		while (true)
@@ -389,14 +390,15 @@ static void _launch_ini_list()
 	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 3));
 	ments[0].type    = MENT_BACK;
 	ments[0].caption = "Back";
+
 	ments[1].type    = MENT_CHGLINE;
 
 	u32 sec_idx = 2;
 	LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_list_sections, link)
 	{
-		if (!strcmp(ini_sec->name, "config") ||
-			ini_sec->type == INI_COMMENT     ||
-			ini_sec->type == INI_NEWLINE)
+		if (ini_sec->type == INI_COMMENT ||
+			ini_sec->type == INI_NEWLINE ||
+			!strcmp(ini_sec->name, "config"))
 			continue;
 
 		ments[sec_idx].type    = ini_sec->type;
@@ -506,17 +508,14 @@ static void _launch_config()
 	// Load emuMMC configuration.
 	emummc_load_cfg();
 
-	// Check that main configuration exists and parse it.
-	if (!ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false))
-	{
-		EPRINTF("Could not open 'bootloader/hekate_ipl.ini'!");
-		goto parse_failed;
-	}
+	// Parse main configuration.
+	ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false);
 
 	// Build configuration menu.
 	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 6));
 	ments[0].type    = MENT_BACK;
 	ments[0].caption = "Back";
+
 	ments[1].type    = MENT_CHGLINE;
 
 	ments[2].type    = MENT_HANDLER;
@@ -532,9 +531,9 @@ static void _launch_config()
 	u32 sec_idx = 5;
 	LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_sections, link)
 	{
-		if (!strcmp(ini_sec->name, "config") ||
-			ini_sec->type == INI_COMMENT     ||
-			ini_sec->type == INI_NEWLINE)
+		if (ini_sec->type == INI_COMMENT ||
+			ini_sec->type == INI_NEWLINE ||
+			!strcmp(ini_sec->name, "config"))
 			continue;
 
 		ments[sec_idx].type    = ini_sec->type;
@@ -693,15 +692,16 @@ static void _nyx_load_run()
 	reloc_meta_t *reloc = (reloc_meta_t *)(IPL_LOAD_ADDR + RELOC_META_OFF);
 	memcpy((u8 *)nyx_str->hekate, (u8 *)reloc->start, reloc->end - reloc->start);
 
-	void (*nyx_ptr)() = (void *)nyx;
+	// Do one last training.
+	minerva_periodic_training();
 
 	bpmp_mmu_disable();
 	bpmp_clk_rate_set(BPMP_CLK_NORMAL);
-	minerva_periodic_training();
 
-	// Some cards (Sandisk U1), do not like a fast power cycle. Wait min 100ms.
+	// Some cards (Sandisk U1), do not like a fast power cycle.
 	sdmmc_storage_init_wait_sd();
 
+	void (*nyx_ptr)() = (void *)nyx;
 	(*nyx_ptr)();
 }
 
@@ -1467,7 +1467,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.0.1", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.0.2", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2019 CTCaer
+ * Copyright (c) 2019-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -84,6 +84,19 @@ void gpio_write(u32 port, u32 pins, int high)
 		GPIO(port_offset) &= ~pins;
 
 	(void)GPIO(port_offset); // Commit the write.
+}
+
+void gpio_direction_input(u32 port, u32 pins)
+{
+	gpio_output_enable(port, pins, GPIO_OUTPUT_DISABLE);
+	gpio_config(port, pins, GPIO_MODE_GPIO);
+}
+
+void gpio_direction_output(u32 port, u32 pins, int high)
+{
+	gpio_output_enable(port, pins, GPIO_OUTPUT_ENABLE);
+	gpio_config(port, pins, GPIO_MODE_GPIO);
+	gpio_write(port, pins, high);
 }
 
 int gpio_read(u32 port, u32 pins)

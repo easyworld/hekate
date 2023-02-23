@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -56,7 +56,7 @@ static lv_obj_t *_create_container(lv_obj_t *parent)
 	return h1;
 }
 
-bool get_autorcm_status(bool toggle)
+bool get_set_autorcm_status(bool toggle)
 {
 	u32 sector;
 	u8 corr_mod0, mod1;
@@ -128,6 +128,8 @@ out:
 	free(tempbuf);
 	emmc_end();
 
+	h_cfg.autorcm_enabled = enabled;
+
 	return enabled;
 }
 
@@ -141,7 +143,7 @@ static lv_res_t _create_mbox_autorcm_status(lv_obj_t *btn)
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 
-	bool enabled = get_autorcm_status(true);
+	bool enabled = get_set_autorcm_status(true);
 
 	if (enabled)
 	{
@@ -1227,21 +1229,8 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 
 	if (h_cfg.t210b01 || kb <= KB_FIRMWARE_VERSION_620)
 	{
-		const u8 *sec_map = pkg1_unpack(warmboot, secmon, loader, pkg1_id, pkg1 + pk1_offset);
-
+		pkg1_unpack(warmboot, secmon, loader, pkg1_id, pkg1 + pk1_offset);
 		pk11_hdr_t *hdr_pk11 = (pk11_hdr_t *)(pkg1 + pk1_offset + pkg1_id->pkg11_off + 0x20);
-
-		// Use correct sizes.
-		u32 sec_size[3] = { hdr_pk11->wb_size, hdr_pk11->ldr_size, hdr_pk11->sm_size };
-		for (u32 i = 0; i < 3; i++)
-		{
-			if (sec_map[i] == PK11_SECTION_WB)
-				hdr_pk11->wb_size = sec_size[i];
-			else if (sec_map[i] == PK11_SECTION_LD)
-				hdr_pk11->ldr_size = sec_size[i];
-			else if (sec_map[i] == PK11_SECTION_SM)
-				hdr_pk11->sm_size = sec_size[i];
-		}
 
 		// Display info.
 		s_printf(txt_buf + strlen(txt_buf),
@@ -1660,7 +1649,7 @@ static void _create_tab_tools_arc_autorcm(lv_theme_t *th, lv_obj_t *parent)
 	lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, _create_mbox_autorcm_status);
 
 	// Set default state for AutoRCM and lock it out if patched unit.
-	if (get_autorcm_status(false))
+	if (get_set_autorcm_status(false))
 		lv_btn_set_state(btn3, LV_BTN_STATE_TGL_REL);
 	else
 		lv_btn_set_state(btn3, LV_BTN_STATE_REL);

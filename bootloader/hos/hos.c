@@ -2,7 +2,7 @@
  * Copyright (c) 2018 naehrwert
  * Copyright (c) 2018 st4rk
  * Copyright (c) 2018 Ced2911
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  * Copyright (c) 2018 balika011
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -119,6 +119,7 @@ static const u8 master_kekseed_t210_tsec_v4[][SE_KEY_128_SIZE] = {
 	{ 0x68, 0x3B, 0xCA, 0x54, 0xB8, 0x6F, 0x92, 0x48, 0xC3, 0x05, 0x76, 0x87, 0x88, 0x70, 0x79, 0x23 }, // 13.0.0.
 	{ 0xF0, 0x13, 0x37, 0x9A, 0xD5, 0x63, 0x51, 0xC3, 0xB4, 0x96, 0x35, 0xBC, 0x9C, 0xE8, 0x76, 0x81 }, // 14.0.0.
 	{ 0x6E, 0x77, 0x86, 0xAC, 0x83, 0x0A, 0x8D, 0x3E, 0x7D, 0xB7, 0x66, 0xA0, 0x22, 0xB7, 0x6E, 0x67 }, // 15.0.0.
+	{ 0x99, 0x22, 0x09, 0x57, 0xA7, 0xF9, 0x5E, 0x94, 0xFE, 0x78, 0x7F, 0x41, 0xD6, 0xE7, 0x56, 0xE6 }, // 16.0.0.
 };
 
 //!TODO: Update on mkey changes.
@@ -133,6 +134,7 @@ static const u8 master_kekseed_t210b01[][SE_KEY_128_SIZE] = {
 	{ 0x52, 0x71, 0x9B, 0xDF, 0xA7, 0x8B, 0x61, 0xD8, 0xD5, 0x85, 0x11, 0xE4, 0x8E, 0x4F, 0x74, 0xC6 }, // 13.0.0.
 	{ 0xD2, 0x68, 0xC6, 0x53, 0x9D, 0x94, 0xF9, 0xA8, 0xA5, 0xA8, 0xA7, 0xC8, 0x8F, 0x53, 0x4B, 0x7A }, // 14.0.0.
 	{ 0xEC, 0x61, 0xBC, 0x82, 0x1E, 0x0F, 0x5A, 0xC3, 0x2B, 0x64, 0x3F, 0x9D, 0xD6, 0x19, 0x22, 0x2D }, // 15.0.0.
+	{ 0xA5, 0xEC, 0x16, 0x39, 0x1A, 0x30, 0x16, 0x08, 0x2E, 0xCF, 0x09, 0x6F, 0x5E, 0x7C, 0xEE, 0xA9 }, // 16.0.0.
 };
 
 static const u8 console_keyseed[SE_KEY_128_SIZE] =
@@ -176,10 +178,10 @@ static void _se_lock(bool lock_se)
 	gfx_printf("SE(0x4) = %08X\n", SE(0x4));
 	gfx_printf("SE(SE_CRYPTO_SECURITY_PERKEY_REG) = %08X\n", SE(SE_CRYPTO_SECURITY_PERKEY_REG));
 	gfx_printf("SE(SE_RSA_SECURITY_PERKEY_REG) = %08X\n", SE(SE_RSA_SECURITY_PERKEY_REG));
-	for(u32 i = 0; i < 16; i++)
+	for (u32 i = 0; i < 16; i++)
 		gfx_printf("%02X ", SE(SE_CRYPTO_KEYTABLE_ACCESS_REG + i * 4) & 0xFF);
 	gfx_putc('\n');
-	for(u32 i = 0; i < 2; i++)
+	for (u32 i = 0; i < 2; i++)
 		gfx_printf("%02X ", SE(SE_RSA_KEYTABLE_ACCESS_REG + i * 4) & 0xFF);
 	gfx_putc('\n');
 	gfx_hexdump(SE_BASE, (void *)SE_BASE, 0x400);*/
@@ -335,8 +337,8 @@ int hos_keygen_t210b01(u32 kb)
 	se_aes_unwrap_key(10, 14, console_keyseed_4xx);
 
 	// Derive master key.
-	se_aes_unwrap_key(7, 12, &master_kekseed_t210b01[kb - KB_FIRMWARE_VERSION_600]);
-	se_aes_unwrap_key(7, 7, master_keyseed_retail);
+	se_aes_unwrap_key(7, 12, master_kekseed_t210b01[kb - KB_FIRMWARE_VERSION_600]);
+	se_aes_unwrap_key(7, 7,  master_keyseed_retail);
 
 	// Derive latest pkg2 key.
 	se_aes_unwrap_key(8, 7, package2_keyseed);
@@ -1070,6 +1072,9 @@ int hos_launch(ini_sec_t *cfg)
 	sd_end();
 	emmc_end();
 
+	// Close AHB aperture. Important when stock old secmon is used.
+	mc_disable_ahb_redirect();
+
 	gfx_printf("Rebuilt & loaded pkg2\n\n%kBooting...%k\n", TXT_CLR_GREENISH, TXT_CLR_DEFAULT);
 
 	// Clear pkg1/pkg2 keys.
@@ -1172,7 +1177,7 @@ int hos_launch(ini_sec_t *cfg)
 	else
 		ccplex_boot_cpu0(secmon_base);
 
-	// Halt ourselves in waitevent state and resume if there's JTAG activity.
+	// Halt ourselves in wait-event state.
 	while (true)
 		bpmp_halt();
 

@@ -2,7 +2,7 @@
  * Touch driver for Nintendo Switch's STM FingerTip S (4CD60D) touch controller
  *
  * Copyright (c) 2018 langerhans
- * Copyright (c) 2018-2020 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -407,14 +407,7 @@ int touch_power_on()
 
 	// Configure touchscreen VDD GPIO.
 	PINMUX_AUX(PINMUX_AUX_DAP4_SCLK) = PINMUX_PULL_DOWN | 1;
-	gpio_config(GPIO_PORT_J, GPIO_PIN_7, GPIO_MODE_GPIO);
-	gpio_output_enable(GPIO_PORT_J, GPIO_PIN_7, GPIO_OUTPUT_ENABLE);
-	gpio_write(GPIO_PORT_J, GPIO_PIN_7, GPIO_HIGH);
-
-	// Touscreen IRQ.
-	// PINMUX_AUX(PINMUX_AUX_TOUCH_INT) = PINMUX_INPUT_ENABLE | PINMUX_TRISTATE | PINMUX_PULL_UP | 3;
-	// gpio_config(GPIO_PORT_X, GPIO_PIN_1, GPIO_MODE_GPIO);
-	// gpio_write(GPIO_PORT_X, GPIO_PIN_1, GPIO_LOW);
+	gpio_direction_output(GPIO_PORT_J, GPIO_PIN_7, GPIO_HIGH);
 
 	// Configure Touscreen and GCAsic shared GPIO.
 	PINMUX_AUX(PINMUX_AUX_CAM_I2C_SDA) = PINMUX_LPDR | PINMUX_INPUT_ENABLE | PINMUX_TRISTATE | PINMUX_PULL_UP | 2;

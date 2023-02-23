@@ -1,7 +1,7 @@
 /*
  * BPMP-Lite Cache/MMU and Frequency driver for Tegra X1
  *
- * Copyright (c) 2019-2022 CTCaer
+ * Copyright (c) 2019-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -134,7 +134,7 @@ void bpmp_mmu_maintenance(u32 op, bool force)
 	// This is a blocking operation.
 	BPMP_CACHE_CTRL(BPMP_CACHE_MAINT_REQ) = MAINT_REQ_WAY_BITMAP(0xF) | op;
 
-	while(!(BPMP_CACHE_CTRL(BPMP_CACHE_INT_RAW_EVENT) & INT_MAINT_DONE))
+	while (!(BPMP_CACHE_CTRL(BPMP_CACHE_INT_RAW_EVENT) & INT_MAINT_DONE))
 		;
 
 	BPMP_CACHE_CTRL(BPMP_CACHE_INT_CLEAR) = BPMP_CACHE_CTRL(BPMP_CACHE_INT_RAW_EVENT);
@@ -206,6 +206,7 @@ void bpmp_mmu_disable()
 const u8 pll_divn[] = {
 	0,   // BPMP_CLK_NORMAL:      408MHz  0% - 136MHz APB.
 	85,  // BPMP_CLK_HIGH_BOOST:  544MHz 33% - 136MHz APB.
+	88,  // BPMP_CLK_HIGH2_BOOST: 563MHz 38% - 141MHz APB.
 	90,  // BPMP_CLK_SUPER_BOOST: 576MHz 41% - 144MHz APB.
 	92   // BPMP_CLK_HYPER_BOOST: 589MHz 44% - 147MHz APB.
 	// Do not use for public releases!
