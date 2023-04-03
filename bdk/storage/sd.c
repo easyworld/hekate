@@ -22,11 +22,18 @@
 #include <libs/fatfs/ff.h>
 #include <mem/heap.h>
 
+#ifndef BDK_SDMMC_UHS_DDR200_SUPPORT
+#define SD_DEFAULT_SPEED SD_UHS_SDR104
+#else
+#define SD_DEFAULT_SPEED SD_UHS_DDR208
+#endif
+
 static bool sd_mounted = false;
 static bool sd_init_done = false;
 static bool insertion_event = false;
 static u16  sd_errors[3] = { 0 }; // Init and Read/Write errors.
-static u32  sd_mode = SD_UHS_SDR104;
+static u32  sd_mode = SD_DEFAULT_SPEED;
+
 
 sdmmc_t sd_sdmmc;
 sdmmc_storage_t sd_storage;
@@ -79,7 +86,11 @@ u32 sd_get_mode()
 int sd_init_retry(bool power_cycle)
 {
 	u32 bus_width = SDMMC_BUS_WIDTH_4;
+#ifndef BDK_SDMMC_UHS_DDR200_SUPPORT
 	u32 type = SDHCI_TIMING_UHS_SDR104;
+#else
+	u32 type = SDHCI_TIMING_UHS_DDR200;
+#endif
 
 	// Power cycle SD card.
 	if (power_cycle)
@@ -93,21 +104,33 @@ int sd_init_retry(bool power_cycle)
 	{
 	case SD_INIT_FAIL: // Reset to max.
 		return 0;
+
 	case SD_1BIT_HS25:
 		bus_width = SDMMC_BUS_WIDTH_1;
 		type = SDHCI_TIMING_SD_HS25;
 		break;
+
 	case SD_4BIT_HS25:
 		type = SDHCI_TIMING_SD_HS25;
 		break;
+
 	case SD_UHS_SDR82:
 		type = SDHCI_TIMING_UHS_SDR82;
 		break;
+
 	case SD_UHS_SDR104:
 		type = SDHCI_TIMING_UHS_SDR104;
 		break;
+
+#ifdef BDK_SDMMC_UHS_DDR200_SUPPORT
+	case SD_UHS_DDR208:
+		type = SDHCI_TIMING_UHS_DDR200;
+		break;
+#endif
+
 	default:
-		sd_mode = SD_UHS_SDR104;
+		sd_mode = SD_DEFAULT_SPEED;
+		break;
 	}
 
 	int res = sdmmc_storage_init_sd(&sd_storage, &sd_sdmmc, bus_width, type);
@@ -135,7 +158,7 @@ bool sd_initialize(bool power_cycle)
 			return true;
 		else if (!sdmmc_get_sd_inserted()) // SD Card is not inserted.
 		{
-			sd_mode = SD_UHS_SDR104;
+			sd_mode = SD_DEFAULT_SPEED;
 			break;
 		}
 		else
@@ -194,8 +217,12 @@ bool sd_mount()
 
 static void _sd_deinit(bool deinit)
 {
-	if (deinit && sd_mode == SD_INIT_FAIL)
-		sd_mode = SD_UHS_SDR104;
+	if (deinit)
+	{
+		insertion_event = false;
+		if (sd_mode == SD_INIT_FAIL)
+			sd_mode = SD_DEFAULT_SPEED;
+	}
 
 	if (sd_init_done)
 	{
@@ -205,8 +232,7 @@ static void _sd_deinit(bool deinit)
 		if (deinit)
 		{
 			sdmmc_storage_end(&sd_storage);
-			sd_init_done    = false;
-			insertion_event = false;
+			sd_init_done = false;
 		}
 	}
 	sd_mounted = false;
