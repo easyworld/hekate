@@ -2,18 +2,19 @@ import re
 import sys
 import os
 
-
 allChineseWords = set({})
 
-for filename in os.listdir("../nyx/nyx_gui/frontend"):
-    if filename.endswith('.c'):
-        with open('../nyx/nyx_gui/frontend/' + filename, encoding='utf-8') as file:
-            content = file.read()
-            ll = re.findall('[\u4e00-\u9fa5]', content)
-            for w in ll:
-                allChineseWords.add(w)
+paths = ['../nyx/nyx_gui/frontend/', '../bdk/usb/']
+for path in paths:
+    for filename in os.listdir(path):
+        if filename.endswith('.c'):
+            with open(path + filename, encoding='utf-8') as file:
+                content = file.read()
+                ll = re.findall('[\u4e00-\u9fa5]', content)
+                for w in ll:
+                    allChineseWords.add(w)
 
-# allChineseWords.update(set(list("识别大气层侦安卓怀旧提醒大家软件完全免费不要付费购买")))
+allChineseWords.update(set(list("識別大氣層偵安卓懷舊冠大氣層系統人傅宇大門原")))
 wordList = list(allChineseWords)
 wordList.sort()
 for w in wordList:
