@@ -33,6 +33,7 @@
  * 1: SDMMC1 LA programming for SDMMC1 UHS DDR200.
  */
 #define L4T_LOADER_API_REV 1
+#define L4T_FIRMWARE_REV   0x32524556 // REV2.
 
 #ifdef DEBUG_UART_PORT
  #include <soc/uart.h>
@@ -71,58 +72,60 @@
 #define SC7ENTRY_HDR_SIZE 0x400
 
 // Secure Elements addresses for T210.
-#define SECFW_BASE        (TZDRAM_BASE - SZ_1M)            // 0xFFE00000 or 0xFF700000.
-#define SC7ENTRY_HDR_BASE (SECFW_BASE + 0)
-#define SC7ENTRY_BASE     (SECFW_BASE + SC7ENTRY_HDR_SIZE) // After header.
-#define SC7EXIT_BASE      (SECFW_BASE + SZ_64K)            //  64KB after SECFW_BASE.
-#define R2P_PAYLOAD_BASE  (SECFW_BASE + SZ_256K)           // 256KB after SECFW_BASE.
-#define MTCTABLE_BASE     (SECFW_BASE + SZ_512K)           // 512KB after SECFW_BASE.
+#define SECFW_BASE             (TZDRAM_BASE - SZ_1M)            // 0xFFE00000 or 0xFF700000.
+#define SC7ENTRY_HDR_BASE      (SECFW_BASE + 0)
+#define SC7ENTRY_BASE          (SECFW_BASE + SC7ENTRY_HDR_SIZE) // After header.
+#define SC7EXIT_BASE           (SECFW_BASE + SZ_64K)            //  64KB after SECFW_BASE.
+#define R2P_PAYLOAD_BASE       (SECFW_BASE + SZ_256K)           // 256KB after SECFW_BASE.
+#define MTCTABLE_BASE          (SECFW_BASE + SZ_512K)           // 512KB after SECFW_BASE.
+#define BPMPFW_BASE            (SECFW_BASE + SZ_512K + SZ_256K) // 768KB after SECFW_BASE.
+#define BPMPFW_ENTRYPOINT      (BPMPFW_BASE + 0x100)            // Used internally also.
 
 // Secure Elements addresses for T210B01.
-#define BPMPFW_BASE       (SECFW_BASE)                     // !! DTS carveout-start must match !!
-#define BPMPFW_ENTRYPOINT (BPMPFW_BASE + 0x40)             // Used internally also.
-#define BPMPFW_HEAP_BASE  (BPMPFW_BASE + SZ_256K - SZ_1K)  // 255KB after BPMPFW_BASE.
-#define BPMPFW_EDTB_BASE  (BPMPFW_BASE + SZ_1M - 0)        // Top BPMPFW carveout minus EMC DTB size.
-#define BPMPFW_ADTB_BASE  (BPMPFW_BASE + 0x26008)          // Attached BPMP-FW DTB address.
-#define SC7EXIT_B01_BASE  (BPMPFW_HEAP_BASE - SZ_4K)       // 4KB before BPMP heap.
+#define BPMPFW_B01_BASE       (SECFW_BASE)                         // !! DTS carveout-start must match !!
+#define BPMPFW_B01_ENTRYPOINT (BPMPFW_B01_BASE + 0x40)             // Used internally also.
+#define BPMPFW_B01_HEAP_BASE  (BPMPFW_B01_BASE + SZ_256K - SZ_1K)  // 255KB after BPMPFW_B01_BASE.
+#define BPMPFW_B01_EDTB_BASE  (BPMPFW_B01_BASE + SZ_1M - 0)        // Top BPMPFW carveout minus EMC DTB size.
+#define BPMPFW_B01_ADTB_BASE  (BPMPFW_B01_BASE + 0x26008)          // Attached BPMP-FW DTB address.
+#define SC7EXIT_B01_BASE      (BPMPFW_B01_HEAP_BASE - SZ_4K)       // 4KB before BPMP heap.
 
 // BPMP-FW defines. Offsets are 0xD8 below real main binary.
-#define BPMPFW_DTB_ADDR   (BPMPFW_BASE + 0x14)    // u32. DTB address if not attached.
-#define BPMPFW_CC_INIT_OP (BPMPFW_BASE + 0x17324) // u8.  Initial table training OP. 0: OP_SWITCH, 1: OP_TRAIN, 2: OP_TRAIN_SWITCH. Default: OP_TRAIN.
-#define BPMPFW_LOGLEVEL   (BPMPFW_BASE + 0x2547C) // u32. Log level. Default 3.
-#define BPMPFW_LOGLEVEL   (BPMPFW_BASE + 0x2547C) // u32. Log level. Default 3.
-#define BPMPFW_CC_PT_TIME (BPMPFW_BASE + 0x25644) // u32. Periodic training period (in ms). Default 100 ms.
-#define BPMPFW_CC_DEBUG   (BPMPFW_BASE + 0x257F8) // u32. EMC Clock Change debug mask. Default: 0x50000101.
+#define BPMPFW_B01_DTB_ADDR   (BPMPFW_B01_BASE + 0x14)    // u32. DTB address if not attached.
+#define BPMPFW_B01_CC_INIT_OP (BPMPFW_B01_BASE + 0x17324) // u8.  Initial table training OP. 0: OP_SWITCH, 1: OP_TRAIN, 2: OP_TRAIN_SWITCH. Default: OP_TRAIN.
+#define BPMPFW_B01_LOGLEVEL   (BPMPFW_B01_BASE + 0x2547C) // u32. Log level. Default 3.
+#define BPMPFW_B01_LOGLEVEL   (BPMPFW_B01_BASE + 0x2547C) // u32. Log level. Default 3.
+#define BPMPFW_B01_CC_PT_TIME (BPMPFW_B01_BASE + 0x25644) // u32. Periodic training period (in ms). Default 100 ms.
+#define BPMPFW_B01_CC_DEBUG   (BPMPFW_B01_BASE + 0x257F8) // u32. EMC Clock Change debug mask. Default: 0x50000101.
 
 // BPMP-FW attached DTB defines. Can be generalized.
-#define BPMPFW_DTB_EMC_ENTRIES           4
-#define BPMPFW_DTB_SERIAL_PORT_VAL       (BPMPFW_ADTB_BASE + 0x5B) // u8. DTB UART port offset. 0: Disabled.
-#define BPMPFW_DTB_SET_SERIAL_PORT(port) (*(u8 *)BPMPFW_DTB_SERIAL_PORT_VAL = port)
-#define BPMPFW_DTB_EMC_TBL_OFF           (BPMPFW_ADTB_BASE + 0xA0)
-#define BPMPFW_DTB_EMC_TBL_SZ            0x1120
-#define BPMPFW_DTB_EMC_NAME_VAL          0xA
-#define BPMPFW_DTB_EMC_ENABLE_OFF        0x20
-#define BPMPFW_DTB_EMC_VALUES_OFF        0x4C
-#define BPMPFW_DTB_EMC_FREQ_VAL          0x8C
-#define BPMPFW_DTB_EMC_SCC_OFF           0x108C
-#define BPMPFW_DTB_EMC_PLLM_DIVM_VAL     0x10A4
-#define BPMPFW_DTB_EMC_PLLM_DIVN_VAL     0x10A8
-#define BPMPFW_DTB_EMC_PLLM_DIVP_VAL     0x10AC
-#define BPMPFW_DTB_EMC_TBL_START(idx)             (BPMPFW_DTB_EMC_TBL_OFF + BPMPFW_DTB_EMC_TBL_SZ * (idx))
-#define BPMPFW_DTB_EMC_TBL_SET_VAL(idx, off, val) (*(u32 *)(BPMPFW_DTB_EMC_TBL_START(idx) + (off)) = (val))
-#define BPMPFW_DTB_EMC_TBL_SET_FREQ(idx, freq)    (*(u32 *)(BPMPFW_DTB_EMC_TBL_START(idx) + BPMPFW_DTB_EMC_FREQ_VAL) = (freq))
-#define BPMPFW_DTB_EMC_TBL_SCC_OFFSET(idx)        ((void *)(BPMPFW_DTB_EMC_TBL_START(idx) + BPMPFW_DTB_EMC_SCC_OFF))
-#define BPMPFW_DTB_EMC_TBL_SET_PLLM_DIVN(idx, n)  (*(u32 *)(BPMPFW_DTB_EMC_TBL_START(idx) + BPMPFW_DTB_EMC_PLLM_DIVN_VAL) = (n))
-#define BPMPFW_DTB_EMC_TBL_SET_NAME(idx, name)    (strcpy((char *)(BPMPFW_DTB_EMC_TBL_START(idx) + BPMPFW_DTB_EMC_NAME_VAL), (name)))
-#define BPMPFW_DTB_EMC_TBL_ENABLE(idx)            (*(char *)(BPMPFW_DTB_EMC_TBL_START(idx) + BPMPFW_DTB_EMC_ENABLE_OFF) = 'n')
-#define BPMPFW_DTB_EMC_TBL_OFFSET(idx)            ((void *)(BPMPFW_DTB_EMC_TBL_START(idx) + BPMPFW_DTB_EMC_VALUES_OFF))
+#define BPMPFW_B01_DTB_EMC_ENTRIES           4
+#define BPMPFW_B01_DTB_SERIAL_PORT_VAL       (BPMPFW_B01_ADTB_BASE + 0x5B) // u8. DTB UART port offset. 0: Disabled.
+#define BPMPFW_B01_DTB_SET_SERIAL_PORT(port) (*(u8 *)BPMPFW_B01_DTB_SERIAL_PORT_VAL = port)
+#define BPMPFW_B01_DTB_EMC_TBL_OFF           (BPMPFW_B01_ADTB_BASE + 0xA0)
+#define BPMPFW_B01_DTB_EMC_TBL_SZ            0x1120
+#define BPMPFW_B01_DTB_EMC_NAME_VAL          0xA
+#define BPMPFW_B01_DTB_EMC_ENABLE_OFF        0x20
+#define BPMPFW_B01_DTB_EMC_VALUES_OFF        0x4C
+#define BPMPFW_B01_DTB_EMC_FREQ_VAL          0x8C
+#define BPMPFW_B01_DTB_EMC_SCC_OFF           0x108C
+#define BPMPFW_B01_DTB_EMC_PLLM_DIVM_VAL     0x10A4
+#define BPMPFW_B01_DTB_EMC_PLLM_DIVN_VAL     0x10A8
+#define BPMPFW_B01_DTB_EMC_PLLM_DIVP_VAL     0x10AC
+#define BPMPFW_B01_DTB_EMC_TBL_START(idx)             (BPMPFW_B01_DTB_EMC_TBL_OFF + BPMPFW_B01_DTB_EMC_TBL_SZ * (idx))
+#define BPMPFW_B01_DTB_EMC_TBL_SET_VAL(idx, off, val) (*(u32 *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + (off)) = (val))
+#define BPMPFW_B01_DTB_EMC_TBL_SET_FREQ(idx, freq)    (*(u32 *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_FREQ_VAL) = (freq))
+#define BPMPFW_B01_DTB_EMC_TBL_SCC_OFFSET(idx)        ((void *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_SCC_OFF))
+#define BPMPFW_B01_DTB_EMC_TBL_SET_PLLM_DIVN(idx, n)  (*(u32 *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_PLLM_DIVN_VAL) = (n))
+#define BPMPFW_B01_DTB_EMC_TBL_SET_NAME(idx, name)    (strcpy((char *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_NAME_VAL), (name)))
+#define BPMPFW_B01_DTB_EMC_TBL_ENABLE(idx)            (*(char *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_ENABLE_OFF) = 'n')
+#define BPMPFW_B01_DTB_EMC_TBL_OFFSET(idx)            ((void *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_VALUES_OFF))
 
 // MTC table defines for T210B01.
-#define BPMPFW_MTC_TABLE_BASE            0xA0000000
-#define BPMPFW_MTC_FREQ_TABLE_SIZE       4300
-#define BPMPFW_MTC_TABLE_SIZE            (BPMPFW_MTC_FREQ_TABLE_SIZE * 3)
-#define BPMPFW_MTC_TABLE(idx)                     (BPMPFW_MTC_TABLE_BASE + BPMPFW_MTC_TABLE_SIZE * (idx))
-#define BPMPFW_MTC_TABLE_OFFSET(idx, fidx)        ((void *)(BPMPFW_MTC_TABLE(idx) + BPMPFW_MTC_FREQ_TABLE_SIZE * (fidx)))
+#define BPMPFW_B01_MTC_TABLE_BASE            0xA0000000
+#define BPMPFW_B01_MTC_FREQ_TABLE_SIZE       4300
+#define BPMPFW_B01_MTC_TABLE_SIZE            (BPMPFW_B01_MTC_FREQ_TABLE_SIZE * 3)
+#define BPMPFW_B01_MTC_TABLE(idx)                     (BPMPFW_B01_MTC_TABLE_BASE + BPMPFW_B01_MTC_TABLE_SIZE * (idx))
+#define BPMPFW_B01_MTC_TABLE_OFFSET(idx, fidx)        ((void *)(BPMPFW_B01_MTC_TABLE(idx) + BPMPFW_B01_MTC_FREQ_TABLE_SIZE * (fidx)))
 
 // BL31 Enable IRAM based config.
 #define BL31_IRAM_PARAMS           0x4D415249 // "IRAM".
@@ -271,6 +274,8 @@ typedef struct _l4t_ctxt_t
 
 	char *ram_oc_txt;
 	int   ram_oc_freq;
+	int   ram_oc_vdd2;
+	int   ram_oc_vddq;
 
 	u32   serial_port;
 	u32   sc7entry_size;
@@ -278,10 +283,11 @@ typedef struct _l4t_ctxt_t
 	emc_table_t *mtc_table;
 } l4t_ctxt_t;
 
-#define DRAM_T210_OC_VOLTAGE        1187500
-#define DRAM_T210_OC_THRESHOLD_FREQ 1862400
-
-#define DRAM_TBL_PROVIDED_MAX_FREQ  1600000
+#define DRAM_VDD2_OC_MIN_VOLTAGE  1100
+#define DRAM_VDD2_OC_MAX_VOLTAGE  1175
+#define DRAM_VDDQ_OC_MIN_VOLTAGE  600
+#define DRAM_VDDQ_OC_MAX_VOLTAGE  650
+#define DRAM_T210B01_TBL_MAX_FREQ 1600000
 
 // JEDEC frequency table.
 static const u32 ram_jd_t210b01[] = {
@@ -303,29 +309,32 @@ static const u8 mtc_table_idx_t210b01[] = {
 };
 
 static const l4t_fw_t l4t_fw[] = {
-	{ TZDRAM_BASE,           "bl31.bin"        },
-	{ BL33_LOAD_BASE,        "bl33.bin"        },
-	{ SC7ENTRY_BASE,         "sc7entry.bin"    },
-	{ SC7EXIT_BASE,          "sc7exit.bin"     },
-	{ SC7EXIT_B01_BASE,      "sc7exit_b01.bin" },
-	{ BPMPFW_BASE,           "bpmpfw_b01.bin"  },
-	{ BPMPFW_MTC_TABLE_BASE, "mtc_tbl_b01.bin" },
+	{ TZDRAM_BASE,               "bl31.bin"        },
+	{ BL33_LOAD_BASE,            "bl33.bin"        },
+	{ SC7ENTRY_BASE,             "sc7entry.bin"    },
+	{ SC7EXIT_BASE,              "sc7exit.bin"     },
+	{ SC7EXIT_B01_BASE,          "sc7exit_b01.bin" },
+	{ BPMPFW_BASE,               "bpmpfw.bin"      },
+	{ BPMPFW_B01_BASE,           "bpmpfw_b01.bin"  },
+	{ BPMPFW_B01_MTC_TABLE_BASE, "mtc_tbl_b01.bin" },
 };
 
 enum {
-	BL31_FW        = 0,
-	BL33_FW        = 1,
-	SC7ENTRY_FW    = 2,
-	SC7EXIT_FW     = 3,
-	SC7EXIT_B01_FW = 4,
-	BPMPFW_FW      = 5,
-	BPMPFW_MTC_TBL = 6
+	BL31_FW            = 0,
+	BL33_FW            = 1,
+	SC7ENTRY_FW        = 2,
+	SC7EXIT_FW         = 3,
+	SC7EXIT_B01_FW     = 4,
+	BPMPFW_FW          = 5,
+	BPMPFW_B01_FW      = 6,
+	BPMPFW_B01_MTC_TBL = 7
 };
 
-static void _l4t_crit_error(const char *text)
+static void _l4t_crit_error(const char *text, bool needs_update)
 {
 	gfx_con.mute = false;
-	gfx_printf("%kL4T Error: %s!\nFailed to launch L4T!\n%k", TXT_CLR_ERROR, text, TXT_CLR_DEFAULT);
+	gfx_printf("%kL4T Error: %s!%sFailed to launch L4T!\n%k",
+		TXT_CLR_ERROR, text, needs_update ? "\nUpdate bootloader folder!\n\n" : "\n\n", TXT_CLR_DEFAULT);
 }
 
 char *sd_path;
@@ -348,6 +357,10 @@ static int _l4t_sd_load(u32 idx)
 		size = 0;
 
 	f_close(&fp);
+
+	u32 rev = *(u32 *)(load_address + size - sizeof(u32));
+	if (idx >= SC7ENTRY_FW && rev != L4T_FIRMWARE_REV)
+		return 0;
 
 	return size;
 }
@@ -771,39 +784,39 @@ static void _l4t_late_hw_config(bool t210b01)
 #endif
 }
 
-static void _l4t_bpmpfw_config(l4t_ctxt_t *ctxt)
+static void _l4t_bpmpfw_b01_config(l4t_ctxt_t *ctxt)
 {
 	char *ram_oc_txt   = ctxt->ram_oc_txt;
 	u32   ram_oc_freq  = ctxt->ram_oc_freq;
 	u32   ram_oc_divn  = 0;
 
 	// Set default parameters.
-	*(u32 *)BPMPFW_DTB_ADDR = 0;
-	*(u8  *)BPMPFW_CC_INIT_OP = OP_TRAIN;
-	*(u32 *)BPMPFW_CC_PT_TIME = 100;
+	*(u32 *)BPMPFW_B01_DTB_ADDR = 0;
+	*(u8  *)BPMPFW_B01_CC_INIT_OP = OP_TRAIN;
+	*(u32 *)BPMPFW_B01_CC_PT_TIME = 100;
 
 #if DEBUG_LOG_BPMPFW
 	// Set default debug parameters.
-	*(u32 *)BPMPFW_LOGLEVEL = 3;
-	*(u32 *)BPMPFW_CC_DEBUG = 0x50000101;
+	*(u32 *)BPMPFW_B01_LOGLEVEL = 3;
+	*(u32 *)BPMPFW_B01_CC_DEBUG = 0x50000101;
 
 	// Set serial debug port.
-	if (*(u32 *)BPMPFW_ADTB_BASE == DTB_MAGIC)
-		BPMPFW_DTB_SET_SERIAL_PORT(ctxt->serial_port);
+	if (*(u32 *)BPMPFW_B01_ADTB_BASE == DTB_MAGIC)
+		BPMPFW_B01_DTB_SET_SERIAL_PORT(ctxt->serial_port);
 #endif
 
 	// Set and copy MTC tables.
 	u32 mtc_idx = mtc_table_idx_t210b01[fuse_read_dramid(true)];
 	for (u32 i = 0; i < 3; i++)
 	{
-		minerva_sdmmc_la_program(BPMPFW_MTC_TABLE_OFFSET(mtc_idx, i), true);
-		memcpy(BPMPFW_DTB_EMC_TBL_OFFSET(i), BPMPFW_MTC_TABLE_OFFSET(mtc_idx, i), BPMPFW_MTC_FREQ_TABLE_SIZE);
+		minerva_sdmmc_la_program(BPMPFW_B01_MTC_TABLE_OFFSET(mtc_idx, i), true);
+		memcpy(BPMPFW_B01_DTB_EMC_TBL_OFFSET(i), BPMPFW_B01_MTC_TABLE_OFFSET(mtc_idx, i), BPMPFW_B01_MTC_FREQ_TABLE_SIZE);
 	}
 
-	if (ram_oc_freq > DRAM_TBL_PROVIDED_MAX_FREQ)
+	if (ram_oc_freq > DRAM_T210B01_TBL_MAX_FREQ)
 	{
 		// Final table.
-		const u32 tbl_idx = BPMPFW_DTB_EMC_ENTRIES - 1;
+		const u32 tbl_idx = BPMPFW_B01_DTB_EMC_ENTRIES - 1;
 
 		// Set Overclock.
 		for (u32 i = 0; i < ARRAY_SIZE(ram_jd_t210b01); i++)
@@ -812,8 +825,7 @@ static void _l4t_bpmpfw_config(l4t_ctxt_t *ctxt)
 			if ((ram_jd_t210b01[i] - 19200) < ram_oc_freq &&
 				(ram_jd_t210b01[i] + 19200) > ram_oc_freq)
 			{
-				// Set actual frequency and divider.
-				ram_oc_freq = ram_jd_t210b01[i];
+				// Set divider.
 				ram_oc_divn = i + 1;
 
 				break;
@@ -821,18 +833,21 @@ static void _l4t_bpmpfw_config(l4t_ctxt_t *ctxt)
 		}
 
 		if (!ram_oc_divn)
-		{
 			ram_oc_divn = ram_oc_freq / 38400;
-			ram_oc_freq = ram_oc_divn * 38400;
-		}
+
+		// Set DRAM voltage.
+		if (ctxt->ram_oc_vdd2)
+			max7762x_regulator_set_voltage(REGULATOR_SD1,  ctxt->ram_oc_vdd2 * 1000);
+		if (ctxt->ram_oc_vddq)
+			max7762x_regulator_set_voltage(REGULATOR_RAM0, ctxt->ram_oc_vddq * 1000);
 
 		// Copy table and set parameters.
-		memcpy(BPMPFW_DTB_EMC_TBL_OFFSET(tbl_idx), BPMPFW_MTC_TABLE_OFFSET(mtc_idx, 2), BPMPFW_MTC_FREQ_TABLE_SIZE);
+		memcpy(BPMPFW_B01_DTB_EMC_TBL_OFFSET(tbl_idx), BPMPFW_B01_MTC_TABLE_OFFSET(mtc_idx, 2), BPMPFW_B01_MTC_FREQ_TABLE_SIZE);
 
-		BPMPFW_DTB_EMC_TBL_SET_NAME(tbl_idx, ram_oc_txt);
-		BPMPFW_DTB_EMC_TBL_SET_FREQ(tbl_idx, ram_oc_freq);
+		BPMPFW_B01_DTB_EMC_TBL_SET_NAME(tbl_idx, ram_oc_txt);
+		BPMPFW_B01_DTB_EMC_TBL_SET_FREQ(tbl_idx, ram_oc_freq);
 
-		pll_spread_spectrum_t210b01_t *ssc = BPMPFW_DTB_EMC_TBL_SCC_OFFSET(tbl_idx);
+		pll_spread_spectrum_t210b01_t *ssc = BPMPFW_B01_DTB_EMC_TBL_SCC_OFFSET(tbl_idx);
 
 		if (ram_oc_divn <= DRAM_T210B01_SSC_PARAMS)
 		{
@@ -852,13 +867,13 @@ static void _l4t_bpmpfw_config(l4t_ctxt_t *ctxt)
 		}
 
 		// Enable table.
-		BPMPFW_DTB_EMC_TBL_ENABLE(tbl_idx);
+		BPMPFW_B01_DTB_EMC_TBL_ENABLE(tbl_idx);
 
 		UPRINTF("RAM Frequency set to: %d KHz. Voltage: %d mV\n", ram_oc_freq, ram_oc_volt);
 	}
 
 	// Save BPMP-FW entrypoint for TZ.
-	PMC(APBDEV_PMC_SCRATCH39) = BPMPFW_ENTRYPOINT;
+	PMC(APBDEV_PMC_SCRATCH39) = BPMPFW_B01_ENTRYPOINT;
 	PMC(APBDEV_PMC_SCRATCH_WRITE_DISABLE1) |= BIT(15);
 }
 
@@ -920,14 +935,30 @@ static void _l4t_set_config(l4t_ctxt_t *ctxt, const ini_sec_t *ini_sec, int entr
 	// Parse ini section and prepare BL33 env.
 	LIST_FOREACH_ENTRY(ini_kv_t, kv, &ini_sec->kvs, link)
 	{
-		if (!strcmp("boot_prefixes",  kv->key))
+		if (!strcmp("boot_prefixes",    kv->key))
 			ctxt->path        = kv->val;
-		else if (!strcmp("ram_oc",    kv->key))
+		else if (!strcmp("ram_oc",      kv->key))
 		{
 			ctxt->ram_oc_txt  = kv->val;
 			ctxt->ram_oc_freq = atoi(kv->val);
 		}
-		else if (!strcmp("uart_port", kv->key))
+		else if (!strcmp("ram_oc_vdd2", kv->key))
+		{
+			ctxt->ram_oc_vdd2 = atoi(kv->val);
+			if (ctxt->ram_oc_vdd2 > DRAM_VDD2_OC_MAX_VOLTAGE)
+				ctxt->ram_oc_vdd2 = DRAM_VDD2_OC_MAX_VOLTAGE;
+			else if (ctxt->ram_oc_vdd2 < DRAM_VDD2_OC_MIN_VOLTAGE)
+				ctxt->ram_oc_vdd2 = 0;
+		}
+		else if (!strcmp("ram_oc_vddq", kv->key))
+		{
+			ctxt->ram_oc_vddq = atoi(kv->val);
+			if (ctxt->ram_oc_vddq > DRAM_VDDQ_OC_MAX_VOLTAGE)
+				ctxt->ram_oc_vddq = DRAM_VDDQ_OC_MAX_VOLTAGE;
+			else if (ctxt->ram_oc_vddq < DRAM_VDDQ_OC_MIN_VOLTAGE)
+				ctxt->ram_oc_vddq = 0;
+		}
+		else if (!strcmp("uart_port",   kv->key))
 			ctxt->serial_port = atoi(kv->val);
 
 		// Set key/val to BL33 env.
@@ -981,7 +1012,7 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 
 	if (!ctxt.path)
 	{
-		_l4t_crit_error("Path missing");
+		_l4t_crit_error("Path missing", false);
 		return;
 	}
 
@@ -989,28 +1020,28 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	ctxt.mtc_table = minerva_get_mtc_table();
 	if (!t210b01 && !ctxt.mtc_table)
 	{
-		_l4t_crit_error("Minerva missing");
+		_l4t_crit_error("Minerva missing", true);
 		return;
 	}
 
 	// U-BOOT does not support exfat.
 	if (sd_fs.fs_type == FS_EXFAT)
 	{
-		_l4t_crit_error("exFAT not supported");
+		_l4t_crit_error("exFAT not supported", false);
 		return;
 	}
 
 	// Load BL31 (ATF/TrustZone fw).
 	if (!_l4t_sd_load(BL31_FW))
 	{
-		_l4t_crit_error("BL31 missing");
+		_l4t_crit_error("BL31 missing", false);
 		return;
 	}
 
 	// Load BL33 (U-BOOT/CBOOT).
 	if (!_l4t_sd_load(BL33_FW))
 	{
-		_l4t_crit_error("BL33 missing");
+		_l4t_crit_error("BL33 missing", false);
 		return;
 	}
 
@@ -1024,23 +1055,30 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 		ctxt.sc7entry_size = _l4t_sd_load(SC7ENTRY_FW);
 		if (!ctxt.sc7entry_size)
 		{
-			_l4t_crit_error("SC7-Entry missing");
+			_l4t_crit_error("loading SC7-Entry", true);
+			return;
+		}
+
+		// Load BPMP-FW. Does power management.
+		if (!_l4t_sd_load(BPMPFW_FW))
+		{
+			_l4t_crit_error("loading BPMP-FW", true);
 			return;
 		}
 	}
 	else
 	{
 		// Load BPMP-FW. Manages SC7-Entry also.
-		if (!_l4t_sd_load(BPMPFW_FW))
+		if (!_l4t_sd_load(BPMPFW_B01_FW))
 		{
-			_l4t_crit_error("BPMP-FW missing");
+			_l4t_crit_error("loading BPMP-FW", true);
 			return;
 		}
 
 		// Load BPMP-FW MTC table.
-		if (!_l4t_sd_load(BPMPFW_MTC_TBL))
+		if (!_l4t_sd_load(BPMPFW_B01_MTC_TBL))
 		{
-			_l4t_crit_error("BPMP-FW MTC missing");
+			_l4t_crit_error("loading BPMP-FW MTC", true);
 			return;
 		}
 	}
@@ -1048,7 +1086,7 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	// Load SC7-Exit firmware.
 	if (!_l4t_sd_load(!t210b01 ? SC7EXIT_FW : SC7EXIT_B01_FW))
 	{
-		_l4t_crit_error("SC7-Exit missing");
+		_l4t_crit_error("loading SC7-Exit", true);
 		return;
 	}
 
@@ -1154,8 +1192,8 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	if (ctxt.mtc_table)
 	{
 		// Set DRAM voltage.
-		if (ctxt.ram_oc_freq > DRAM_T210_OC_THRESHOLD_FREQ)
-			max7762x_regulator_set_voltage(REGULATOR_SD1, DRAM_T210_OC_VOLTAGE);
+		if (ctxt.ram_oc_vdd2)
+			max7762x_regulator_set_voltage(REGULATOR_SD1, ctxt.ram_oc_vdd2 * 1000);
 
 		// Train the rest of the table, apply FSP WAR, set RAM to 800 MHz.
 		minerva_prep_boot_l4t(ctxt.ram_oc_freq);
@@ -1191,7 +1229,7 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 
 	// Set BPMP-FW parameters.
 	if (t210b01)
-		_l4t_bpmpfw_config(&ctxt);
+		_l4t_bpmpfw_b01_config(&ctxt);
 
 	// Set carveouts and save them to PMC for SC7 Exit.
 	_l4t_mc_config_carveout(t210b01);
@@ -1202,18 +1240,23 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	// Do late hardware config.
 	_l4t_late_hw_config(t210b01);
 
-	// Launch BL31.
-	ccplex_boot_cpu0(TZDRAM_COLD_ENTRY);
-
-	// Enable Wrap burst for BPMP, GPU and PCIE.
-	MSELECT(MSELECT_CONFIG) = (MSELECT(MSELECT_CONFIG) & (~(MSELECT_CFG_ERR_RESP_EN_GPU | MSELECT_CFG_ERR_RESP_EN_PCIE))) |
-							  (MSELECT_CFG_WRAP_TO_INCR_GPU | MSELECT_CFG_WRAP_TO_INCR_PCIE | MSELECT_CFG_WRAP_TO_INCR_BPMP);
-
-	// If T210B01 run BPMP-FW.
 	if (t210b01)
 	{
-		// Prep reset vector for SC7 save state and start BPMP-FW.
-		EXCP_VEC(EVP_COP_RESET_VECTOR) = BPMPFW_ENTRYPOINT;
+		// Launch BL31.
+		ccplex_boot_cpu0(TZDRAM_COLD_ENTRY);
+
+		// Enable Wrap burst for BPMP, GPU and PCIE.
+		MSELECT(MSELECT_CONFIG) = (MSELECT(MSELECT_CONFIG) & (~(MSELECT_CFG_ERR_RESP_EN_GPU | MSELECT_CFG_ERR_RESP_EN_PCIE))) |
+								  (MSELECT_CFG_WRAP_TO_INCR_GPU | MSELECT_CFG_WRAP_TO_INCR_PCIE | MSELECT_CFG_WRAP_TO_INCR_BPMP);
+
+		// For T210B01, prep reset vector for SC7 save state and start BPMP-FW.
+		EXCP_VEC(EVP_COP_RESET_VECTOR) = BPMPFW_B01_ENTRYPOINT;
+		void (*bpmp_fw_ptr)() = (void *)BPMPFW_B01_ENTRYPOINT;
+		(*bpmp_fw_ptr)();
+	}
+	else
+	{
+		// If T210, BPMP-FW runs BL31.
 		void (*bpmp_fw_ptr)() = (void *)BPMPFW_ENTRYPOINT;
 		(*bpmp_fw_ptr)();
 	}

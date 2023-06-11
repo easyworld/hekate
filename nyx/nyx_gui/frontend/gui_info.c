@@ -33,7 +33,7 @@ extern volatile nyx_storage_t *nyx_str;
 extern lv_res_t launch_payload(lv_obj_t *list);
 extern char *emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage);
 
-static u8 *cal0_buf = NULL;
+u8 *cal0_buf = NULL;
 
 static lv_res_t _create_window_dump_done(int error, char *dump_filenames)
 {
@@ -237,6 +237,55 @@ static lv_res_t _kfuse_dump_window_action(lv_obj_t * btn)
 	return LV_RES_OK;
 }
 
+int dump_cal0()
+{
+	// Init eMMC.
+	if (!emmc_initialize(false))
+		return 1;
+
+	// Generate BIS keys
+	hos_bis_keygen();
+
+	if (!cal0_buf)
+		cal0_buf = malloc(SZ_64K);
+
+	// Read and decrypt CAL0.
+	emmc_set_partition(EMMC_GPP);
+	LIST_INIT(gpt);
+	emmc_gpt_parse(&gpt);
+	emmc_part_t *cal0_part = emmc_part_find(&gpt, "PRODINFO"); // check if null
+	nx_emmc_bis_init(cal0_part, false, 0);
+	nx_emmc_bis_read(0, 0x40, cal0_buf);
+	nx_emmc_bis_end();
+	emmc_gpt_free(&gpt);
+
+	emmc_end();
+
+	// Clear BIS keys slots.
+	hos_bis_keys_clear();
+
+	nx_emmc_cal0_t *cal0 = (nx_emmc_cal0_t *)cal0_buf;
+
+	// Check keys validity.
+	if (memcmp(&cal0->magic, "CAL0", 4))
+	{
+		free(cal0_buf);
+		cal0_buf = NULL;
+
+		// Clear EKS keys.
+		hos_eks_clear(KB_FIRMWARE_VERSION_MAX);
+
+		return 2;
+	}
+
+	u32 hash[8];
+	se_calc_sha256_oneshot(hash, (u8 *)cal0 + 0x40, cal0->body_size);
+	if (memcmp(hash, cal0->body_sha256, 0x20))
+		return 3;
+
+	return 0;
+}
+
 static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 {
 	lv_obj_t *dark_bg = lv_obj_create(lv_scr_act(), NULL);
@@ -261,47 +310,23 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 
 	sd_mount();
 
-	// Init eMMC.
-	if (!emmc_initialize(false))
+	// Dump CAL0.
+	int cal0_res = dump_cal0();
+
+	// Check result. Don't error if hash doesn't match.
+	if (cal0_res == 1)
 	{
 		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失敗!#");
 
 		goto out;
 	}
-
-	// Generate BIS keys
-	hos_bis_keygen();
-
-	if (!cal0_buf)
-		cal0_buf = malloc(SZ_64K);
-
-	// Read and decrypt CAL0.
-	emmc_set_partition(EMMC_GPP);
-	LIST_INIT(gpt);
-	emmc_gpt_parse(&gpt);
-	emmc_part_t *cal0_part = emmc_part_find(&gpt, "PRODINFO"); // check if null
-	nx_emmc_bis_init(cal0_part, false, 0);
-	nx_emmc_bis_read(0, 0x40, cal0_buf);
-	nx_emmc_bis_end();
-	emmc_gpt_free(&gpt);
-
-	// Clear BIS keys slots.
-	hos_bis_keys_clear();
-
-	nx_emmc_cal0_t *cal0 = (nx_emmc_cal0_t *)cal0_buf;
-
-	// Check keys validity.
-	if (memcmp(&cal0->magic, "CAL0", 4))
+	else if (cal0_res == 2)
 	{
-		free(cal0_buf);
-		cal0_buf = NULL;
-
-		// Clear EKS keys.
-		hos_eks_clear(KB_FIRMWARE_VERSION_MAX);
-
 		lv_label_set_text(lb_desc, "#FFDD00 CAL0 被汙染或錯誤的keys!#\n");
 		goto out;
 	}
+
+	nx_emmc_cal0_t *cal0 = (nx_emmc_cal0_t *)cal0_buf;
 
 	u32 hash[8];
 	se_calc_sha256_oneshot(hash, (u8 *)cal0 + 0x40, cal0->body_size);
@@ -376,7 +401,6 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 out:
 	free(txt_buf);
 	sd_unmount();
-	emmc_end();
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, _cal0_dump_window_action);
 
@@ -481,6 +505,9 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		case LPDDR4_ICOSA_6GB_SAMSUNG_K4FHE3D4HM_MGCH:
 			strcpy(dram_man, "Samsung K4FHE3D4HM-MGCH 6GB");
 			break;
+		case LPDDR4_ICOSA_8GB_SAMSUNG_K4FBE3D4HM_MGXX:
+			strcpy(dram_man, "Samsung K4FBE3D4HM-MGXX 8GB");
+			break;
 		default:
 			strcpy(dram_man, "#FF8000 Unknown#");
 			break;
@@ -519,10 +546,10 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		case LPDDR4X_AULA_8GB_SAMSUNG_K4UBE3D4AA_MGCL:
 			strcpy(dram_man, "Samsung K4UBE3D4AA-MGCL 8GB");
 			break;
-		case LPDDR4X_IOWA_4GB_SAMSUNG_1Z:
-		case LPDDR4X_HOAG_4GB_SAMSUNG_1Z:
-		case LPDDR4X_AULA_4GB_SAMSUNG_1Z:
-			strcpy(dram_man, "Samsung 1z B 4GB");
+		case LPDDR4X_IOWA_4GB_SAMSUNG_K4U6E3S4AB_MGCL:
+		case LPDDR4X_HOAG_4GB_SAMSUNG_K4U6E3S4AB_MGCL:
+		case LPDDR4X_AULA_4GB_SAMSUNG_K4U6E3S4AB_MGCL:
+			strcpy(dram_man, "Samsung K4U6E3S4AB-MGCL 4GB");
 			break;
 		case LPDDR4X_IOWA_4GB_MICRON_MT53E512M32D2NP_046_WTF:
 		case LPDDR4X_HOAG_4GB_MICRON_MT53E512M32D2NP_046_WTF:
@@ -530,15 +557,15 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 			strcpy(dram_man, "Micron MT53E512M32D2NP-046 WT:F");
 			break;
 		case LPDDR4X_HOAG_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
-		case LPDDR4X_IOWA_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
 		case LPDDR4X_AULA_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
+		case LPDDR4X_IOWA_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
 			strcpy(dram_man, "Hynix H9HCNNNBKMMLXR-NEE 4GB");
 			break;
 
-		case LPDDR4X_UNK0_4GB_HYNIX_1A:
-		case LPDDR4X_UNK1_4GB_HYNIX_1A:
-		case LPDDR4X_UNK2_4GB_HYNIX_1A:
-			strcpy(dram_man, "Hynix 1a 4GB #FF8000 Contact me!#");
+		case LPDDR4X_UNK0_4GB_HYNIX_H9HCNNNBKMMLXR_NEI:
+		case LPDDR4X_UNK1_4GB_HYNIX_H9HCNNNBKMMLXR_NEI:
+		case LPDDR4X_UNK2_4GB_HYNIX_H9HCNNNBKMMLXR_NEI:
+			strcpy(dram_man, "Hynix H9HCNNNBKMMLXR-NEI 4GB");
 			break;
 
 		case LPDDR4X_UNK0_4GB_MICRON_1A:
@@ -1584,13 +1611,15 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	char *txt_buf = (char *)malloc(SZ_16K);
 	txt_buf[0] = '\n';
 	txt_buf[1] = 0;
+	u16 *emmc_errors;
 
 	if (!emmc_initialize(false))
 	{
 		lv_label_set_text(lb_desc, "#FFDD00 初始化eMMC失敗!#");
 		lv_obj_set_width(lb_desc, lv_obj_get_width(desc));
+		emmc_errors = emmc_get_error_count();
 
-		goto out;
+		goto out_error;
 	}
 
 	u32 speed = 0;
@@ -1780,12 +1809,13 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	lv_obj_set_width(lb_desc2, lv_obj_get_width(desc2));
 	lv_obj_align(desc2, val, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 6, 0);
 
-	u16 *emmc_errors = emmc_get_error_count();
+	emmc_errors = emmc_get_error_count();
 	if (emmc_get_mode() < EMMC_MMC_HS400  ||
 		emmc_errors[EMMC_ERROR_INIT_FAIL] ||
 		emmc_errors[EMMC_ERROR_RW_FAIL]   ||
 		emmc_errors[EMMC_ERROR_RW_RETRY])
 	{
+out_error:
 		lv_obj_t *dark_bg = lv_obj_create(lv_scr_act(), NULL);
 		lv_obj_set_style(dark_bg, &mbox_darken);
 		lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
@@ -1816,7 +1846,6 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 		lv_obj_set_top(mbox, true);
 	}
 
-out:
 	emmc_end();
 	free(txt_buf);
 
@@ -2137,7 +2166,9 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 
 	u16 *sd_errors = sd_get_error_count();
 	s_printf(txt_buf, "\n%d (%d)\n%d (%d)\n%d (%d)",
-		sd_errors[0], nyx_str->info.sd_errors[0], sd_errors[1], nyx_str->info.sd_errors[1], sd_errors[2], nyx_str->info.sd_errors[2]);
+		sd_errors[SD_ERROR_INIT_FAIL], nyx_str->info.sd_errors[SD_ERROR_INIT_FAIL],
+		sd_errors[SD_ERROR_RW_FAIL],   nyx_str->info.sd_errors[SD_ERROR_RW_FAIL],
+		sd_errors[SD_ERROR_RW_RETRY],  nyx_str->info.sd_errors[SD_ERROR_RW_RETRY]);
 
 	lv_label_set_text(lb_val4, txt_buf);
 

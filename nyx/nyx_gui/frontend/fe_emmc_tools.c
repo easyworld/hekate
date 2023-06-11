@@ -563,7 +563,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 				}
 				else
 				{
-					s_printf(gui->txt_buf, "#FF0000 創建 partial.idx 文件錯誤!#\n");
+					s_printf(gui->txt_buf, "\n#FF0000 創建 partial.idx 文件錯誤!#\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -999,7 +999,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 			if ((u32)((u64)totalCheckFileSize >> (u64)9) > totalSectors)
 			{
-				s_printf(gui->txt_buf, "#FF8000 SD卡分割備份檔案大小超過了#\n#FF8000 eMMC選擇的部分的大小!#\n#FFDD00 中斷中...#");
+				s_printf(gui->txt_buf, "\n#FF8000 SD卡分割備份檔案大小超過了#\n#FF8000 eMMC選擇的部分的大小!#\n#FFDD00 中斷中...#");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1009,7 +1009,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 			{
 				if (!gui->raw_emummc)
 				{
-					s_printf(gui->txt_buf, "#FFDD00 Error (%d) 文件未找到#\n#FFDD00 %s.#\n\n", res, outFilename);
+					s_printf(gui->txt_buf, "\n#FFDD00 Error (%d) 文件未找到#\n#FFDD00 %s.#\n\n", res, outFilename);
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -1027,7 +1027,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 				// Restore folder is empty.
 				if (!numSplitParts)
 				{
-					s_printf(gui->txt_buf, "#FFDD00 恢復文件夾為空.#\n\n");
+					s_printf(gui->txt_buf, "\n#FFDD00 恢復文件夾為空.#\n\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -1040,7 +1040,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 				if (check_4MB_aligned && (((u64)fno.fsize) % SZ_4M))
 				{
-					s_printf(gui->txt_buf, "#FFDD00 分割檔案大小必須是 #\n#FFDD00 4 MiB 的倍數.#\n#FFDD00 中斷中...#");
+					s_printf(gui->txt_buf, "\n#FFDD00 分割檔案大小必須是 #\n#FFDD00 4 MiB 的倍數.#\n#FFDD00 中斷中...#");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -1068,7 +1068,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 			if (!(btn_wait() & BTN_POWER))
 			{
 				lv_obj_del(warn_mbox_bg);
-				s_printf(gui->txt_buf, "#FF0000 SD卡分割檔案大小與#\n#FF0000 eMMC選擇的部分大小不匹配!#\n");
+				s_printf(gui->txt_buf, "\n#FF0000 SD卡分割檔案大小與#\n#FF0000 eMMC選擇的部分大小不匹配!#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1123,7 +1123,7 @@ multipart_not_allowed:
 	{
 		if (((u32)((u64)f_size(&fp) >> (u64)9)) > totalSectors)
 		{
-			s_printf(gui->txt_buf, "#FF8000 SD卡備份檔案大小超過了#\n#FF8000 eMMC選擇的部分大小!#\n#FFDD00 中斷中...#");
+			s_printf(gui->txt_buf, "\n#FF8000 SD卡備份檔案大小超過了#\n#FF8000 eMMC選擇的部分大小!#\n#FFDD00 中斷中...#");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
