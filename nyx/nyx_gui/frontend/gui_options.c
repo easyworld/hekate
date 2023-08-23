@@ -26,10 +26,10 @@
 
 #define CLOCK_MIN_YEAR 2023
 #define CLOCK_MAX_YEAR (CLOCK_MIN_YEAR + 10)
+#define CLOCK_YEARLIST "2023\n2024\n2025\n2026\n2027\n2028\n2029\n2030\n2031\n2032\n2033"
 
 extern hekate_config h_cfg;
 extern nyx_config n_cfg;
-extern u8 *cal0_buf;
 
 static lv_obj_t *autoboot_btn;
 static bool autoboot_first_time = true;
@@ -764,18 +764,7 @@ static lv_res_t _create_mbox_clock_edit(lv_obj_t *btn)
 
 	// Create year roller.
 	lv_obj_t *roller_year = lv_roller_create(h1, NULL);
-	lv_roller_set_options(roller_year,
-		"2022\n"
-		"2023\n"
-		"2024\n"
-		"2025\n"
-		"2026\n"
-		"2027\n"
-		"2028\n"
-		"2029\n"
-		"2030\n"
-		"2031\n"
-		"2032");
+	lv_roller_set_options(roller_year, CLOCK_YEARLIST);
 	lv_roller_set_selected(roller_year, time.year, false);
 	lv_roller_set_visible_row_count(roller_year, 3);
 	clock_ctxt.year = roller_year;
@@ -863,7 +852,7 @@ static lv_res_t _joycon_info_dump_action(lv_obj_t * btn)
 
 	if (nx_hoag)
 	{
-		error = dump_cal0();
+		error = hos_dump_cal0();
 		if (!error)
 			goto save_data;
 	}
@@ -933,22 +922,22 @@ save_data:
 
 			f_mkdir("switchroot");
 
-			//! TODO: Add Accelerometer and Gyroscope calibration.
 			// Save Lite Gamepad Calibration data.
+			// Actual max/min are right/left and up/down offsets.
 			s_printf(data,
-				"lite_cal_lx_min=0x%X\n"
+				"lite_cal_lx_lof=0x%X\n"
 				"lite_cal_lx_cnt=0x%X\n"
-				"lite_cal_lx_max=0x%X\n"
-				"lite_cal_ly_min=0x%X\n"
+				"lite_cal_lx_rof=0x%X\n"
+				"lite_cal_ly_dof=0x%X\n"
 				"lite_cal_ly_cnt=0x%X\n"
-				"lite_cal_ly_max=0x%X\n\n"
+				"lite_cal_ly_uof=0x%X\n\n"
 
-				"lite_cal_rx_min=0x%X\n"
+				"lite_cal_rx_lof=0x%X\n"
 				"lite_cal_rx_cnt=0x%X\n"
-				"lite_cal_rx_max=0x%X\n"
-				"lite_cal_ry_min=0x%X\n"
+				"lite_cal_rx_rof=0x%X\n"
+				"lite_cal_ry_dof=0x%X\n"
 				"lite_cal_ry_cnt=0x%X\n"
-				"lite_cal_ry_max=0x%X\n\n"
+				"lite_cal_ry_uof=0x%X\n\n"
 
 				"acc_cal_off_x=0x%X\n"
 				"acc_cal_off_y=0x%X\n"
@@ -965,10 +954,10 @@ save_data:
 				"gyr_cal_scl_z=0x%X\n\n"
 
 				"device_bt_mac=%02X:%02X:%02X:%02X:%02X:%02X\n",
-				stick_cal_l->x_center - stick_cal_l->x_min, stick_cal_l->x_center, stick_cal_l->x_center + stick_cal_l->x_max,
-				stick_cal_l->y_center - stick_cal_l->y_min, stick_cal_l->y_center, stick_cal_l->y_center + stick_cal_l->y_max,
-				stick_cal_r->x_center - stick_cal_r->x_min, stick_cal_r->x_center, stick_cal_r->x_center + stick_cal_r->x_max,
-				stick_cal_r->y_center - stick_cal_r->y_min, stick_cal_r->y_center, stick_cal_r->y_center + stick_cal_r->y_max,
+				stick_cal_l->x_min, stick_cal_l->x_center, stick_cal_l->x_max,
+				stick_cal_l->y_min, stick_cal_l->y_center, stick_cal_l->y_max,
+				stick_cal_r->x_min, stick_cal_r->x_center, stick_cal_r->x_max,
+				stick_cal_r->y_min, stick_cal_r->y_center, stick_cal_r->y_max,
 				cal0->acc_offset[0],  cal0->acc_offset[1],  cal0->acc_offset[2],
 				cal0->acc_scale[0],   cal0->acc_scale[1],   cal0->acc_scale[2],
 				cal0->gyro_offset[0], cal0->gyro_offset[1], cal0->gyro_offset[2],
@@ -1044,7 +1033,7 @@ disabled:;
 		{
 			s_printf(txt_buf,
 				"提取到SD卡完成!\n"
-				"保存到: #C7EA46 switchroot/lite_gamepad.cal#\n\n");
+				"已保存到: #C7EA46 switchroot/switch.cal#\n\n");
 			strcat(txt_buf, "#C7EA46 成功!#\n#C7EA46 找到Lite Gamepad數據!#\n");
 		}
 	}
@@ -1428,7 +1417,7 @@ void create_tab_options(lv_theme_t *th, lv_obj_t *parent)
 
 	// Create Auto NoGC button.
 	lv_obj_t *btn2 = lv_btn_create(sw_h2, NULL);
-	nyx_create_onoff_button(th, sw_h2, btn2, SYMBOL_SHRK" 自動NoGC", auto_nogc_toggle, true);
+	nyx_create_onoff_button(th, sw_h2, btn2, SYMBOL_CHIP" 自動NoGC", auto_nogc_toggle, true);
 	lv_obj_align(btn2, line_sep, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 10);
 
 	label_txt2 = lv_label_create(sw_h2, NULL);
