@@ -1383,7 +1383,7 @@ static void _about()
 {
 	static const char credits[] =
 		"\nhekate   (c) 2018,      naehrwert, st4rk\n\n"
-		"         (c) 2018-2022, CTCaer\n\n"
+		"         (c) 2018-2023, CTCaer\n\n"
 		" ___________________________________________\n\n"
 		"Thanks to: %kderrek, nedwill, plutoo,\n"
 		"           shuffle2, smea, thexyz, yellows8%k\n"
@@ -1478,7 +1478,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.0.6", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.0.7", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2023 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -34,7 +34,7 @@
 extern hekate_config h_cfg;
 extern const u8 package2_keyseed[];
 
-u32 pkg2_newkern_ini1_val;
+u32 pkg2_newkern_ini1_info;
 u32 pkg2_newkern_ini1_start;
 u32 pkg2_newkern_ini1_end;
 
@@ -190,16 +190,26 @@ static u32 _pkg2_calc_kip1_size(pkg2_kip1_t *kip1)
 
 void pkg2_get_newkern_info(u8 *kern_data)
 {
-	u32 pkg2_newkern_ini1_off = 0;
+	u32 crt_start = 0;
+	pkg2_newkern_ini1_info  = 0;
 	pkg2_newkern_ini1_start = 0;
+
+	u32 first_op = *(u32 *)kern_data;
+	if ((first_op & 0xFE000000) == 0x14000000)
+		crt_start = (first_op & 0x1FFFFFF) << 2;
 
 	// Find static OP offset that is close to INI1 offset.
 	u32 counter_ops = 0x100;
 	while (counter_ops)
 	{
-		if (*(u32 *)(kern_data + 0x100 - counter_ops) == PKG2_NEWKERN_GET_INI1_HEURISTIC)
+		if (*(u32 *)(kern_data + crt_start + 0x100 - counter_ops) == PKG2_NEWKERN_GET_INI1_HEURISTIC)
 		{
-			pkg2_newkern_ini1_off = 0x100 - counter_ops + 12; // OP found. Add 12 for the INI1 offset.
+			// OP found. Add 12 for the INI1 info offset.
+			pkg2_newkern_ini1_info = crt_start + 0x100 - counter_ops + 12;
+
+			// On v2 kernel with dynamic crt there's a NOP after heuristic. Offset one op.
+			if (crt_start)
+				pkg2_newkern_ini1_info += 4;
 			break;
 		}
 
@@ -210,11 +220,18 @@ void pkg2_get_newkern_info(u8 *kern_data)
 	if (!counter_ops)
 		return;
 
-	u32 info_op = *(u32 *)(kern_data + pkg2_newkern_ini1_off);
-	pkg2_newkern_ini1_val = ((info_op & 0xFFFF) >> 3) + pkg2_newkern_ini1_off; // Parse ADR and PC.
+	u32 info_op = *(u32 *)(kern_data + pkg2_newkern_ini1_info);
+	pkg2_newkern_ini1_info += ((info_op & 0xFFFF) >> 3); // Parse ADR and PC.
 
-	pkg2_newkern_ini1_start = *(u32 *)(kern_data + pkg2_newkern_ini1_val);
-	pkg2_newkern_ini1_end   = *(u32 *)(kern_data + pkg2_newkern_ini1_val + 0x8);
+	pkg2_newkern_ini1_start = *(u32 *)(kern_data + pkg2_newkern_ini1_info);
+	pkg2_newkern_ini1_end   = *(u32 *)(kern_data + pkg2_newkern_ini1_info + 0x8);
+
+	// On v2 kernel with dynamic crt, values are relative to value address.
+	if (crt_start)
+	{
+		pkg2_newkern_ini1_start += pkg2_newkern_ini1_info;
+		pkg2_newkern_ini1_end   += pkg2_newkern_ini1_info + 0x8;
+	}
 }
 
 bool pkg2_parse_kips(link_t *info, pkg2_hdr_t *pkg2, bool *new_pkg2)
@@ -667,7 +684,7 @@ pkg2_hdr_t *pkg2_decrypt(void *data, u8 kb, bool is_exo)
 	pkg2_keyslot = 8;
 
 	// Decrypt 7.0.0 pkg2 via 8.1.0 mkey on Erista.
-	if (!h_cfg.t210b01 && kb == KB_FIRMWARE_VERSION_700)
+	if (!h_cfg.t210b01 && kb == HOS_KB_VERSION_700)
 	{
 		u8 tmp_mkey[SE_KEY_128_SIZE];
 
@@ -702,29 +719,38 @@ DPRINTF("sec %d has size %08X\n", i, hdr->sec_size[i]);
 	return hdr;
 }
 
-static u32 _pkg2_ini1_build(u8 *pdst, pkg2_hdr_t *hdr, link_t *kips_info, bool new_pkg2)
+static u32 _pkg2_ini1_build(u8 *pdst, u8 *psec, pkg2_hdr_t *hdr, link_t *kips_info, bool new_pkg2)
 {
+	// Calculate INI1 size.
 	u32 ini1_size = sizeof(pkg2_ini1_t);
-	pkg2_ini1_t *ini1 = (pkg2_ini1_t *)pdst;
+	LIST_FOREACH_ENTRY(pkg2_kip1_info_t, ki, kips_info, link)
+	{
+		ini1_size += ki->size;
+	}
+
+	// Align size and set it.
+	ini1_size = ALIGN(ini1_size, 4);
+
+	// For new kernel if INI1 fits in the old one, use it.
+	bool use_old_ini_region = psec && ini1_size <= (pkg2_newkern_ini1_end - pkg2_newkern_ini1_start);
+	if (use_old_ini_region)
+		pdst = psec + pkg2_newkern_ini1_start;
 
 	// Set initial header and magic.
+	pkg2_ini1_t *ini1 = (pkg2_ini1_t *)pdst;
 	memset(ini1, 0, sizeof(pkg2_ini1_t));
 	ini1->magic = INI1_MAGIC;
+	ini1->size  = ini1_size;
 	pdst += sizeof(pkg2_ini1_t);
 
-	// Merge kips into INI1.
+	// Merge KIPs into INI1.
 	LIST_FOREACH_ENTRY(pkg2_kip1_info_t, ki, kips_info, link)
 	{
 DPRINTF("adding kip1 '%s' @ %08X (%08X)\n", ki->kip1->name, (u32)ki->kip1, ki->size);
 		memcpy(pdst, ki->kip1, ki->size);
 		pdst += ki->size;
-		ini1_size += ki->size;
 		ini1->num_procs++;
 	}
-
-	// Align size and set it.
-	ini1_size = ALIGN(ini1_size, 4);
-	ini1->size = ini1_size;
 
 	// Encrypt INI1 in its own section if old pkg2. Otherwise it gets embedded into Kernel.
 	if (!new_pkg2)
@@ -739,18 +765,19 @@ DPRINTF("adding kip1 '%s' @ %08X (%08X)\n", ki->kip1->name, (u32)ki->kip1, ki->s
 		hdr->sec_off[PKG2_SEC_INI1] = 0;
 	}
 
-	return ini1_size;
+	return !use_old_ini_region ? ini1_size : 0;
 }
 
 void pkg2_build_encrypt(void *dst, void *hos_ctxt, link_t *kips_info, bool is_exo)
 {
-	u8 *pdst = (u8 *)dst;
 	launch_ctxt_t * ctxt = (launch_ctxt_t *)hos_ctxt;
+	u32 meso_magic = *(u32 *)(ctxt->kernel + 4);
 	u32 kernel_size = ctxt->kernel_size;
-	bool is_meso = *(u32 *)(ctxt->kernel + 4) == ATM_MESOSPHERE;
 	u8 kb = ctxt->pkg1_id->kb;
+	u8 *pdst = (u8 *)dst;
 
 	// Force new Package2 if Mesosphere.
+	bool is_meso = (meso_magic & 0xF0FFFFFF) == ATM_MESOSPHERE;
 	if (is_meso)
 		ctxt->new_pkg2 = true;
 
@@ -758,7 +785,7 @@ void pkg2_build_encrypt(void *dst, void *hos_ctxt, link_t *kips_info, bool is_ex
 	u8 key_ver = kb ? kb + 1 : 0;
 	if (pkg2_keyslot == 9)
 	{
-		key_ver = KB_FIRMWARE_VERSION_810 + 1;
+		key_ver = HOS_KB_VERSION_810 + 1;
 		pkg2_keyslot = 8;
 	}
 
@@ -789,12 +816,18 @@ DPRINTF("%s @ %08X (%08X)\n", is_meso ? "Mesosphere": "kernel",(u32)ctxt->kernel
 		hdr->sec_off[PKG2_SEC_KERNEL] = 0x10000000;
 	else
 	{
-		// Set new INI1 offset to kernel.
-		*(u32 *)(pdst + (is_meso ? 8 : pkg2_newkern_ini1_val)) = kernel_size;
-
 		// Build INI1 for new Package2.
-		kernel_size += _pkg2_ini1_build(pdst + kernel_size, hdr, kips_info, ctxt->new_pkg2);
+		u32 ini1_size = _pkg2_ini1_build(pdst + kernel_size, is_meso ? NULL : pdst, hdr, kips_info, true);
 		hdr->sec_off[PKG2_SEC_KERNEL] = 0x60000;
+
+		// Set new INI1 offset to kernel.
+		u32 meso_meta_offset = *(u32 *)(pdst + 8);
+		if (is_meso && (meso_magic & 0xF000000)) // MSS1.
+			*(u32 *)(pdst + meso_meta_offset) = kernel_size - meso_meta_offset;
+		else if (ini1_size)
+			*(u32 *)(pdst + (is_meso ? 8 : pkg2_newkern_ini1_info)) = kernel_size;
+
+		kernel_size += ini1_size;
 	}
 	hdr->sec_size[PKG2_SEC_KERNEL] = kernel_size;
 	se_aes_crypt_ctr(pkg2_keyslot, pdst, kernel_size, pdst, kernel_size, &hdr->sec_ctr[PKG2_SEC_KERNEL * SE_AES_IV_SIZE]);
@@ -804,7 +837,7 @@ DPRINTF("kernel encrypted\n");
 	// Build INI1 for old Package2.
 	u32 ini1_size = 0;
 	if (!ctxt->new_pkg2)
-		ini1_size = _pkg2_ini1_build(pdst, hdr, kips_info, false);
+		ini1_size = _pkg2_ini1_build(pdst, NULL, hdr, kips_info, false);
 DPRINTF("INI1 encrypted\n");
 
 	if (!is_exo) // Not needed on Exosphere 1.0.0 and up.
