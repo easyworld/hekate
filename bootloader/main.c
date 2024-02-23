@@ -665,7 +665,7 @@ static void _nyx_load_run()
 
 		gfx_con_setpos(0, 0);
 		WPRINTF("Old Nyx GUI found! There will be dragons!\n");
-		WPRINTF("\nUpdate the bootloader folder!\n\n");
+		WPRINTF("\nUpdate bootloader folder!\n\n");
 		WPRINTF("Press any key...");
 
 		msleep(1000);
@@ -1478,7 +1478,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.0.7", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.1.0", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 

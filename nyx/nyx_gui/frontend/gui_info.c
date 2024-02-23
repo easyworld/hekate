@@ -405,7 +405,7 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 
 	// Decode fuses.
 	char *sku;
-	char dram_man[32];
+	char dram_man[64];
 	char fuses_hos_version[64];
 	u8 dram_id = fuse_read_dramid(true);
 
@@ -440,7 +440,7 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		case LPDDR4_ICOSA_4GB_HYNIX_H9HCNNNBPUMLHR_NLE:
 			strcpy(dram_man, "Hynix H9HCNNNBPUMLHR-NLE 4GB");
 			break;
-		case LPDDR4_ICOSA_4GB_MICRON_MT53B512M32D2NP_062_WT:
+		case LPDDR4_ICOSA_4GB_MICRON_MT53B512M32D2NP_062_WTC:
 			strcpy(dram_man, "Micron MT53B512M32D2NP-062 WT:C");
 			break;
 		case LPDDR4_ICOSA_6GB_SAMSUNG_K4FHE3D4HM_MGCH:
@@ -502,19 +502,15 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		case LPDDR4X_IOWA_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
 			strcpy(dram_man, "Hynix H9HCNNNBKMMLXR-NEE 4GB");
 			break;
-
-		case LPDDR4X_UNK0_4GB_HYNIX_H9HCNNNBKMMLXR_NEI:
-		case LPDDR4X_UNK1_4GB_HYNIX_H9HCNNNBKMMLXR_NEI:
-		case LPDDR4X_UNK2_4GB_HYNIX_H9HCNNNBKMMLXR_NEI:
-			//strcpy(dram_man, "Hynix H9HCNNNBKMMLXR-NEI 4GB");
-			strcpy(dram_man, "Hynix 1a 4GB #FF8000 Contact me!#");
+		case LPDDR4X_IOWA_4GB_HYNIX_H54G46CYRBX267:
+		case LPDDR4X_HOAG_4GB_HYNIX_H54G46CYRBX267:
+		case LPDDR4X_AULA_4GB_HYNIX_H54G46CYRBX267:
+			strcpy(dram_man, "Hynix H54G46CYRBX267 4GB");
 			break;
-
-		case LPDDR4X_UNK0_4GB_MICRON_MT53E512M32D1NP_046_WTB:
-		case LPDDR4X_UNK1_4GB_MICRON_MT53E512M32D1NP_046_WTB:
-		case LPDDR4X_UNK2_4GB_MICRON_MT53E512M32D1NP_046_WTB:
-			//strcpy(dram_man, "Micron MT53E512M32D1NP-046 WT:B");
-			strcpy(dram_man, "Micron 1a 4GB #FF8000 Contact me!#");
+		case LPDDR4X_IOWA_4GB_MICRON_MT53E512M32D1NP_046_WTB:
+		case LPDDR4X_HOAG_4GB_MICRON_MT53E512M32D1NP_046_WTB:
+		case LPDDR4X_AULA_4GB_MICRON_MT53E512M32D1NP_046_WTB:
+			strcpy(dram_man, "Micron MT53E512M32D1NP-046 WT:B");
 			break;
 
 		default:
@@ -616,9 +612,9 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 	// Parse fuses and display them.
 	s_printf(txt_buf,
 		"%X - %s - %s\n%02d: %s\n%d - %d (HOS: %s)\n%08X %08X %08X\n%08X%08X%08X%08X\n%08X\n%08X%08X%08X%08X\n%08X%08X%08X%08X\n%d\n"
-		"%s\n%d.%02d (0x%X)\n%d.%02d (0x%X)\n%d\n%d\n%d\n%d\n0x%X\n%d\n%d\n%d\n%d\n"
+		"%s\n%d.%02d (0x%X)\n%d.%02d (0x%X)\n%d\n%d\n%d\n%d\n0x%X\n%d\n%d (%d)\n%d (%d)\n%d (%d)\n"
 		"%d\n%d\n%d (0x%X)\n%d\n%d\n%d\n"
-		"ID: %02X, Major: A%02d, Minor: %d",
+		"ID: %02X, Major: %d, Minor: A%02d",
 		FUSE(FUSE_SKU_INFO), sku, fuse_read_hw_state() ? "Dev" : "Retail",
 		dram_id, dram_man, burnt_fuses_7, burnt_fuses_6, fuses_hos_version,
 		fuse_read_odm(4), fuse_read_odm(6), fuse_read_odm(7),
@@ -635,7 +631,9 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		(FUSE(FUSE_OPT_CP_REV)  >> 5) & 0x3F, FUSE(FUSE_OPT_CP_REV) & 0x1F, FUSE(FUSE_OPT_CP_REV),
 		FUSE(FUSE_CPU_SPEEDO_0_CALIB), FUSE(FUSE_CPU_SPEEDO_1_CALIB), FUSE(FUSE_CPU_SPEEDO_2_CALIB),
 		FUSE(FUSE_SOC_SPEEDO_0_CALIB), FUSE(FUSE_SOC_SPEEDO_1_CALIB), FUSE(FUSE_SOC_SPEEDO_2_CALIB),
-		FUSE(FUSE_CPU_IDDQ_CALIB), FUSE(FUSE_SOC_IDDQ_CALIB), FUSE(FUSE_GPU_IDDQ_CALIB),
+		FUSE(FUSE_CPU_IDDQ_CALIB), FUSE(FUSE_CPU_IDDQ_CALIB) * 4,
+		FUSE(FUSE_SOC_IDDQ_CALIB), FUSE(FUSE_SOC_IDDQ_CALIB) * 4,
+		FUSE(FUSE_GPU_IDDQ_CALIB), FUSE(FUSE_GPU_IDDQ_CALIB) * 5,
 		FUSE(FUSE_OPT_VENDOR_CODE), FUSE(FUSE_OPT_FAB_CODE), lot_bin, FUSE(FUSE_OPT_LOT_CODE_0),
 		FUSE(FUSE_OPT_WAFER_ID), FUSE(FUSE_OPT_X_COORDINATE), FUSE(FUSE_OPT_Y_COORDINATE),
 		(chip_id >> 8) & 0xFF, (chip_id >> 4) & 0xF, (chip_id >> 16) & 0xF);
@@ -657,11 +655,11 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 	emc_mr_data_t ram_rev0    = sdram_read_mrx(MR6_REV_ID1);
 	emc_mr_data_t ram_rev1    = sdram_read_mrx(MR7_REV_ID2);
 	emc_mr_data_t ram_density = sdram_read_mrx(MR8_DENSITY);
-	u32 ranks = EMC(EMC_ADR_CFG) + 1;
+	u32 ranks    = EMC(EMC_ADR_CFG) + 1;
 	u32 channels = (EMC(EMC_FBIO_CFG7) >> 1) & 3;
 	channels = (channels & 1) + ((channels & 2) >> 1);
 	s_printf(txt_buf, "#00DDFF %s SDRAM ##FF8000 (Ch 0 | Ch 1):#\n#FF8000 Vendor:# ", h_cfg.t210b01 ? "LPDDR4X" : "LPDDR4");
-	switch (ram_vendor.rank0_ch0)
+	switch (ram_vendor.chip0.rank0_ch0)
 	{
 	case 1:
 		strcat(txt_buf, "Samsung");
@@ -681,11 +679,23 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 	case 9:
 		strcat(txt_buf, "ESMT");
 		break;
+	case 19:
+		strcat(txt_buf, "CXMT");
+		break;
 	case 26:
-		strcat(txt_buf, "Xi'an UniIC Semiconductors Co., Ltd");
+		strcat(txt_buf, "Xi'an UniIC");
+		break;
+	case 27:
+		strcat(txt_buf, "ISSI");
 		break;
 	case 28:
 		strcat(txt_buf, "JSC");
+		break;
+	case 197:
+		strcat(txt_buf, "SINKER");
+		break;
+	case 229:
+		strcat(txt_buf, "Dosilicon");
 		break;
 	case 248:
 		strcat(txt_buf, "Fidelix");
@@ -701,11 +711,11 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		strcat(txt_buf, "Micron");
 		break;
 	default:
-		s_printf(txt_buf + strlen(txt_buf), "#FF8000 Unknown# (%d)", ram_vendor.rank0_ch0);
+		s_printf(txt_buf + strlen(txt_buf), "#FF8000 Unknown# (%d)", ram_vendor.chip0.rank0_ch0);
 		break;
 	}
 	strcat(txt_buf, " #FF8000 |# ");
-	switch (ram_vendor.rank0_ch1)
+	switch (ram_vendor.chip1.rank0_ch0)
 	{
 	case 1:
 		strcat(txt_buf, "Samsung");
@@ -717,12 +727,12 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		strcat(txt_buf, "Micron");
 		break;
 	default:
-		s_printf(txt_buf + strlen(txt_buf), "#FF8000 Unknown# (%d)", ram_vendor.rank0_ch1);
+		s_printf(txt_buf + strlen(txt_buf), "#FF8000 Unknown# (%d)", ram_vendor.chip1.rank0_ch0);
 		break;
 	}
 	s_printf(txt_buf + strlen(txt_buf), "\n#FF8000 Rev ID:#  %X.%02X #FF8000 |# %X.%02X\n#FF8000 Density:# %d",
-		ram_rev0.rank0_ch0, ram_rev1.rank0_ch0, ram_rev0.rank0_ch1, ram_rev1.rank0_ch1, ranks * channels);
-	switch ((ram_density.rank0_ch0 & 0x3C) >> 2)
+		ram_rev0.chip0.rank0_ch0, ram_rev1.chip0.rank0_ch0, ram_rev0.chip1.rank0_ch0, ram_rev1.chip1.rank0_ch0, ranks * channels);
+	switch ((ram_density.chip0.rank0_ch0 & 0x3C) >> 2)
 	{
 	case 2:
 		strcat(txt_buf, " x 512MB");
@@ -740,11 +750,11 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		strcat(txt_buf, " x 2GB");
 		break;
 	default:
-		s_printf(txt_buf + strlen(txt_buf), " x Unk (%d)", (ram_density.rank0_ch0 & 0x3C) >> 2);
+		s_printf(txt_buf + strlen(txt_buf), " x Unk (%d)", (ram_density.chip0.rank0_ch0 & 0x3C) >> 2);
 		break;
 	}
 	s_printf(txt_buf + strlen(txt_buf), " #FF8000 |# %d", ranks * channels);
-	switch ((ram_density.rank0_ch1 & 0x3C) >> 2)
+	switch ((ram_density.chip1.rank0_ch0 & 0x3C) >> 2)
 	{
 	case 2:
 		strcat(txt_buf, " x 512MB");
@@ -762,7 +772,7 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		strcat(txt_buf, " x 2GB");
 		break;
 	default:
-		s_printf(txt_buf + strlen(txt_buf), " x Unk (%d)", (ram_density.rank0_ch1 & 0x3C) >> 2);
+		s_printf(txt_buf + strlen(txt_buf), " x Unk (%d)", (ram_density.chip1.rank0_ch0 & 0x3C) >> 2);
 		break;
 	}
 	strcat(txt_buf, "\n\n");
@@ -800,6 +810,9 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		case 0x98:
 			strcat(txt_buf, "-???");
 			break;
+		case 0x99:
+			strcat(txt_buf, "-???");
+			break;
 		default:
 			strcat(txt_buf, " #FFDD00 Contact me!#");
 			break;
@@ -819,13 +832,13 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 			strcat(txt_buf, "02");
 			break;
 		case 0x96:
-			strcat(txt_buf, "XX");
+			strcat(txt_buf, "??");
 			break;
 		case 0x97:
-			strcat(txt_buf, "XX");
+			strcat(txt_buf, "??");
 			break;
 		case 0x98:
-			strcat(txt_buf, "XX");
+			strcat(txt_buf, "??");
 			break;
 		default:
 			strcat(txt_buf, " #FFDD00 Contact me!#");
@@ -844,6 +857,12 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		break;
 	case PANEL_SAM_AMS699VC01:
 		strcat(txt_buf, "Samsung AMS699VC01");
+		break;
+	case PANEL_OEM_CLONE_5_5:
+		strcat(txt_buf, "#FFDD00 OEM Clone 5.5\"#");
+		break;
+	case PANEL_OEM_CLONE:
+		strcat(txt_buf, "#FFDD00 OEM Clone#");
 		break;
 	case 0xCCCC:
 		strcat(txt_buf, "#FFDD00 Failed to get info!#");
@@ -1605,7 +1624,7 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	s_printf(txt_buf + strlen(txt_buf), "(%02X)\n%c%c%c%c%c%c\n%d.%d\n%04X\n%02d/%04d\n\n",
 		emmc_storage.cid.manfid,
 		emmc_storage.cid.prod_name[0], emmc_storage.cid.prod_name[1], emmc_storage.cid.prod_name[2],
-		emmc_storage.cid.prod_name[3], emmc_storage.cid.prod_name[4],	emmc_storage.cid.prod_name[5],
+		emmc_storage.cid.prod_name[3], emmc_storage.cid.prod_name[4], emmc_storage.cid.prod_name[5],
 		emmc_storage.cid.prv & 0xF, emmc_storage.cid.prv >> 4,
 		emmc_storage.cid.serial, emmc_storage.cid.month, emmc_storage.cid.year);
 
@@ -1997,9 +2016,8 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 		"Bus Width:\n"
 		"Current Rate:\n"
 		"Speed Class:\n"
-		"UHS Grade:\n"
-		"Video Class:\n"
-		"App perf class:\n"
+		"UHS Classes:\n"
+		"Max Bus Speed:\n\n"
 		"Write Protect:"
 	);
 	lv_obj_set_width(lb_desc2, lv_obj_get_width(desc2));
@@ -2033,14 +2051,32 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 		uhs_au_size /= 1024;
 	}
 
+	sd_func_modes_t fmodes = { 0 };
+	sd_storage_get_fmodes(&sd_storage, NULL, &fmodes);
+
+	char *bus_speed;
+	if      (fmodes.cmd_system & SD_MODE_UHS_DDR200)
+		bus_speed = "DDR200";
+	else if (fmodes.access_mode & SD_MODE_UHS_SDR104)
+		bus_speed = "SDR104";
+	else if (fmodes.access_mode & SD_MODE_UHS_SDR50)
+		bus_speed = "SDR50";
+	else if (fmodes.access_mode & SD_MODE_UHS_DDR50)
+		bus_speed = "DDR50";
+	else if (fmodes.access_mode & SD_MODE_UHS_SDR25)
+		bus_speed = "SDR25";
+	else
+		bus_speed = "SDR12";
+
 	s_printf(txt_buf,
-		"#00DDFF v%d.0#\n%02X\n%d MiB\n%X (CP %X)\n%d\n%d MB/s (%d MHz)\n%d (AU: %d %s\nU%d\nV%d\nA%d\n%s",
+		"#00DDFF v%d.0#\n%02X\n%d MiB\n%X (CP %X)\n%d\n%d MB/s (%d MHz)\n%d (AU: %d %s\nU%d V%d A%d\n%s\n\n%s",
 		sd_storage.csd.structure + 1, sd_storage.csd.cmdclass,
 		sd_storage.sec_cnt >> 11, sd_storage.sec_cnt, sd_storage.ssr.protected_size >> 9,
 		sd_storage.ssr.bus_width, sd_storage.csd.busspeed,
 		(sd_storage.csd.busspeed > 10) ? (sd_storage.csd.busspeed * 2) : 50,
-		sd_storage.ssr.speed_class, uhs_au_size, uhs_au_mb ? "MiB)" : "KiB)", sd_storage.ssr.uhs_grade,
-		sd_storage.ssr.video_class, sd_storage.ssr.app_class, wp_info);
+		sd_storage.ssr.speed_class, uhs_au_size, uhs_au_mb ? "MiB)" : "KiB)",
+		sd_storage.ssr.uhs_grade, sd_storage.ssr.video_class, sd_storage.ssr.app_class,
+		bus_speed, wp_info);
 
 	lv_label_set_text(lb_val2, txt_buf);
 

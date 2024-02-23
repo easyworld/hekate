@@ -91,9 +91,9 @@ static pllm_clk_config_t pllm_clk_config_table[] =
 	{38400, 2099200, 164, 3, 0}, // Custom. Normalized 2100 MHz.
 	{38400, 2131200, 111, 2, 0}, // JEDEC Standard. (T210B01 official max).
 	{38400, 2163200, 169, 3, 0}, // Custom. Normalized 2166 MHz.
-	{38400, 2188800,  57, 1, 0}, // Custom. Normalized 2200 MHz.
-	{38400, 2227200,  58, 1, 0}, // Custom. Normalized 2233 MHz.
-	{38400, 2265600,  59, 1, 0}, // Custom. Normalized 2266 MHz.
+	{38400, 2188800, 114, 2, 0}, // Custom. Normalized 2200 MHz.
+	{38400, 2227200, 116, 2, 0}, // Custom. Normalized 2233 MHz.
+	{38400, 2265600, 118, 2, 0}, // Custom. Normalized 2266 MHz.
 	{38400, 2291200, 179, 3, 0}, // Custom. Normalized 2300 MHz.
 	{38400, 2329600, 182, 3, 0}, // Custom. Normalized 2333 MHz.
 	{38400, 2361600, 123, 2, 0}, // Custom. Normalized 2366 MHz.
@@ -1168,7 +1168,7 @@ static u32 _get_dram_temperature()
 	if (channel1_enabled)
 	{
 		_request_mmr_data(0x40040000, EMC_CHANNEL1);
-		mr4_1 = EMC(EMC_MRR);
+		mr4_1 = EMC(EMC_MRR) & 0xFFFF;
 
 		if (mr4_1 < 0xF001)
 			mr4_1 &= 0x7;
@@ -1549,21 +1549,25 @@ static u32 _minerva_update_clock_tree_delay(emc_table_t *src_emc_entry, emc_tabl
 	if (upd_type_bits & 0x5400)
 	{
 		_request_mmr_data(0x80130000, channel1_enabled); // Dev0 MRR 19.
-		temp_ch0_0 = (EMC(EMC_MRR) & 0xFF) << 8;
-		temp_ch0_1 = EMC(EMC_MRR) & 0xFF00;
+		u32 mrr = EMC(EMC_MRR);
+		temp_ch0_0 = (mrr & 0xFF) << 8;
+		temp_ch0_1 = mrr & 0xFF00;
 		if (channel1_enabled)
 		{
-			temp_ch1_0 = (EMC_CH1(EMC_MRR) & 0xFF) << 8;
-			temp_ch1_1 = EMC_CH1(EMC_MRR) & 0xFF00;
+			mrr = EMC_CH1(EMC_MRR);
+			temp_ch1_0 = (mrr & 0xFF) << 8;
+			temp_ch1_1 = mrr & 0xFF00;
 		}
 
 		_request_mmr_data(0x80120000, channel1_enabled); // Dev0 MRR 18.
-		temp_ch0_0 |= EMC(EMC_MRR) & 0xFF;
-		temp_ch0_1 |= (EMC(EMC_MRR) & 0xFF00) >> 8;
+		mrr = EMC(EMC_MRR);
+		temp_ch0_0 |= mrr & 0xFF;
+		temp_ch0_1 |= (mrr & 0xFF00) >> 8;
 		if (channel1_enabled)
 		{
-			temp_ch1_0 |= EMC_CH1(EMC_MRR) & 0xFF;
-			temp_ch1_1 |= (EMC_CH1(EMC_MRR) & 0xFF00) >> 8;
+			mrr = EMC_CH1(EMC_MRR);
+			temp_ch1_0 |= mrr & 0xFF;
+			temp_ch1_1 |= (mrr & 0xFF00) >> 8;
 		}
 	}
 
@@ -1723,21 +1727,25 @@ calc_dev2:
 	if (update_type <= PERIODIC_TRAINING_UPDATE && upd_type_bits & 0x5400)
 	{
 		_request_mmr_data(0x40130000, channel1_enabled); // Dev1 MRR 19.
-		temp_ch0_0 = (EMC(EMC_MRR) & 0xFF) << 8;
-		temp_ch0_1 = EMC(EMC_MRR) & 0xFF00;
+		u32 mrr = EMC(EMC_MRR);
+		temp_ch0_0 = (mrr& 0xFF) << 8;
+		temp_ch0_1 = mrr & 0xFF00;
 		if (channel1_enabled)
 		{
-			temp_ch1_0 = (EMC_CH1(EMC_MRR) & 0xFF) << 8;
-			temp_ch1_1 = EMC_CH1(EMC_MRR) & 0xFF00;
+			mrr = EMC_CH1(EMC_MRR);
+			temp_ch1_0 = (mrr & 0xFF) << 8;
+			temp_ch1_1 = mrr & 0xFF00;
 		}
 
 		_request_mmr_data(0x40120000, channel1_enabled); // Dev1 MRR 18
-		temp_ch0_0 |= EMC(EMC_MRR) & 0xFF;
-		temp_ch0_1 |= ((EMC(EMC_MRR) & 0xFF00) >> 8);
+		mrr = EMC(EMC_MRR);
+		temp_ch0_0 |= mrr & 0xFF;
+		temp_ch0_1 |= ((mrr & 0xFF00) >> 8);
 		if (channel1_enabled)
 		{
-			temp_ch1_0 |= EMC_CH1(EMC_MRR) & 0xFF;
-			temp_ch1_1 |= (EMC_CH1(EMC_MRR) & 0xFF00) >> 8;
+			mrr = EMC_CH1(EMC_MRR);
+			temp_ch1_0 |= mrr & 0xFF;
+			temp_ch1_1 |= (mrr & 0xFF00) >> 8;
 		}
 	}
 
@@ -3280,7 +3288,7 @@ static u32 _minerva_set_clock(emc_table_t *src_emc_entry, emc_table_t *dst_emc_e
 		if (needs_wr_training)
 			training_command |= (1 << 3);  // WR: Initiates WR Training.
 		if (needs_wr_vref_training)
-			training_command |= (1 << 6);  // WR_VREF: Initiates OB (wrire) DRAM_VREF Training.
+			training_command |= (1 << 6);  // WR_VREF: Initiates OB (write) DRAM_VREF Training.
 		if (needs_rd_training)
 			training_command |= (1 << 2);  // RD: Initiates RD Training.
 		if (needs_rd_vref_training)
@@ -3614,9 +3622,9 @@ void _minerva_do_over_temp_compensation(mtc_config_t *mtc_cfg)
 	if (dram_type != DRAM_TYPE_LPDDR4)
 		return;
 
-	u32 dram_temp = _get_dram_temperature();
+	s32 dram_temp = _get_dram_temperature();
 
-	if (mtc_cfg->prev_temp == dram_temp || dram_temp == (u32)-1)
+	if (dram_temp < 0 || mtc_cfg->prev_temp == (u32)dram_temp)
 		return;
 
 	u32 refr = mtc_cfg->current_emc_table->burst_regs.emc_refresh;
@@ -3632,7 +3640,7 @@ void _minerva_do_over_temp_compensation(mtc_config_t *mtc_cfg)
 	case 3:
 		if (mtc_cfg->prev_temp < 4)
 		{
-			mtc_cfg->prev_temp = dram_temp;
+			mtc_cfg->prev_temp = (u32)dram_temp;
 			return;
 		}
 		break;

@@ -1,7 +1,7 @@
 /*
  * L4T Loader for Tegra X1
  *
- * Copyright (c) 2020-2023 CTCaer
+ * Copyright (c) 2020-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -34,8 +34,8 @@
  * 2: Arachne Register Cell v1.
  * 3: Arachne Register Cell v2. PTSA Rework support.
  */
-#define L4T_LOADER_API_REV 3
-#define L4T_FIRMWARE_REV   0x33524556 // REV3.
+#define L4T_LOADER_API_REV 4
+#define L4T_FIRMWARE_REV   0x34524556 // REV4.
 
 #ifdef DEBUG_UART_PORT
  #include <soc/uart.h>
@@ -109,13 +109,11 @@
 #define BPMPFW_B01_DTB_EMC_ENABLE_OFF        0x20
 #define BPMPFW_B01_DTB_EMC_VALUES_OFF        0x4C
 #define BPMPFW_B01_DTB_EMC_FREQ_VAL          0x8C
-#define BPMPFW_B01_DTB_EMC_SCC_OFF           0x108C
-#define BPMPFW_B01_DTB_EMC_PLLM_DIVM_VAL     0x10A4
-#define BPMPFW_B01_DTB_EMC_PLLM_DIVN_VAL     0x10A8
-#define BPMPFW_B01_DTB_EMC_PLLM_DIVP_VAL     0x10AC
+#define BPMPFW_B01_DTB_EMC_OPT_VAL           0xEDC
 #define BPMPFW_B01_DTB_EMC_TBL_START(idx)             (BPMPFW_B01_DTB_EMC_TBL_OFF + BPMPFW_B01_DTB_EMC_TBL_SZ * (idx))
 #define BPMPFW_B01_DTB_EMC_TBL_SET_VAL(idx, off, val) (*(u32 *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + (off)) = (val))
 #define BPMPFW_B01_DTB_EMC_TBL_SET_FREQ(idx, freq)    (*(u32 *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_FREQ_VAL) = (freq))
+#define BPMPFW_B01_DTB_EMC_TBL_SET_OPTC(idx, opt)     (*(u32 *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_OPT_VAL) = (opt))
 #define BPMPFW_B01_DTB_EMC_TBL_SET_NAME(idx, name)    (strcpy((char *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_NAME_VAL), (name)))
 #define BPMPFW_B01_DTB_EMC_TBL_ENABLE(idx)            (*(char *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_ENABLE_OFF) = 'n')
 #define BPMPFW_B01_DTB_EMC_TBL_OFFSET(idx)            ((void *)(BPMPFW_B01_DTB_EMC_TBL_START(idx) + BPMPFW_B01_DTB_EMC_VALUES_OFF))
@@ -258,6 +256,7 @@ typedef struct _l4t_ctxt_t
 	int   ram_oc_freq;
 	int   ram_oc_vdd2;
 	int   ram_oc_vddq;
+	int   ram_oc_opt;
 
 	u32   serial_port;
 	u32   sc7entry_size;
@@ -265,10 +264,11 @@ typedef struct _l4t_ctxt_t
 	emc_table_t *mtc_table;
 } l4t_ctxt_t;
 
-#define DRAM_VDD2_OC_MIN_VOLTAGE  1050
-#define DRAM_VDD2_OC_MAX_VOLTAGE  1175
-#define DRAM_VDDQ_OC_MIN_VOLTAGE  550
-#define DRAM_VDDQ_OC_MAX_VOLTAGE  650
+#define DRAM_VDD2_OC_MIN_VOLTAGE   1050
+#define DRAM_VDD2_OC_MAX_VOLTAGE   1175
+#define DRAM_VDD2Q_OC_MAX_VOLTAGE  1237
+#define DRAM_VDDQ_OC_MIN_VOLTAGE   550
+#define DRAM_VDDQ_OC_MAX_VOLTAGE   650
 #define DRAM_T210B01_TBL_MAX_FREQ 1600000
 
 //! TODO: Update on dram config changes.
@@ -362,8 +362,6 @@ static void _l4t_sdram_lp0_save_params(bool t210b01)
 	} else {
 		s(MC_VIDEO_PROTECT_REG_CTRL, 1:0, secure_scratch14, 31:30);
 	}
-	s32(MC_VIDEO_PROTECT_GPU_OVERRIDE_0, secure_scratch12);
-	s(MC_VIDEO_PROTECT_GPU_OVERRIDE_1, 15:0, secure_scratch49, 15:0);
 
 	// TZD.
 	s(MC_SEC_CARVEOUT_BOM,     31:20, secure_scratch53, 23:12);
@@ -471,22 +469,9 @@ static void _l4t_mc_config_carveout(bool t210b01)
 	// Disabled VPR carveout. DT decides if enabled or not.
 	MC(MC_VIDEO_PROTECT_BOM) = 0xFFF00000;
 	MC(MC_VIDEO_PROTECT_SIZE_MB) = 0;
-	if (!t210b01)
-	{
-		// For T210 force the following values for Falcon to configure WPR access.
-		// For T210B01 use default, already set from dram config.
-		// HOS forces 1 and 0.
-		MC(MC_VIDEO_PROTECT_GPU_OVERRIDE_0) = 0x2A800000;
-		MC(MC_VIDEO_PROTECT_GPU_OVERRIDE_1) = 2;
-	}
 	MC(MC_VIDEO_PROTECT_REG_CTRL) = VPR_CTRL_TZ_SECURE | VPR_CTRL_LOCKED;
 
 	// Temporarily disable TZDRAM carveout. For launching coldboot TZ.
-	MC(MC_SEC_CARVEOUT_BOM)      = 0xFFF00000;
-	MC(MC_SEC_CARVEOUT_SIZE_MB)  = 0;
-	MC(MC_SEC_CARVEOUT_REG_CTRL) = 0;
-
-	// Disable MTS carveout. Only CCPLEX has access.
 	MC(MC_SEC_CARVEOUT_BOM)      = 0xFFF00000;
 	MC(MC_SEC_CARVEOUT_SIZE_MB)  = 0;
 	MC(MC_SEC_CARVEOUT_REG_CTRL) = 0;
@@ -657,18 +642,7 @@ static void _l4t_mc_config_carveout(bool t210b01)
 	 */
 	carveout_base -= CARVEOUT_NVDEC_TSEC_ENABLE ? ALIGN(CARVEOUT_TSEC_SIZE, SZ_1M) : 0;
 	MC(MC_SECURITY_CARVEOUT4_BOM)        = CARVEOUT_NVDEC_TSEC_ENABLE ? carveout_base : 0;
-	MC(MC_SECURITY_CARVEOUT4_BOM_HI)     = 0x0;
 	MC(MC_SECURITY_CARVEOUT4_SIZE_128KB) = CARVEOUT_NVDEC_TSEC_ENABLE ? CARVEOUT_TSEC_SIZE / SZ_128K : 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_ACCESS0) = 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_ACCESS1) = 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_ACCESS2) = SEC_CARVEOUT_CA2_R_TSEC  | SEC_CARVEOUT_CA2_W_TSEC;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_ACCESS3) = 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_ACCESS4) = SEC_CARVEOUT_CA4_R_TSECB | SEC_CARVEOUT_CA4_W_TSECB;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_FORCE_INTERNAL_ACCESS0) = 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_FORCE_INTERNAL_ACCESS1) = 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_FORCE_INTERNAL_ACCESS2) = 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_FORCE_INTERNAL_ACCESS3) = 0;
-	MC(MC_SECURITY_CARVEOUT4_CLIENT_FORCE_INTERNAL_ACCESS4) = 0;
 	MC(MC_SECURITY_CARVEOUT4_CFG0) = SEC_CARVEOUT_CFG_LOCKED         |
 									 SEC_CARVEOUT_CFG_RD_FALCON_HS   |
 									 SEC_CARVEOUT_CFG_WR_FALCON_HS   |
@@ -681,18 +655,7 @@ static void _l4t_mc_config_carveout(bool t210b01)
 	// Set TSECA carveout. Only for NVDEC bl/prod and TSEC. Otherwise disabled.
 	carveout_base -= CARVEOUT_NVDEC_TSEC_ENABLE ? ALIGN(CARVEOUT_TSEC_SIZE, SZ_1M) : 0;
 	MC(MC_SECURITY_CARVEOUT5_BOM)        = CARVEOUT_NVDEC_TSEC_ENABLE ? carveout_base : 0;
-	MC(MC_SECURITY_CARVEOUT5_BOM_HI)     = 0;
 	MC(MC_SECURITY_CARVEOUT5_SIZE_128KB) = CARVEOUT_NVDEC_TSEC_ENABLE ? CARVEOUT_TSEC_SIZE / SZ_128K : 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_ACCESS0) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_ACCESS1) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_ACCESS2) = SEC_CARVEOUT_CA2_R_TSEC  | SEC_CARVEOUT_CA2_W_TSEC;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_ACCESS3) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_ACCESS4) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_FORCE_INTERNAL_ACCESS0) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_FORCE_INTERNAL_ACCESS1) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_FORCE_INTERNAL_ACCESS2) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_FORCE_INTERNAL_ACCESS3) = 0;
-	MC(MC_SECURITY_CARVEOUT5_CLIENT_FORCE_INTERNAL_ACCESS4) = 0;
 	MC(MC_SECURITY_CARVEOUT5_CFG0) = SEC_CARVEOUT_CFG_LOCKED         |
 									 SEC_CARVEOUT_CFG_RD_FALCON_HS   |
 									 SEC_CARVEOUT_CFG_WR_FALCON_HS   |
@@ -757,6 +720,7 @@ static void _l4t_bpmpfw_b01_config(l4t_ctxt_t *ctxt)
 {
 	char *ram_oc_txt  = ctxt->ram_oc_txt;
 	u32   ram_oc_freq = ctxt->ram_oc_freq;
+	u32   ram_oc_opt  = ctxt->ram_oc_opt;
 	u32   ram_id      = fuse_read_dramid(true);
 
 	// Set default parameters.
@@ -815,11 +779,12 @@ static void _l4t_bpmpfw_b01_config(l4t_ctxt_t *ctxt)
 
 		BPMPFW_B01_DTB_EMC_TBL_SET_NAME(tbl_idx, ram_oc_txt);
 		BPMPFW_B01_DTB_EMC_TBL_SET_FREQ(tbl_idx, ram_oc_freq);
+		BPMPFW_B01_DTB_EMC_TBL_SET_OPTC(tbl_idx, ram_oc_opt);
 
 		// Enable table.
 		BPMPFW_B01_DTB_EMC_TBL_ENABLE(tbl_idx);
 
-		UPRINTF("RAM Frequency set to: %d KHz. Voltage: %d mV\n", ram_oc_freq, ram_oc_volt);
+		UPRINTF("RAM Frequency set to: %d KHz. Voltage: %d mV\n", ram_oc_freq, ctxt->ram_oc_vdd2);
 	}
 
 	// Save BPMP-FW entrypoint for TZ.
@@ -876,7 +841,7 @@ static void _l4t_bl33_cfg_set_key(char *env, char *key, char *val)
 	strcat(env, "\n");
 }
 
-static void _l4t_set_config(l4t_ctxt_t *ctxt, const ini_sec_t *ini_sec, int entry_idx, int is_list)
+static void _l4t_set_config(l4t_ctxt_t *ctxt, const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b01)
 {
 	char *bl33_env = (char *)BL33_ENV_BASE;
 	bl33_env[0] = '\0';
@@ -895,10 +860,13 @@ static void _l4t_set_config(l4t_ctxt_t *ctxt, const ini_sec_t *ini_sec, int entr
 		else if (!strcmp("ram_oc_vdd2", kv->key))
 		{
 			ctxt->ram_oc_vdd2 = atoi(kv->val);
-			if (ctxt->ram_oc_vdd2 > DRAM_VDD2_OC_MAX_VOLTAGE)
+
+			if (t210b01 && ctxt->ram_oc_vdd2 > DRAM_VDD2_OC_MAX_VOLTAGE)
 				ctxt->ram_oc_vdd2 = DRAM_VDD2_OC_MAX_VOLTAGE;
+			else if (!t210b01 && ctxt->ram_oc_vdd2 > DRAM_VDD2Q_OC_MAX_VOLTAGE)
+				ctxt->ram_oc_vdd2 = DRAM_VDD2Q_OC_MAX_VOLTAGE;
 			else if (ctxt->ram_oc_vdd2 < DRAM_VDD2_OC_MIN_VOLTAGE)
-				ctxt->ram_oc_vdd2 = 0;
+				ctxt->ram_oc_vdd2 = DRAM_VDD2_OC_MIN_VOLTAGE;
 		}
 		else if (!strcmp("ram_oc_vddq", kv->key))
 		{
@@ -908,6 +876,8 @@ static void _l4t_set_config(l4t_ctxt_t *ctxt, const ini_sec_t *ini_sec, int entr
 			else if (ctxt->ram_oc_vddq < DRAM_VDDQ_OC_MIN_VOLTAGE)
 				ctxt->ram_oc_vddq = 0;
 		}
+		else if (!strcmp("ram_oc_opt",  kv->key))
+			ctxt->ram_oc_opt = atoi(kv->val);
 		else if (!strcmp("uart_port",   kv->key))
 			ctxt->serial_port = atoi(kv->val);
 
@@ -958,7 +928,7 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	gfx_con_setpos(0, 0);
 
 	// Parse config.
-	_l4t_set_config(&ctxt, ini_sec, entry_idx, is_list);
+	_l4t_set_config(&ctxt, ini_sec, entry_idx, is_list, t210b01);
 
 	if (!ctxt.path)
 	{
@@ -971,13 +941,6 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	if (!t210b01 && !ctxt.mtc_table)
 	{
 		_l4t_crit_error("Minerva missing", true);
-		return;
-	}
-
-	// U-BOOT does not support exfat.
-	if (sd_fs.fs_type == FS_EXFAT)
-	{
-		_l4t_crit_error("exFAT not supported", false);
 		return;
 	}
 
@@ -1146,7 +1109,7 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 			max7762x_regulator_set_voltage(REGULATOR_SD1, ctxt.ram_oc_vdd2 * 1000);
 
 		// Train the rest of the table, apply FSP WAR, set RAM to 800 MHz.
-		minerva_prep_boot_l4t(ctxt.ram_oc_freq);
+		minerva_prep_boot_l4t(ctxt.ram_oc_freq, ctxt.ram_oc_opt);
 
 		// Set emc table parameters and copy it.
 		int table_entries = minerva_get_mtc_table_entries();

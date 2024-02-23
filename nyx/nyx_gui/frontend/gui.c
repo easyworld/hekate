@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -65,7 +65,9 @@ char *text_color;
 typedef struct _jc_lv_driver_t
 {
 	lv_indev_t *indev;
-	bool centering_done;
+// LV_INDEV_READ_PERIOD * JC_CAL_MAX_STEPS = 264 ms.
+#define JC_CAL_MAX_STEPS 8
+	u32 calibration_step;
 	u16 cx_max;
 	u16 cx_min;
 	u16 cy_max;
@@ -412,7 +414,7 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 	}
 
 	// Calibrate left stick.
-	if (!jc_drv_ctx.centering_done)
+	if (jc_drv_ctx.calibration_step != JC_CAL_MAX_STEPS)
 	{
 		if (n_cfg.jc_force_right)
 		{
@@ -420,11 +422,11 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 				&& jc_pad->rstick_x > 0x400 && jc_pad->rstick_y > 0x400
 				&& jc_pad->rstick_x < 0xC00 && jc_pad->rstick_y < 0xC00)
 			{
+				jc_drv_ctx.calibration_step++;
 				jc_drv_ctx.cx_max = jc_pad->rstick_x + 0x96;
 				jc_drv_ctx.cx_min = jc_pad->rstick_x - 0x96;
 				jc_drv_ctx.cy_max = jc_pad->rstick_y + 0x96;
 				jc_drv_ctx.cy_min = jc_pad->rstick_y - 0x96;
-				jc_drv_ctx.centering_done = true;
 				jc_drv_ctx.cursor_timeout = 0;
 			}
 		}
@@ -432,14 +434,15 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 			     && jc_pad->lstick_x > 0x400 && jc_pad->lstick_y > 0x400
 			     && jc_pad->lstick_x < 0xC00 && jc_pad->lstick_y < 0xC00)
 		{
+			jc_drv_ctx.calibration_step++;
 			jc_drv_ctx.cx_max = jc_pad->lstick_x + 0x96;
 			jc_drv_ctx.cx_min = jc_pad->lstick_x - 0x96;
 			jc_drv_ctx.cy_max = jc_pad->lstick_y + 0x96;
 			jc_drv_ctx.cy_min = jc_pad->lstick_y - 0x96;
-			jc_drv_ctx.centering_done = true;
 			jc_drv_ctx.cursor_timeout = 0;
 		}
-		else
+
+		if (jc_drv_ctx.calibration_step != JC_CAL_MAX_STEPS)
 		{
 			data->state = LV_INDEV_STATE_REL;
 			return false;
@@ -447,13 +450,10 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 	}
 
 	// Re-calibrate on disconnection.
-	if (n_cfg.jc_force_right)
-	{
-		if (!jc_pad->conn_r)
-			jc_drv_ctx.centering_done = 0;
-	}
-	else if (!jc_pad->conn_l)
-		jc_drv_ctx.centering_done = 0;
+	if (n_cfg.jc_force_right && !jc_pad->conn_r)
+		jc_drv_ctx.calibration_step = 0;
+	else if (!n_cfg.jc_force_right && !jc_pad->conn_l)
+		jc_drv_ctx.calibration_step = 0;
 
 	// Set button presses.
 	if (jc_pad->a || jc_pad->zl || jc_pad->zr)
@@ -1330,11 +1330,13 @@ static void _update_status_bar(void *params)
 	max17050_get_property(MAX17050_VCELL, &batt_volt);
 	max17050_get_property(MAX17050_Current, &batt_curr);
 
-	// Enable fan if more than 46 oC.
+	// Enable fan if more than 41 oC.
 	u32 soc_temp_dec = (soc_temp >> 8);
 	if (soc_temp_dec > 51)
 		set_fan_duty(102);
 	else if (soc_temp_dec > 46)
+		set_fan_duty(76);
+	else if (soc_temp_dec > 41)
 		set_fan_duty(51);
 	else if (soc_temp_dec < 40)
 		set_fan_duty(0);
