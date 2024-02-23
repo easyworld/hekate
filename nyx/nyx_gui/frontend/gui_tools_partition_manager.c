@@ -1775,20 +1775,20 @@ static lv_res_t _create_mbox_partitioning_andr_part(lv_obj_t *btn)
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-	static const char *mbox_btn_map[] = { "\222Dynamic", "\222Legacy", "" };
+	static const char *mbox_btn_map[] = { "\222動態", "\222傳統", "" };
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 
 	lv_obj_set_width(mbox, LV_HOR_RES / 10 * 5);
-	lv_mbox_set_text(mbox, "#FF8000 Android Partitioning#");
+	lv_mbox_set_text(mbox, "#FF8000 Android 分區#");
 
 	lv_obj_t *lbl_status = lv_label_create(mbox, NULL);
 	lv_label_set_recolor(lbl_status, true);
 
 	lv_label_set_text(lbl_status,
-		"Please select a partition scheme:\n\n"
-		"#C7EA46 Dynamic:# Android 13+\n"
-		"#C7EA46 Legacy:# Android 10-11\n");
+		"請選擇分區模式:\n\n"
+		"#C7EA46 動態:# Android 13+\n"
+		"#C7EA46 傳統:# Android 10-11\n");
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, _create_mbox_partitioning_android);
 	lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
