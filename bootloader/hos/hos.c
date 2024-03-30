@@ -2,7 +2,7 @@
  * Copyright (c) 2018 naehrwert
  * Copyright (c) 2018 st4rk
  * Copyright (c) 2018 Ced2911
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  * Copyright (c) 2018 balika011
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -25,6 +25,7 @@
 #include "hos.h"
 #include "hos_config.h"
 #include "secmon_exo.h"
+#include "../frontend/fe_tools.h"
 #include "../config.h"
 #include "../storage/emummc.h"
 
@@ -121,6 +122,7 @@ static const u8 master_kekseed_t210_tsec_v4[HOS_KB_VERSION_MAX - HOS_KB_VERSION_
 	{ 0x6E, 0x77, 0x86, 0xAC, 0x83, 0x0A, 0x8D, 0x3E, 0x7D, 0xB7, 0x66, 0xA0, 0x22, 0xB7, 0x6E, 0x67 }, // 15.0.0.
 	{ 0x99, 0x22, 0x09, 0x57, 0xA7, 0xF9, 0x5E, 0x94, 0xFE, 0x78, 0x7F, 0x41, 0xD6, 0xE7, 0x56, 0xE6 }, // 16.0.0.
 	{ 0x71, 0xB9, 0xA6, 0xC0, 0xFF, 0x97, 0x6B, 0x0C, 0xB4, 0x40, 0xB9, 0xD5, 0x81, 0x5D, 0x81, 0x90 }, // 17.0.0.
+	{ 0x00, 0x04, 0x5D, 0xF0, 0x4D, 0xCD, 0x14, 0xA3, 0x1C, 0xBF, 0xDE, 0x48, 0x55, 0xBA, 0x35, 0xC1 }, // 18.0.0.
 };
 
 //!TODO: Update on mkey changes.
@@ -137,6 +139,7 @@ static const u8 master_kekseed_t210b01[HOS_KB_VERSION_MAX - HOS_KB_VERSION_600 +
 	{ 0xEC, 0x61, 0xBC, 0x82, 0x1E, 0x0F, 0x5A, 0xC3, 0x2B, 0x64, 0x3F, 0x9D, 0xD6, 0x19, 0x22, 0x2D }, // 15.0.0.
 	{ 0xA5, 0xEC, 0x16, 0x39, 0x1A, 0x30, 0x16, 0x08, 0x2E, 0xCF, 0x09, 0x6F, 0x5E, 0x7C, 0xEE, 0xA9 }, // 16.0.0.
 	{ 0x8D, 0xEE, 0x9E, 0x11, 0x36, 0x3A, 0x9B, 0x0A, 0x6A, 0xC7, 0xBB, 0xE9, 0xD1, 0x03, 0xF7, 0x80 }, // 17.0.0.
+	{ 0x4F, 0x41, 0x3C, 0x3B, 0xFB, 0x6A, 0x01, 0x2A, 0x68, 0x9F, 0x83, 0xE9, 0x53, 0xBD, 0x16, 0xD2 }, // 18.0.0.
 };
 
 static const u8 console_keyseed[SE_KEY_128_SIZE] =
@@ -218,7 +221,7 @@ static void _hos_eks_get()
 	if (!h_cfg.eks)
 	{
 		// Read EKS blob.
-		u8 *mbr = calloc(512 , 1);
+		u8 *mbr = zalloc(SD_BLOCKSIZE);
 		if (!hos_eks_rw_try(mbr, false))
 			goto out;
 
@@ -248,7 +251,7 @@ static void _hos_eks_save()
 	bool new_eks = false;
 	if (!h_cfg.eks)
 	{
-		h_cfg.eks = calloc(512 , 1);
+		h_cfg.eks = zalloc(SD_BLOCKSIZE);
 		new_eks = true;
 	}
 
@@ -256,7 +259,7 @@ static void _hos_eks_save()
 	if (h_cfg.eks->enabled != HOS_EKS_TSEC_VER)
 	{
 		// Read EKS blob.
-		u8 *mbr = calloc(512 , 1);
+		u8 *mbr = zalloc(SD_BLOCKSIZE);
 		if (!hos_eks_rw_try(mbr, false))
 		{
 			if (new_eks)
@@ -269,7 +272,7 @@ static void _hos_eks_save()
 		}
 
 		// Get keys.
-		u8 *keys = (u8 *)calloc(SZ_4K, 2);
+		u8 *keys = (u8 *)zalloc(SZ_8K);
 		se_get_aes_keys(keys + SZ_4K, keys, SE_KEY_128_SIZE);
 
 		// Set magic and personalized info.
@@ -283,7 +286,7 @@ static void _hos_eks_save()
 		memcpy(h_cfg.eks->troot_dev, keys + 11 * SE_KEY_128_SIZE, SE_KEY_128_SIZE);
 
 		// Encrypt EKS blob.
-		u8 *eks = calloc(512 , 1);
+		u8 *eks = zalloc(SD_BLOCKSIZE);
 		memcpy(eks, h_cfg.eks, sizeof(hos_eks_mbr_t));
 		se_aes_crypt_ecb(14, ENCRYPT, eks, sizeof(hos_eks_mbr_t), eks, sizeof(hos_eks_mbr_t));
 
@@ -310,7 +313,7 @@ void hos_eks_clear(u32 kb)
 		if (h_cfg.eks->enabled)
 		{
 			// Read EKS blob.
-			u8 *mbr = calloc(512 , 1);
+			u8 *mbr = zalloc(SD_BLOCKSIZE);
 			if (!hos_eks_rw_try(mbr, false))
 				goto out;
 
@@ -318,7 +321,7 @@ void hos_eks_clear(u32 kb)
 			h_cfg.eks->enabled = 0;
 
 			// Encrypt EKS blob.
-			u8 *eks = calloc(512 , 1);
+			u8 *eks = zalloc(SD_BLOCKSIZE);
 			memcpy(eks, h_cfg.eks, sizeof(hos_eks_mbr_t));
 			se_aes_crypt_ecb(14, ENCRYPT, eks, sizeof(hos_eks_mbr_t), eks, sizeof(hos_eks_mbr_t));
 
@@ -392,7 +395,7 @@ int hos_keygen(void *keyblob, u32 kb, tsec_ctxt_t *tsec_ctxt, bool stock, bool i
 		tsec_ctxt->type = TSEC_FW_TYPE_EMU;
 
 		// Prepare smmu tsec page for 6.2.0.
-		u8 *tsec_paged = (u8 *)page_alloc(3);
+		u8 *tsec_paged = (u8 *)smmu_page_zalloc(3);
 		memcpy(tsec_paged, (void *)tsec_ctxt->fw, tsec_ctxt->size);
 		tsec_ctxt->fw = tsec_paged;
 	}
@@ -646,7 +649,7 @@ try_load:
 	// Read the correct keyblob for older HOS versions.
 	if (ctxt->pkg1_id->kb <= HOS_KB_VERSION_600)
 	{
-		ctxt->keyblob = (u8 *)calloc(EMMC_BLOCKSIZE, 1);
+		ctxt->keyblob = (u8 *)zalloc(EMMC_BLOCKSIZE);
 		emummc_storage_read(PKG1_HOS_KEYBLOBS_OFFSET / EMMC_BLOCKSIZE + ctxt->pkg1_id->kb, 1, ctxt->keyblob);
 	}
 
@@ -694,12 +697,12 @@ out:
 
 static void _free_launch_components(launch_ctxt_t *ctxt)
 {
+	// Free the malloc'ed guaranteed addresses.
+	free(ctxt->fss0);
 	free(ctxt->keyblob);
 	free(ctxt->pkg1);
 	free(ctxt->pkg2);
 	free(ctxt->warmboot);
-	free(ctxt->secmon);
-	free(ctxt->kernel);
 	free(ctxt->kip1_patches);
 }
 
@@ -711,7 +714,7 @@ static bool _get_fs_exfat_compatible(link_t *info, u32 *hos_revision)
 
 	LIST_FOREACH_ENTRY(pkg2_kip1_info_t, ki, info, link)
 	{
-		if (strncmp((const char*)ki->kip1->name, "FS", sizeof(ki->kip1->name)))
+		if (strcmp((char *)ki->kip1->name, "FS"))
 			continue;
 
 		if (!se_calc_sha256_oneshot(sha_buf, ki->kip1, ki->size))
@@ -785,18 +788,30 @@ int hos_launch(ini_sec_t *cfg)
 		goto error;
 	}
 
-	// Read package1 and the correct keyblob.
-	if (!_read_emmc_pkg1(&ctxt))
-		goto error;
-
-	kb = ctxt.pkg1_id->kb;
-
 	// Try to parse config if present.
 	if (ctxt.cfg && !parse_boot_config(&ctxt))
 	{
 		_hos_crit_error("Wrong ini cfg or missing/corrupt files!");
 		goto error;
 	}
+
+	// Read package1 and the correct keyblob.
+	if (!_read_emmc_pkg1(&ctxt))
+	{
+		// Check if stock is enabled and device can boot in OFW.
+		if (ctxt.stock && (h_cfg.t210b01 || !tools_autorcm_enabled()))
+		{
+			emmc_end();
+
+			WPRINTF("\nRebooting to OFW in 5s...");
+			msleep(5000);
+
+			power_set_state(REBOOT_BYPASS_FUSES);
+		}
+		goto error;
+	}
+
+	kb = ctxt.pkg1_id->kb;
 
 	bool emummc_enabled = emu_cfg.enabled && !h_cfg.emummc_force_disable;
 
@@ -849,16 +864,18 @@ int hos_launch(ini_sec_t *cfg)
 	// Check if secmon is exosphere.
 	if (ctxt.secmon)
 		is_exo = !memcmp((void *)((u8 *)ctxt.secmon + ctxt.secmon_size - 4), "LENY", 4);
+
+	// Get secmon and warmboot bases.
 	const pkg1_id_t *pk1_latest = pkg1_get_latest();
-	secmon_base = is_exo ? pk1_latest->secmon_base : ctxt.pkg1_id->secmon_base;
+	secmon_base   = is_exo ? pk1_latest->secmon_base   : ctxt.pkg1_id->secmon_base;
 	warmboot_base = is_exo ? pk1_latest->warmboot_base : ctxt.pkg1_id->warmboot_base;
 
-	// Generate keys.
-	tsec_ctxt.fw = (u8 *)ctxt.pkg1 + ctxt.pkg1_id->tsec_off;
-	tsec_ctxt.pkg1 = ctxt.pkg1;
+	// Set package1 and tsec fw offsets.
+	tsec_ctxt.fw        = (u8 *)ctxt.pkg1 + ctxt.pkg1_id->tsec_off;
+	tsec_ctxt.pkg1      = ctxt.pkg1;
 	tsec_ctxt.pkg11_off = ctxt.pkg1_id->pkg11_off;
-	tsec_ctxt.secmon_base = secmon_base;
 
+	// Generate keys.
 	if (!hos_keygen(ctxt.keyblob, kb, &tsec_ctxt, ctxt.stock, is_exo))
 		goto error;
 	gfx_puts("Generated keys\n");
@@ -903,7 +920,7 @@ int hos_launch(ini_sec_t *cfg)
 		}
 		else
 		{
-			_hos_crit_error("No mandatory secmon or warmboot provided!");
+			_hos_crit_error("No mandatory pkg1 files provided!");
 			goto error;
 		}
 	}
@@ -1036,20 +1053,17 @@ int hos_launch(ini_sec_t *cfg)
 		{
 			_hos_crit_error("SD Card is exFAT but installed HOS driver\nonly supports FAT32!");
 
-			_free_launch_components(&ctxt);
 			goto error;
 		}
 	}
 
 	// Patch kip1s in memory if needed.
-	if (ctxt.kip1_patches)
-		gfx_printf("%kPatching kips%k\n", TXT_CLR_ORANGE, TXT_CLR_DEFAULT);
-	const char* unappliedPatch = pkg2_patch_kips(&kip1_info, ctxt.kip1_patches);
-	if (unappliedPatch != NULL)
+	const char *failed_patch = pkg2_patch_kips(&kip1_info, ctxt.kip1_patches);
+	if (failed_patch != NULL)
 	{
-		EHPRINTFARGS("Failed to apply '%s'!", unappliedPatch);
+		EHPRINTFARGS("Failed to apply '%s'!", failed_patch);
 
-		bool emmc_patch_failed = !strcmp(unappliedPatch, "emummc");
+		bool emmc_patch_failed = !strcmp(failed_patch, "emummc");
 		if (!emmc_patch_failed)
 		{
 			gfx_puts("\nPress POWER to continue.\nPress VOL to go to the menu.\n");
@@ -1057,10 +1071,7 @@ int hos_launch(ini_sec_t *cfg)
 		}
 
 		if (emmc_patch_failed || !(btn_wait() & BTN_POWER))
-		{
-			_free_launch_components(&ctxt);
 			goto error; // MUST stop here, because if user requests 'nogc' but it's not applied, their GC controller gets updated!
-		}
 	}
 
 	// Rebuild and encrypt package2.
@@ -1128,12 +1139,9 @@ int hos_launch(ini_sec_t *cfg)
 	// Lock SE before starting 'SecureMonitor' if < 6.2.0, otherwise lock bootrom and ipatches.
 	_se_lock(kb <= HOS_KB_VERSION_600 && !is_exo);
 
-	// Reset sysctr0 counters.
-	if (kb >= HOS_KB_VERSION_620)
-	{
-		for (u32 i = 0; i < SYSCTR0_COUNTERS; i += sizeof(u32))
-			SYSCTR0(SYSCTR0_COUNTERS_BASE + i) = 0;
-	}
+	// Reset sysctr0 counters. Mandatory for 6.2.0 and up.
+	for (u32 i = 0; i < SYSCTR0_COUNTERS; i++)
+		SYSCTR0(SYSCTR0_COUNTERS_BASE + i * sizeof(u32)) = 0;
 
 	// NX Bootloader locks LP0 Carveout secure scratch registers.
 	//pmc_scratch_lock(PMC_SEC_LOCK_LP0_PARAMS);
@@ -1152,7 +1160,7 @@ int hos_launch(ini_sec_t *cfg)
 	}
 
 	// Start directly from PKG2 ready signal and reset outgoing value.
-	secmon_mailbox->in = pkg1_state_pkg2_ready;
+	secmon_mailbox->in  = pkg1_state_pkg2_ready;
 	secmon_mailbox->out = SECMON_STATE_NOT_READY;
 
 	// Disable display. This must be executed before secmon to provide support for all fw versions.
@@ -1173,16 +1181,14 @@ int hos_launch(ini_sec_t *cfg)
 	bpmp_clk_rate_set(BPMP_CLK_NORMAL);
 
 	// Launch secmon.
-	if (smmu_is_used())
-		smmu_exit();
-	else
-		ccplex_boot_cpu0(secmon_base);
+	ccplex_boot_cpu0(secmon_base, true);
 
 	// Halt ourselves in wait-event state.
 	while (true)
 		bpmp_halt();
 
 error:
+	_free_launch_components(&ctxt);
 	emmc_end();
 
 	EPRINTF("\nFailed to launch HOS!");

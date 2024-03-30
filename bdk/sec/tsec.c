@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  * Copyright (c) 2018 balika011
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -70,8 +70,9 @@ int tsec_query(void *tsec_keys, tsec_ctxt_t *tsec_ctxt)
 	int res = 0;
 	u8 *fwbuf = NULL;
 	u32 type = tsec_ctxt->type;
-	u32 *pdir, *car, *fuse, *pmc, *flowctrl, *se, *mc, *iram, *evec;
+	u32 *car, *fuse, *pmc, *flowctrl, *se, *mc, *iram, *evec;
 	u32 *pkg11_magic_off;
+	void *ptb;
 
 	bpmp_mmu_disable();
 	bpmp_freq_t prev_fid = bpmp_clk_rate_set(BPMP_CLK_NORMAL);
@@ -145,56 +146,56 @@ int tsec_query(void *tsec_keys, tsec_ctxt_t *tsec_ctxt)
 	if (type == TSEC_FW_TYPE_EMU)
 	{
 		// Init SMMU translation for TSEC.
-		pdir = smmu_init_for_tsec();
-		smmu_init(tsec_ctxt->secmon_base);
-		// Enable SMMU
-		if (!smmu_is_used())
-			smmu_enable();
+		ptb = smmu_init_domain(MC_SMMU_TSEC_ASID, 1);
+		smmu_init();
+
+		// Enable SMMU.
+		smmu_enable();
 
 		// Clock reset controller.
-		car = page_alloc(1);
+		car = smmu_page_zalloc(1);
 		memcpy(car, (void *)CLOCK_BASE, SZ_PAGE);
-		car[CLK_RST_CONTROLLER_CLK_SOURCE_TSEC / 4] = 2;
-		smmu_map(pdir, CLOCK_BASE, (u32)car, 1, _WRITABLE | _READABLE | _NONSECURE);
+		car[CLK_RST_CONTROLLER_CLK_SOURCE_TSEC / 4] = CLK_SRC_DIV(2);
+		smmu_map(ptb, CLOCK_BASE, (u32)car, 1, SMMU_WRITE | SMMU_READ | SMMU_NS);
 
 		// Fuse driver.
-		fuse = page_alloc(1);
+		fuse = smmu_page_zalloc(1);
 		memcpy((void *)&fuse[0x800/4], (void *)FUSE_BASE, SZ_1K);
 		fuse[0x82C / 4] = 0;
 		fuse[0x9E0 / 4] = (1 << (TSEC_HOS_KB_620 + 2)) - 1;
 		fuse[0x9E4 / 4] = (1 << (TSEC_HOS_KB_620 + 2)) - 1;
-		smmu_map(pdir, (FUSE_BASE - 0x800), (u32)fuse, 1, _READABLE | _NONSECURE);
+		smmu_map(ptb, (FUSE_BASE - 0x800), (u32)fuse, 1, SMMU_READ | SMMU_NS);
 
 		// Power management controller.
-		pmc = page_alloc(1);
-		smmu_map(pdir, RTC_BASE, (u32)pmc, 1, _READABLE | _NONSECURE);
+		pmc = smmu_page_zalloc(1);
+		smmu_map(ptb, RTC_BASE, (u32)pmc, 1, SMMU_READ | SMMU_NS);
 
 		// Flow control.
-		flowctrl = page_alloc(1);
-		smmu_map(pdir, FLOW_CTLR_BASE, (u32)flowctrl, 1, _WRITABLE | _NONSECURE);
+		flowctrl = smmu_page_zalloc(1);
+		smmu_map(ptb, FLOW_CTLR_BASE, (u32)flowctrl, 1, SMMU_WRITE | SMMU_NS);
 
 		// Security engine.
-		se = page_alloc(1);
+		se = smmu_page_zalloc(1);
 		memcpy(se, (void *)SE_BASE, SZ_PAGE);
-		smmu_map(pdir, SE_BASE, (u32)se, 1, _READABLE | _WRITABLE | _NONSECURE);
+		smmu_map(ptb, SE_BASE, (u32)se, 1, SMMU_READ | SMMU_WRITE | SMMU_NS);
 
 		// Memory controller.
-		mc = page_alloc(1);
+		mc = smmu_page_zalloc(1);
 		memcpy(mc, (void *)MC_BASE, SZ_PAGE);
 		mc[MC_IRAM_BOM / 4] = 0;
 		mc[MC_IRAM_TOM / 4] = DRAM_START;
-		smmu_map(pdir, MC_BASE, (u32)mc, 1, _READABLE | _NONSECURE);
+		smmu_map(ptb, MC_BASE, (u32)mc, 1, SMMU_READ | SMMU_NS);
 
 		// IRAM
-		iram = page_alloc(0x30);
+		iram = smmu_page_zalloc(0x30);
 		memcpy(iram, tsec_ctxt->pkg1, 0x30000);
 		// PKG1.1 magic offset.
-		pkg11_magic_off = (u32 *)(iram + ((tsec_ctxt->pkg11_off + 0x20) / 4));
-		smmu_map(pdir, 0x40010000, (u32)iram, 0x30, _READABLE | _WRITABLE | _NONSECURE);
+		pkg11_magic_off = (u32 *)(iram + ((tsec_ctxt->pkg11_off + 0x20) / sizeof(u32)));
+		smmu_map(ptb, 0x40010000, (u32)iram, 0x30, SMMU_READ | SMMU_WRITE | SMMU_NS);
 
 		// Exception vectors
-		evec = page_alloc(1);
-		smmu_map(pdir, EXCP_VEC_BASE, (u32)evec, 1, _READABLE | _WRITABLE | _NONSECURE);
+		evec = smmu_page_zalloc(1);
+		smmu_map(ptb, EXCP_VEC_BASE, (u32)evec, 1, SMMU_READ | SMMU_WRITE | SMMU_NS);
 	}
 
 	// Execute firmware.
@@ -229,7 +230,7 @@ int tsec_query(void *tsec_keys, tsec_ctxt_t *tsec_ctxt)
 		if (kidx != 8)
 		{
 			res = -6;
-			smmu_deinit_for_tsec();
+			smmu_deinit_domain(MC_SMMU_TSEC_ASID, 1);
 
 			goto out_free;
 		}
@@ -240,7 +241,7 @@ int tsec_query(void *tsec_keys, tsec_ctxt_t *tsec_ctxt)
 		memcpy(tsec_keys, &key, 0x20);
 		memcpy(tsec_ctxt->pkg1, iram, 0x30000);
 
-		smmu_deinit_for_tsec();
+		smmu_deinit_domain(MC_SMMU_TSEC_ASID, 1);
 
 		// for (int i = 0; i < kidx; i++)
 		// 	gfx_printf("key %08X\n", key[i]);

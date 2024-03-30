@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  * Copyright (c) 2018 balika011
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -858,6 +858,9 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 	case PANEL_SAM_AMS699VC01:
 		strcat(txt_buf, "Samsung AMS699VC01");
 		break;
+	case PANEL_OEM_CLONE_6_2:
+		strcat(txt_buf, "#FFDD00 OEM Clone 6.2\"#");
+		break;
 	case PANEL_OEM_CLONE_5_5:
 		strcat(txt_buf, "#FFDD00 OEM Clone 5.5\"#");
 		break;
@@ -1107,7 +1110,7 @@ static lv_res_t _create_mbox_emmc_sandisk_report(lv_obj_t * btn)
 
 	lv_mbox_set_text(mbox, "#C7EA46 SanDisk設備報告#");
 
-	u8 *buf = calloc(512, 1);
+	u8 *buf = zalloc(EMMC_BLOCKSIZE);
 	char *txt_buf = (char *)malloc(SZ_32K);
 	char *txt_buf2 = (char *)malloc(SZ_32K);
 	txt_buf[0] = 0;
@@ -1619,6 +1622,9 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	case 0x90:
 		strcat(txt_buf, "SK Hynix ");
 		break;
+	default:
+		strcat(txt_buf, "Unknown ");
+		break;
 	}
 
 	s_printf(txt_buf + strlen(txt_buf), "(%02X)\n%c%c%c%c%c%c\n%d.%d\n%04X\n%02d/%04d\n\n",
@@ -1694,7 +1700,7 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 		emmc_storage.csd.cmdclass, speed & 0xFFFF, (speed >> 16) & 0xFFFF,
 		emmc_storage.csd.busspeed, card_type_support,
 		!(cache % 1024) ? (cache / 1024) : cache, !(cache % 1024) ? "MiB" : "KiB",
-		emmc_storage.ext_csd.max_enh_mult * 512 / 1024,
+		emmc_storage.ext_csd.max_enh_mult * EMMC_BLOCKSIZE / 1024,
 		life_a_txt, life_b_txt, rsvd_blocks);
 
 	lv_label_set_static_text(lb_desc,
@@ -1735,9 +1741,9 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	u32 boot_size = emmc_storage.ext_csd.boot_mult << 17;
 	u32 rpmb_size = emmc_storage.ext_csd.rpmb_mult << 17;
 	strcpy(txt_buf, "#00DDFF eMMC Physical Partitions:#\n");
-	s_printf(txt_buf + strlen(txt_buf), "1: #96FF00 BOOT0# Size: %6d KiB (Sect: 0x%08X)\n", boot_size / 1024, boot_size / 512);
-	s_printf(txt_buf + strlen(txt_buf), "2: #96FF00 BOOT1# Size: %6d KiB (Sect: 0x%08X)\n", boot_size / 1024, boot_size / 512);
-	s_printf(txt_buf + strlen(txt_buf), "3: #96FF00 RPMB#  Size: %6d KiB (Sect: 0x%08X)\n", rpmb_size / 1024, rpmb_size / 512);
+	s_printf(txt_buf + strlen(txt_buf), "1: #96FF00 BOOT0# Size: %6d KiB (Sect: 0x%08X)\n", boot_size / 1024, boot_size / EMMC_BLOCKSIZE);
+	s_printf(txt_buf + strlen(txt_buf), "2: #96FF00 BOOT1# Size: %6d KiB (Sect: 0x%08X)\n", boot_size / 1024, boot_size / EMMC_BLOCKSIZE);
+	s_printf(txt_buf + strlen(txt_buf), "3: #96FF00 RPMB#  Size: %6d KiB (Sect: 0x%08X)\n", rpmb_size / 1024, rpmb_size / EMMC_BLOCKSIZE);
 	s_printf(txt_buf + strlen(txt_buf), "0: #96FF00 GPP#   Size: %6d MiB (Sect: 0x%08X)\n", emmc_storage.sec_cnt >> SECTORS_TO_MIB_COEFF, emmc_storage.sec_cnt);
 	strcat(txt_buf, "\n#00DDFF GPP (eMMC USER) Partition Table:#\n");
 
@@ -2119,7 +2125,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 
 	s_printf(txt_buf, "\n%s\n%d %s\n%d/%d MiB",
 		sd_fs.fs_type == FS_EXFAT ? ("exFAT  "SYMBOL_SHRK) : ("FAT32"),
-		(sd_fs.csize > 1) ? (sd_fs.csize >> 1) : 512,
+		(sd_fs.csize > 1) ? (sd_fs.csize >> 1) : SD_BLOCKSIZE,
 		(sd_fs.csize > 1) ? "KiB" : "B",
 		(u32)(sd_fs.free_clst * sd_fs.csize >> SECTORS_TO_MIB_COEFF),
 		(u32)(sd_fs.n_fatent  * sd_fs.csize >> SECTORS_TO_MIB_COEFF));

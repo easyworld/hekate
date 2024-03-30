@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  * Copyright (c) 2019 Atmosphère-NX
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -156,27 +156,23 @@ void config_exosphere(launch_ctxt_t *ctxt, u32 warmboot_base)
 
 	//! TODO: Replace current HOS version decoding (as it's bound to break in the future).
 
-	// Old exosphere target versioning. Use fuses for a simpler decoding.
-	if (ctxt->pkg1_id->fuses <= 3 || ctxt->pkg1_id->fuses >= 10) // 1.0.0 - 3.0.0, 8.1.0+.
+	// Old exosphere target versioning.
+	if (ctxt->pkg1_id->kb >= HOS_KB_VERSION_1210)                     // 12.1.0+
+		exo_fw_no = ctxt->pkg1_id->kb + 4;
+	else if (ctxt->pkg1_id->fuses <= 3 || ctxt->pkg1_id->fuses >= 10) // 1.0.0 - 3.0.0, 8.1.0 - 12.0.3.
 		exo_fw_no = ctxt->pkg1_id->fuses;
 	else
-		exo_fw_no = ctxt->pkg1_id->fuses - 1;                    // 3.0.1 - 7.0.1, 8.0.x.
+		exo_fw_no = ctxt->pkg1_id->fuses - 1;                         // 3.0.1 - 7.0.1, 8.0.x.
+
+	// Handle versions that change API and do not burn new fuse.
+	if (!memcmp(ctxt->pkg1_id->id, "20190314", 8) || //  8.0.x, same fuses with  7.0.1.
+		!memcmp(ctxt->pkg1_id->id, "20210129", 8)    // 12.0.0, same fuses with 11.0.0.
+	   )
+		exo_fw_no++;
 
 	// Set 12.1.0 specific revision.
 	if (ctxt->pkg1_id->kb == HOS_KB_VERSION_1210)
 		ctxt->exo_ctx.hos_revision = 1;
-
-	// Handle 15.0.0+.
-	if (ctxt->pkg1_id->fuses >= 17)
-		exo_fw_no++;
-
-	// Handle versions that change API and do not burn new fuse.
-	if (!memcmp(ctxt->pkg1_id->id, "20190314", 8) || //  8.0.x, same fuses with  7.0.1.
-		!memcmp(ctxt->pkg1_id->id, "20210129", 8) || // 12.0.0, same fuses with 11.0.0.
-		!memcmp(ctxt->pkg1_id->id, "20210805", 8) || // 13.0.0, same fuses with 12.1.0.
-		!memcmp(ctxt->pkg1_id->id, "20220209", 8)    // 14.0.0, same fuses with 13.2.1.
-	   )
-		exo_fw_no++;
 
 	// Feed old exosphere target versioning to new.
 	switch (exo_fw_no)
@@ -203,7 +199,7 @@ void config_exosphere(launch_ctxt_t *ctxt, u32 warmboot_base)
 	case 12:
 		exo_fw_no = EXO_FW_VER(9, 1);
 		break;
-	case 13 ... 20: //!TODO: Update on API changes. 20: 17.0.0.
+	case 13 ... 21: //!TODO: Update on API changes. 21: 18.0.0.
 		exo_fw_no = EXO_FW_VER(exo_fw_no - 3, ctxt->exo_ctx.hos_revision);
 		break;
 	}
@@ -245,32 +241,29 @@ void config_exosphere(launch_ctxt_t *ctxt, u32 warmboot_base)
 				}
 				break;
 			}
-		}
 
-		// Parse usb mtim settings. Avoid parsing if it's overridden.
-		if (ctxt->fss0_main_path && !ctxt->exo_ctx.usb3_force)
-		{
-			char settings_path[256];
-			strcpy(settings_path, ctxt->fss0_main_path);
-			strcat(settings_path, "config/system_settings.ini");
-			LIST_INIT(sys_settings);
-			if (ini_parse(&ini_sections, settings_path, false))
+			// Parse usb mtim settings. Avoid parsing if it's overridden.
+			if (!ctxt->exo_ctx.usb3_force)
 			{
-				LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_sections, link)
+				LIST_INIT(ini_sections);
+				if (ini_parse(&ini_sections, "atmosphere/config/system_settings.ini", false))
 				{
-					// Only parse usb section.
-					if (!(ini_sec->type == INI_CHOICE) || strcmp(ini_sec->name, "usb"))
-						continue;
-
-					LIST_FOREACH_ENTRY(ini_kv_t, kv, &ini_sec->kvs, link)
+					LIST_FOREACH_ENTRY(ini_sec_t, ini_sec, &ini_sections, link)
 					{
-						if (!strcmp("usb30_force_enabled", kv->key))
+						// Only parse usb section.
+						if (!(ini_sec->type == INI_CHOICE) || strcmp(ini_sec->name, "usb"))
+							continue;
+
+						LIST_FOREACH_ENTRY(ini_kv_t, kv, &ini_sec->kvs, link)
 						{
-							usb3_force = !strcmp("u8!0x1", kv->val);
-							break; // Only parse usb30_force_enabled key.
+							if (!strcmp("usb30_force_enabled", kv->key))
+							{
+								usb3_force = !strcmp("u8!0x1", kv->val);
+								break; // Only parse usb30_force_enabled key.
+							}
 						}
+						break;
 					}
-					break;
 				}
 			}
 		}
@@ -416,7 +409,7 @@ void secmon_exo_check_panic()
 	// Save context to the SD card.
 	char filepath[0x40];
 	f_mkdir("atmosphere/fatal_errors");
-	strcpy(filepath, "/atmosphere/fatal_errors/report_");
+	strcpy(filepath, "atmosphere/fatal_errors/report_");
 	itoa((u32)((u64)rpt->report_identifier >> 32), filepath + strlen(filepath), 16);
 	itoa((u32)(rpt->report_identifier), filepath + strlen(filepath), 16);
 	strcat(filepath, ".bin");

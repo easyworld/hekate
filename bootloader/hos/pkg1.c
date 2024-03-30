@@ -169,7 +169,8 @@ static const pkg1_id_t _pkg1_ids[] = {
 	{ "20220209", 13, 16, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 14.0.0 - 14.1.2.
 	{ "20220801", 14, 17, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 15.0.0 - 15.0.1.
 	{ "20230111", 15, 18, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 16.0.0 - 16.1.0.
-	{ "20230906", 16, 19, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 17.0.0+
+	{ "20230906", 16, 19, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 17.0.0 - 17.0.1.
+	{ "20240207", 17, 19, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 18.0.0+
 };
 
 const pkg1_id_t *pkg1_get_latest()
@@ -436,7 +437,7 @@ int pkg1_warmboot_config(void *hos_ctxt, u32 warmboot_base, u32 fuses_fw, u8 kb)
 void pkg1_warmboot_rsa_mod(u32 warmboot_base)
 {
 	// Set warmboot binary rsa modulus.
-	u8 *rsa_mod = (u8 *)malloc(512);
+	u8 *rsa_mod = (u8 *)malloc(EMMC_BLOCKSIZE);
 
 	emmc_set_partition(EMMC_BOOT0);
 

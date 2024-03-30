@@ -1,15 +1,12 @@
 /*------------------------------------------------------------------------*/
 /* Sample Code of OS Dependent Functions for FatFs                        */
-/* (C) ChaN, 2018                                                          */
-/* (C) CTCaer, 2018                                                       */
+/* (C) ChaN, 2018                                                         */
+/* (C) CTCaer, 2018-2024                                                  */
 /*------------------------------------------------------------------------*/
 
 #include <bdk.h>
 
 #include <libs/fatfs/ff.h>
-#include "../../config.h"
-
-extern nyx_config n_cfg;
 
 #if FF_USE_LFN == 3	/* Dynamic memory allocation */
 
@@ -21,7 +18,8 @@ void* ff_memalloc (	/* Returns pointer to the allocated memory block (null if no
 	UINT msize		/* Number of bytes to allocate */
 )
 {
-	return malloc(msize);	/* Allocate a new memory block with POSIX API */
+	// Ensure size is aligned to SDMMC block size.
+	return malloc(ALIGN(msize, SDMMC_DAT_BLOCKSIZE));	/* Allocate a new memory block with POSIX API */
 }
 
 
@@ -50,12 +48,7 @@ DWORD get_fattime (
 {
 	rtc_time_t time;
 
-	max77620_rtc_get_time(&time);
-	if (n_cfg.timeoff)
-	{
-		u32 epoch = (u32)((s32)max77620_rtc_date_to_epoch(&time) + (s32)n_cfg.timeoff);
-		max77620_rtc_epoch_to_date(epoch, &time);
-	}
+	max77620_rtc_get_time_adjusted(&time);
 
 	return (((DWORD)(time.year - 1980) << 25) | ((DWORD)time.month << 21) | ((DWORD)time.day << 16) |
 		((DWORD)time.hour << 11) | ((DWORD)time.min << 5) | (time.sec >> 1));

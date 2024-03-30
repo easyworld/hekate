@@ -706,9 +706,14 @@ static lv_res_t _action_clock_edit(lv_obj_t *btns, const char * txt)
 
 		u32 new_epoch = max77620_rtc_date_to_epoch(&time);
 
+		// Stored in u32 and allow overflow for integer offset casting.
 		n_cfg.timeoff = new_epoch - epoch;
+
+		// If canceled set 1 for invalidating first boot clock edit.
 		if (!n_cfg.timeoff)
 			n_cfg.timeoff = 1;
+		else
+			max77620_rtc_set_epoch_offset((int)n_cfg.timeoff);
 
 		nyx_changes_made = true;
 	}
@@ -744,12 +749,7 @@ static lv_res_t _create_mbox_clock_edit(lv_obj_t *btn)
 
 	// Get current time.
 	rtc_time_t time;
-	max77620_rtc_get_time(&time);
-	if (n_cfg.timeoff)
-	{
-		u32 epoch = max77620_rtc_date_to_epoch(&time) + (s32)n_cfg.timeoff;
-		max77620_rtc_epoch_to_date(epoch, &time);
-	}
+	max77620_rtc_get_time_adjusted(&time);
 
 	// Normalize year if out of range.
 	if (time.year < CLOCK_MIN_YEAR)
@@ -842,6 +842,7 @@ static lv_res_t _joycon_info_dump_action(lv_obj_t * btn)
 {
 	FIL fp;
 	int error = 0;
+	int cal_error = 0;
 	bool is_l_hos = false;
 	bool is_r_hos = false;
 	bool nx_hoag = fuse_read_hw_type() == FUSE_NX_HW_TYPE_HOAG;
@@ -853,8 +854,17 @@ static lv_res_t _joycon_info_dump_action(lv_obj_t * btn)
 	if (!nx_hoag && !jc_pad)
 		error = 255;
 
-	if (!error)
-		error = hos_dump_cal0();
+	// Try 2 times to get factory calibration data.
+	for (u32 i = 0; i < 2; i++)
+	{
+		if (!error)
+			cal_error = hos_dump_cal0();
+		if (!cal_error)
+			break;
+	}
+
+	if (cal_error && nx_hoag)
+		error = cal_error;
 
 	if (error)
 		goto disabled_or_cal0_issue;
@@ -919,35 +929,38 @@ save_data:
 			f_mkdir("switchroot");
 
 			// Save IMU Calibration data.
-			s_printf(data,
-				"imu_type=%d\n\n"
-				"acc_cal_off_x=0x%X\n"
-				"acc_cal_off_y=0x%X\n"
-				"acc_cal_off_z=0x%X\n"
-				"acc_cal_scl_x=0x%X\n"
-				"acc_cal_scl_y=0x%X\n"
-				"acc_cal_scl_z=0x%X\n\n"
-
-				"gyr_cal_off_x=0x%X\n"
-				"gyr_cal_off_y=0x%X\n"
-				"gyr_cal_off_z=0x%X\n"
-				"gyr_cal_scl_x=0x%X\n"
-				"gyr_cal_scl_y=0x%X\n"
-				"gyr_cal_scl_z=0x%X\n\n"
-
-				"device_bt_mac=%02X:%02X:%02X:%02X:%02X:%02X\n",
-				cal0->console_6axis_sensor_type,
-				cal0->acc_offset[0],  cal0->acc_offset[1],  cal0->acc_offset[2],
-				cal0->acc_scale[0],   cal0->acc_scale[1],   cal0->acc_scale[2],
-				cal0->gyro_offset[0], cal0->gyro_offset[1], cal0->gyro_offset[2],
-				cal0->gyro_scale[0],  cal0->gyro_scale[1],  cal0->gyro_scale[2],
-				cal0->bd_mac[0], cal0->bd_mac[1], cal0->bd_mac[2], cal0->bd_mac[3], cal0->bd_mac[4], cal0->bd_mac[5]);
-			if (!error)
-				error = f_open(&fp, "switchroot/switch.cal", FA_WRITE | FA_CREATE_ALWAYS) ? 4 : 0;
-			if (!error)
+			if (!error && !cal_error)
 			{
-				f_puts(data, &fp);
-				f_close(&fp);
+				s_printf(data,
+					"imu_type=%d\n\n"
+					"acc_cal_off_x=0x%X\n"
+					"acc_cal_off_y=0x%X\n"
+					"acc_cal_off_z=0x%X\n"
+					"acc_cal_scl_x=0x%X\n"
+					"acc_cal_scl_y=0x%X\n"
+					"acc_cal_scl_z=0x%X\n\n"
+
+					"gyr_cal_off_x=0x%X\n"
+					"gyr_cal_off_y=0x%X\n"
+					"gyr_cal_off_z=0x%X\n"
+					"gyr_cal_scl_x=0x%X\n"
+					"gyr_cal_scl_y=0x%X\n"
+					"gyr_cal_scl_z=0x%X\n\n"
+
+					"device_bt_mac=%02X:%02X:%02X:%02X:%02X:%02X\n",
+					cal0->console_6axis_sensor_type,
+					cal0->acc_offset[0],  cal0->acc_offset[1],  cal0->acc_offset[2],
+					cal0->acc_scale[0],   cal0->acc_scale[1],   cal0->acc_scale[2],
+					cal0->gyro_offset[0], cal0->gyro_offset[1], cal0->gyro_offset[2],
+					cal0->gyro_scale[0],  cal0->gyro_scale[1],  cal0->gyro_scale[2],
+					cal0->bd_mac[0], cal0->bd_mac[1], cal0->bd_mac[2], cal0->bd_mac[3], cal0->bd_mac[4], cal0->bd_mac[5]);
+				if (!error)
+					error = f_open(&fp, "switchroot/switch.cal", FA_WRITE | FA_CREATE_ALWAYS) ? 4 : 0;
+				if (!error)
+				{
+					f_puts(data, &fp);
+					f_close(&fp);
+				}
 			}
 		}
 		else
@@ -1066,6 +1079,9 @@ disabled_or_cal0_issue:;
 				strcat(txt_buf,
 					"\n\n#FFDD00 確保兩個 Joy-Con 都已連接,#\n"
 					"#FFDD00 並且在HOS系統中將它們配對!#");
+
+			if (cal_error)
+				s_printf(txt_buf + strlen(txt_buf), "\n\n#FF8000 警告: 獲取 IMU 校準失敗 (%d)!#", cal_error);
 		}
 		else
 		{

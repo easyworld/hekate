@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -44,7 +44,8 @@ enum {
 	HOS_KB_VERSION_1500 = 14,
 	HOS_KB_VERSION_1600 = 15,
 	HOS_KB_VERSION_1700 = 16,
-	HOS_KB_VERSION_MAX  = HOS_KB_VERSION_1700
+	HOS_KB_VERSION_1800 = 17,
+	HOS_KB_VERSION_MAX  = HOS_KB_VERSION_1800
 };
 
 #define HOS_TSEC_VERSION 4 //! TODO: Update on TSEC Root Key changes.
@@ -109,7 +110,7 @@ typedef struct _launch_ctxt_t
 	bool stock;
 	bool emummc_forced;
 
-	char *fss0_main_path;
+	void *fss0;
 	u32   fss0_hosver;
 	bool  atmosphere;
 

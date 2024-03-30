@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 CTCaer
+ * Copyright (c) 2019-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -345,7 +345,7 @@ static void _prepare_and_flash_mbr_gpt()
 
 	if (part_info.and_size)
 	{
-		gpt_t *gpt = calloc(1, sizeof(gpt_t));
+		gpt_t *gpt = zalloc(sizeof(gpt_t));
 		gpt_header_t gpt_hdr_backup = { 0 };
 
 		// Set GPT protective partition in MBR.
@@ -768,7 +768,7 @@ exit:
 static u32 _get_available_l4t_partition()
 {
 	mbr_t mbr = { 0 };
-	gpt_t *gpt = calloc(1, sizeof(gpt_t));
+	gpt_t *gpt = zalloc(sizeof(gpt_t));
 
 	memset(&l4t_flash_ctxt, 0, sizeof(l4t_flasher_ctxt_t));
 
@@ -815,7 +815,7 @@ static u32 _get_available_l4t_partition()
 
 static bool _get_available_android_partition()
 {
-	gpt_t *gpt = calloc(1, sizeof(gpt_t));
+	gpt_t *gpt = zalloc(sizeof(gpt_t));
 
 	// Read main GPT.
 	sdmmc_storage_read(&sd_storage, 1, sizeof(gpt_t) >> 9, gpt);
@@ -926,8 +926,8 @@ static lv_res_t _action_check_flash_linux(lv_obj_t *btn)
 				goto error;
 			}
 
-			// Last part. Align size to LBA (512 bytes).
-			fno.fsize = ALIGN((u64)fno.fsize, 512);
+			// Last part. Align size to LBA (SD_BLOCKSIZE).
+			fno.fsize = ALIGN((u64)fno.fsize, SD_BLOCKSIZE);
 			idx--;
 		}
 		l4t_flash_ctxt.image_size_sct += (u64)fno.fsize >> 9;
@@ -1007,7 +1007,7 @@ static lv_res_t _action_flash_android_data(lv_obj_t * btns, const char * txt)
 
 	// Flash Android components.
 	char path[128];
-	gpt_t *gpt = calloc(1, sizeof(gpt_t));
+	gpt_t *gpt = zalloc(sizeof(gpt_t));
 	char *txt_buf = malloc(SZ_4K);
 
 	lv_obj_t *dark_bg = lv_obj_create(lv_scr_act(), NULL);
@@ -1077,7 +1077,7 @@ static lv_res_t _action_flash_android_data(lv_obj_t * btns, const char * txt)
 		if (file_size % 0x200)
 		{
 			file_size = ALIGN(file_size, 0x200);
-			u8 *buf_tmp = calloc(file_size, 1);
+			u8 *buf_tmp = zalloc(file_size);
 			memcpy(buf_tmp, buf, file_size);
 			free(buf);
 			buf = buf_tmp;
@@ -1141,7 +1141,7 @@ boot_img_not_found:
 		if (file_size % 0x200)
 		{
 			file_size = ALIGN(file_size, 0x200);
-			u8 *buf_tmp = calloc(file_size, 1);
+			u8 *buf_tmp = zalloc(file_size);
 			memcpy(buf_tmp, buf, file_size);
 			free(buf);
 			buf = buf_tmp;
@@ -1203,7 +1203,7 @@ recovery_not_found:
 		if (file_size % 0x200)
 		{
 			file_size = ALIGN(file_size, 0x200);
-			u8 *buf_tmp = calloc(file_size, 1);
+			u8 *buf_tmp = zalloc(file_size);
 			memcpy(buf_tmp, buf, file_size);
 			free(buf);
 			buf = buf_tmp;
@@ -1231,7 +1231,7 @@ dtb_not_found:
 	{
 		if (!memcmp(gpt->entries[i].name, (char[]) { 'S', 0, 'O', 0, 'S', 0 }, 6) || !memcmp(gpt->entries[i].name, (char[]) { 'r', 0, 'e', 0, 'c', 0, 'o', 0, 'v', 0, 'e', 0, 'r', 0, 'y', 0 }, 16))
 		{
-			u8 *buf = malloc(512);
+			u8 *buf = malloc(SD_BLOCKSIZE);
 			sdmmc_storage_read(&sd_storage, gpt->entries[i].lba_start, 1, buf);
 			if (!memcmp(buf, "ANDROID", 7))
 				boot_recovery = true;
@@ -2228,7 +2228,7 @@ static lv_res_t _action_fix_mbr(lv_obj_t *btn)
 	lv_label_set_recolor(lbl_status, true);
 
 	mbr_t mbr[2] = { 0 };
-	gpt_t *gpt = calloc(1, sizeof(gpt_t));
+	gpt_t *gpt = zalloc(sizeof(gpt_t));
 	gpt_header_t gpt_hdr_backup = { 0 };
 
 	bool has_mbr_attributes = false;
@@ -2279,7 +2279,7 @@ static lv_res_t _action_fix_mbr(lv_obj_t *btn)
 	LIST_INIT(gpt_parsed);
 	for (u32 i = 0; i < gpt->header.num_part_ents; i++)
 	{
-		emmc_part_t *part = (emmc_part_t *)calloc(sizeof(emmc_part_t), 1);
+		emmc_part_t *part = (emmc_part_t *)zalloc(sizeof(emmc_part_t));
 
 		if (gpt->entries[i].lba_start < gpt->header.first_use_lba)
 			continue;
@@ -2429,7 +2429,7 @@ check_changes:
 				gpt_hdr_backup.crc32 = crc32_calc(0, (const u8 *)&gpt_hdr_backup, gpt_hdr_backup.size);
 
 				// Write main GPT.
-				u32 aligned_entries_size = ALIGN(entries_size, 512);
+				u32 aligned_entries_size = ALIGN(entries_size, SD_BLOCKSIZE);
 				sdmmc_storage_write(&sd_storage, gpt->header.my_lba, (sizeof(gpt_header_t) + aligned_entries_size) >> 9, gpt);
 
 				// Write backup GPT partition table.
