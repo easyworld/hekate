@@ -1,0 +1,61 @@
+name: Build Hekate
+
+on:
+  push:
+    branches: [ tc ]
+  pull_request:
+    branches: [ tc ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: devkitpro/devkita64
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Essential Build Tools and Utilities
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential jq unzip zip
+
+    - name: Build hekate
+      run: |
+        make
+
+    - name: Download latest hekate_ctcaer release
+      id: download
+      run: |
+        # Get the latest release tag name and asset name
+        RELEASE_DATA=$(curl --silent "https://api.github.com/repos/CTCaer/hekate/releases/latest")
+        TAG_NAME=$(echo "$RELEASE_DATA" | jq -r .tag_name)
+        ASSET_NAME_WITH_EXTENSION=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | startswith("hekate_ctcaer_")) | .name')
+        ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | startswith("hekate_ctcaer_")) | .browser_download_url')
+    
+        # Download the zip file
+        curl -L $ASSET_URL -o $ASSET_NAME_WITH_EXTENSION
+    
+        # Output the asset name without extension
+        echo "original_asset_name=${ASSET_NAME_WITH_EXTENSION%.zip}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Replace nyx.bin and repackage
+      run: |
+        # Extract the zip file
+        unzip "${original_asset_name}.zip" -d hekate_extracted
+    
+        # Replace nyx.bin with the one built
+        cp output/nyx.bin hekate_extracted/bootloader/sys/nyx.bin
+    
+        # Define the new asset name
+        echo "new_asset_name=${original_asset_name}_tc" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Upload new zip as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.new_asset_name }}
+        path: hekate_extracted/
