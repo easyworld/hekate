@@ -2055,7 +2055,7 @@ static void _create_tab_home(lv_theme_t *th, lv_obj_t *parent)
 	_create_text_button(th, NULL, btn_reboot, SYMBOL_REBOOT" 重啟", _create_mbox_reboot);
 	lv_obj_align(btn_reboot, btn_power_off, LV_ALIGN_OUT_LEFT_MID, 0, 0);
 
-	_create_text_button(th, NULL, btn_reload, SYMBOL_REFRESH" 過載", _create_mbox_reload);
+	_create_text_button(th, NULL, btn_reload, SYMBOL_REFRESH" 重新載入", _create_mbox_reload);
 	lv_obj_align(btn_reload, btn_reboot, LV_ALIGN_OUT_LEFT_MID, 0, 0);
 }
 

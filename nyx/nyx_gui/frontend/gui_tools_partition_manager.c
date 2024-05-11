@@ -2629,7 +2629,7 @@ lv_res_t create_window_partition_manager(lv_obj_t *btn)
 	// Create slider type labels.
 	lv_obj_t *lbl_hos = lv_label_create(h1, NULL);
 	lv_label_set_recolor(lbl_hos, true);
-	lv_label_set_static_text(lbl_hos, "#96FF00 "SYMBOL_DOT" 官方系統 (FAT32) :#");
+	lv_label_set_static_text(lbl_hos, "#96FF00 "SYMBOL_DOT" 官方系統(FAT32):#");
 	lv_obj_align(lbl_hos, bar_hos, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 
 	lv_obj_t *lbl_emu = lv_label_create(h1, lbl_hos);
