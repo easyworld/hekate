@@ -53,7 +53,7 @@ static void _create_window_backup_restore(emmcPartType_t type, const char* win_l
 
 	char win_label_full[80];
 
-	s_printf(win_label_full, "%s%s", emmc_btn_ctxt.restore ? SYMBOL_DOWNLOAD"  恢复 " : SYMBOL_UPLOAD"  备份 ", win_label+3);
+	s_printf(win_label_full, "%s%s", emmc_btn_ctxt.restore ? SYMBOL_DOWNLOAD"  恢復 " : SYMBOL_UPLOAD"  備份 ", win_label+3);
 
 	lv_obj_t *win = nyx_create_standard_window(win_label_full);
 
@@ -221,14 +221,14 @@ static lv_res_t _emmc_backup_buttons_raw_toggle(lv_obj_t *btn)
 		lv_obj_realign(emmc_btn_ctxt.emmc_raw_gpp);
 
 		if (!emmc_btn_ctxt.restore)
-			lv_label_set_static_text(lv_obj_get_child(emmc_btn_ctxt.emmc_sys, NULL), SYMBOL_MODULES"  eMMC系统");
+			lv_label_set_static_text(lv_obj_get_child(emmc_btn_ctxt.emmc_sys, NULL), SYMBOL_MODULES"  eMMC系統");
 		else
 			lv_label_set_static_text(lv_obj_get_child(emmc_btn_ctxt.emmc_sys, NULL), SYMBOL_MODULES"  eMMC所有");
 		lv_obj_realign(emmc_btn_ctxt.emmc_sys);
 
 		if (!emmc_btn_ctxt.restore)
 		{
-			lv_label_set_static_text(lv_obj_get_child(emmc_btn_ctxt.emmc_usr, NULL), SYMBOL_MODULES_ALT"  eMMC用户");
+			lv_label_set_static_text(lv_obj_get_child(emmc_btn_ctxt.emmc_usr, NULL), SYMBOL_MODULES_ALT"  eMMC使用者");
 			lv_obj_realign(emmc_btn_ctxt.emmc_usr);
 
 			lv_obj_set_click(emmc_btn_ctxt.emmc_usr, true);
@@ -271,13 +271,13 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	lv_obj_t *win;
 
 	emmc_btn_ctxt.restore = false;
-	if (strcmp(lv_label_get_text(lv_obj_get_child(btn, NULL)), SYMBOL_UPLOAD"  备份eMMC"))
+	if (strcmp(lv_label_get_text(lv_obj_get_child(btn, NULL)), SYMBOL_UPLOAD"  備份eMMC"))
 		emmc_btn_ctxt.restore = true;
 
 	if (!emmc_btn_ctxt.restore)
-		win = nyx_create_standard_window(SYMBOL_SD" 备份");
+		win = nyx_create_standard_window(SYMBOL_SD" 備份");
 	else
-		win = nyx_create_standard_window(SYMBOL_SD" 恢复");
+		win = nyx_create_standard_window(SYMBOL_SD" 恢復");
 
 	static lv_style_t h_style;
 	lv_style_copy(&h_style, &lv_style_transp);
@@ -325,16 +325,16 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您备份BOOT物理分区.\n"
-			"它们包含BCT, 密钥和各种package1.\n"
-			"#FF8000 这些需要与原始GPP备份数据配对.#");
+			"允許您備份BOOT物理分割槽.\n"
+			"它們包含BCT, 金鑰和各種package1.\n"
+			"#FF8000 這些需要與原始GPP備份資料配對.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您恢复BOOT物理分区.\n"
-			"它们包含BCT, 密钥和各种package1.\n"
-			"#FF8000 这些需要与原始GPP恢复数据配对.#");
+			"允許您恢復BOOT物理分割槽.\n"
+			"它們包含BCT, 金鑰和各種package1.\n"
+			"#FF8000 這些需要與原始GPP恢復資料配對.#");
 	}
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn1, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
@@ -355,16 +355,16 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您备份GPP物理分区.\n"
-			"它包含CAL0, 各种package2, 系统分区, 用户分区等.\n"
-			"#FF8000 这些需要与BOOT0/1分区备份数据配对.#");
+			"允許您備份GPP物理分割槽.\n"
+			"它包含CAL0, 各種package2, 系統分割槽, 使用者分割槽等.\n"
+			"#FF8000 這些需要與BOOT0/1分割槽備份資料配對.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt2,
-			"允许您恢复GPP物理分区.\n"
-			"它包含CAL0, 各种package2, 系统分区, 用户分区等.\n"
-			"#FF8000 这些需要与BOOT0/1分区恢复数据配对.#");
+			"允許您恢復GPP物理分割槽.\n"
+			"它包含CAL0, 各種package2, 系統分割槽, 使用者分割槽等.\n"
+			"#FF8000 這些需要與BOOT0/1分割槽恢復資料配對.#");
 	}
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
@@ -382,7 +382,7 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	lv_label_set_static_text(label_sep, "");
 
 	lv_obj_t *label_txt3 = lv_label_create(h2, NULL);
-	lv_label_set_static_text(label_txt3, "GPP分区");
+	lv_label_set_static_text(label_txt3, "GPP分割槽");
 	lv_obj_set_style(label_txt3, lv_theme_get_current()->label.prim);
 	lv_obj_align(label_txt3, label_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, -LV_DPI * 4 / 21);
 
@@ -394,7 +394,7 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	label_btn = lv_label_create(btn3, NULL);
 	lv_btn_set_fit(btn3, true, true);
 	if (!emmc_btn_ctxt.restore)
-		lv_label_set_static_text(label_btn, SYMBOL_MODULES"  eMMC系统");
+		lv_label_set_static_text(label_btn, SYMBOL_MODULES"  eMMC系統");
 	else
 		lv_label_set_static_text(label_btn, SYMBOL_MODULES"  eMMC所有");
 	lv_obj_align(btn3, line_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, LV_DPI / 4);
@@ -406,15 +406,15 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt4,
-			"允许您备份原始GPP中除用户分区以外的分区.\n"
-			"它包含CAL0, 各种package2, 系统分区等.\n"
-			"#FF8000 这是一个不完整的备份.#");
+			"允許您備份原始GPP中除使用者分割槽以外的分割槽.\n"
+			"它包含CAL0, 各種package2, 系統分割槽等.\n"
+			"#FF8000 這是一個不完整的備份.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt4,
-			"允许您从原始GPP备份中恢复所有分区.\n"
-			"它包含CAL0, 各种package2, 系统分区, 用户分区等.\n");
+			"允許您從原始GPP備份中恢復所有分割槽.\n"
+			"它包含CAL0, 各種package2, 系統分割槽, 使用者分割槽等.\n");
 	}
 
 	lv_obj_set_style(label_txt4, &hint_small_style);
@@ -425,7 +425,7 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	{
 		lv_obj_t *btn4 = lv_btn_create(h2, btn1);
 		label_btn = lv_label_create(btn4, NULL);
-		lv_label_set_static_text(label_btn, SYMBOL_MODULES_ALT"  eMMC用户");
+		lv_label_set_static_text(label_btn, SYMBOL_MODULES_ALT"  eMMC使用者");
 		lv_obj_align(btn4, label_txt4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 		lv_btn_set_action(btn4, LV_BTN_ACTION_CLICK, _emmc_backup_buttons_decider);
 		emmc_btn_ctxt.emmc_usr = btn4;
@@ -433,8 +433,8 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 		label_txt4 = lv_label_create(h2, NULL);
 		lv_label_set_recolor(label_txt4, true);
 		lv_label_set_static_text(label_txt4,
-			"允许您从原始GPP备份用户分区.\n"
-			"#FF8000 这是一个不完整的备份.#\n");
+			"允許您從原始GPP備份使用者分割槽.\n"
+			"#FF8000 這是一個不完整的備份.#\n");
 		lv_obj_set_style(label_txt4, &hint_small_style);
 		lv_obj_align(label_txt4, btn4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 	}
@@ -454,7 +454,7 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 
 	lv_obj_t *sd_emummc_raw = lv_btn_create(h3, NULL);
 	nyx_create_onoff_button(lv_theme_get_current(), h3,
-		sd_emummc_raw, SYMBOL_SD" SD卡emuMMC分区", _emmc_backup_buttons_raw_toggle, false);
+		sd_emummc_raw, SYMBOL_SD" SD卡emuMMC分割槽", _emmc_backup_buttons_raw_toggle, false);
 	emmc_btn_ctxt.raw_emummc = false;
 
 	return LV_RES_OK;

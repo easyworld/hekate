@@ -156,7 +156,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 	char *outFilename = sd_path;
 	u32 sdPathLen = strlen(sd_path);
 
-	s_printf(gui->txt_buf, "#96FF00 SD卡可用空间:# %dMiB\n#96FF00 总大小:# %dMiB\n\n",
+	s_printf(gui->txt_buf, "#96FF00 SD卡可用空間:# %dMiB\n#96FF00 總大小:# %dMiB\n\n",
 		(u32)(sd_fs.free_clst * sd_fs.csize >> SECTORS_TO_MIB_COEFF),
 		totalSectors >> SECTORS_TO_MIB_COEFF);
 	lv_label_ins_text(gui->label_info, LV_LABEL_POS_LAST, gui->txt_buf);
@@ -169,7 +169,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 	// Check if the USER partition or the RAW eMMC fits the sd card free space.
 	if (totalSectors > (sd_fs.free_clst * sd_fs.csize))
 	{
-		s_printf(gui->txt_buf, "\n#FFDD00 文件式emuMMC空间不足!#\n");
+		s_printf(gui->txt_buf, "\n#FFDD00 檔案式emuMMC空間不足!#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -187,7 +187,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 	}
 
 	FIL fp;
-	s_printf(gui->txt_buf, "#96FF00 文件路径:#\n%s\n#96FF00 文件名:# #FF8000 %s#",
+	s_printf(gui->txt_buf, "#96FF00 檔案路徑:#\n%s\n#96FF00 檔名:# #FF8000 %s#",
 		gui->base_path, outFilename + strlen(gui->base_path));
 	lv_label_ins_text(gui->label_info, LV_LABEL_POS_LAST, gui->txt_buf);
 	manual_system_maintenance(true);
@@ -195,7 +195,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 	res = f_open(&fp, outFilename, FA_CREATE_ALWAYS | FA_WRITE);
 	if (res)
 	{
-		s_printf(gui->txt_buf, "\n#FF0000 错误 (%d) #\n创建 #FFDD00 %s# 文件错误\n", res, outFilename);
+		s_printf(gui->txt_buf, "\n#FF0000 錯誤 (%d) #\n建立 #FFDD00 %s# 檔案錯誤\n", res, outFilename);
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -241,7 +241,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 			res = f_open(&fp, outFilename, FA_CREATE_ALWAYS | FA_WRITE);
 			if (res)
 			{
-				s_printf(gui->txt_buf, "\n#FF0000 错误 (%d) #\n创建 #FFDD00 %s# 文件错误\n", res, outFilename);
+				s_printf(gui->txt_buf, "\n#FF0000 錯誤 (%d) #\n建立 #FFDD00 %s# 檔案錯誤\n", res, outFilename);
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -257,7 +257,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 		// Check for cancellation combo.
 		if (btn_read_vol() == (BTN_VOL_UP | BTN_VOL_DOWN))
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 备份emuMMC已取消!#\n");
+			s_printf(gui->txt_buf, "\n#FFDD00 備份emuMMC已取消!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -276,8 +276,8 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 		while (!sdmmc_storage_read(storage, lba_curr, num, buf))
 		{
 			s_printf(gui->txt_buf,
-				"\n#FFDD00 从eMMC读取%d个块时出现错误,#\n"
-				"#FFDD00 LBA为%08X, (第%d次重试).#",
+				"\n#FFDD00 從eMMC讀取%d個塊時出現錯誤,#\n"
+				"#FFDD00 LBA為%08X, (第%d次重試).#",
 				num, lba_curr, ++retryCount);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
@@ -285,7 +285,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 			msleep(150);
 			if (retryCount >= 3)
 			{
-				s_printf(gui->txt_buf, "#FF0000 操作已中止...#\n请重试...\n");
+				s_printf(gui->txt_buf, "#FF0000 操作已中止...#\n請重試...\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -297,7 +297,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 			}
 			else
 			{
-				s_printf(gui->txt_buf, "#FFDD00 正在重试...#");
+				s_printf(gui->txt_buf, "#FFDD00 正在重試...#");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 			}
@@ -311,7 +311,7 @@ static int _dump_emummc_file_part(emmc_tool_gui_t *gui, char *sd_path, sdmmc_sto
 
 		if (res)
 		{
-			s_printf(gui->txt_buf, "\n#FF0000 写入SD卡时发生致命错误 (%d) #\n请重试...\n", res);
+			s_printf(gui->txt_buf, "\n#FF0000 寫入SD卡時發生致命錯誤 (%d) #\n請重試...\n", res);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -373,11 +373,11 @@ void dump_emummc_file(emmc_tool_gui_t *gui)
 
 	if (!sd_mount())
 	{
-		lv_label_set_text(gui->label_info, "#FFDD00 初始化SD卡失败!#");
+		lv_label_set_text(gui->label_info, "#FFDD00 初始化SD卡失敗!#");
 		goto out;
 	}
 
-	lv_label_set_text(gui->label_info, "正在检查可用空间...");
+	lv_label_set_text(gui->label_info, "正在檢查可用空間...");
 	manual_system_maintenance(true);
 
 	// Get SD Card free space for file based emuMMC.
@@ -385,7 +385,7 @@ void dump_emummc_file(emmc_tool_gui_t *gui)
 
 	if (!emmc_initialize(false))
 	{
-		lv_label_set_text(gui->label_info, "#FFDD00 初始化eMMC失败!#");
+		lv_label_set_text(gui->label_info, "#FFDD00 初始化eMMC失敗!#");
 		goto out;
 	}
 
@@ -423,7 +423,7 @@ void dump_emummc_file(emmc_tool_gui_t *gui)
 		bootPart.name[4] = (u8)('0' + i);
 		bootPart.name[5] = 0;
 
-		s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 范围: 0x%08X - 0x%08X#\n\n",
+		s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 範圍: 0x%08X - 0x%08X#\n\n",
 			i, bootPart.name, bootPart.lba_start, bootPart.lba_end);
 		lv_label_set_text(gui->label_info, txt_buf);
 		s_printf(txt_buf, "%02d: %s... ", i, bootPart.name);
@@ -437,7 +437,7 @@ void dump_emummc_file(emmc_tool_gui_t *gui)
 
 		if (!res)
 		{
-			s_printf(txt_buf, "#FFDD00 失败!#\n");
+			s_printf(txt_buf, "#FFDD00 失敗!#\n");
 			goto out_failed;
 		}
 		else
@@ -461,7 +461,7 @@ void dump_emummc_file(emmc_tool_gui_t *gui)
 	rawPart.lba_end = RAW_AREA_NUM_SECTORS - 1;
 	strcpy(rawPart.name, "GPP");
 
-	s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 范围: 0x%08X - 0x%08X#\n\n",
+	s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 範圍: 0x%08X - 0x%08X#\n\n",
 		i, rawPart.name, rawPart.lba_start, rawPart.lba_end);
 	lv_label_set_text(gui->label_info, txt_buf);
 	s_printf(txt_buf, "%02d: %s... ", i, rawPart.name);
@@ -471,7 +471,7 @@ void dump_emummc_file(emmc_tool_gui_t *gui)
 	res = _dump_emummc_file_part(gui, sdPath, &emmc_storage, &rawPart);
 
 	if (!res)
-		s_printf(txt_buf, "#FFDD00 失败!#\n");
+		s_printf(txt_buf, "#FFDD00 失敗!#\n");
 	else
 		s_printf(txt_buf, "完成!\n");
 
@@ -484,7 +484,7 @@ out_failed:
 
 	if (res)
 	{
-		s_printf(txt_buf, "耗时: %d分 %d秒.\n完成!", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗時: %d分 %d秒.\n完成!", timer / 60, timer % 60);
 		gui->base_path[strlen(gui->base_path) - 5] = '\0';
 		strcpy(sdPath, gui->base_path);
 		strcat(sdPath, "file_based");
@@ -496,7 +496,7 @@ out_failed:
 		save_emummc_cfg(0, 0, gui->base_path);
 	}
 	else
-		s_printf(txt_buf, "耗时: %d分 %d秒.", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗時: %d分 %d秒.", timer / 60, timer % 60);
 
 	lv_label_set_text(gui->label_finish, txt_buf);
 
@@ -524,7 +524,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 	lv_label_set_text(gui->label_pct, " "SYMBOL_DOT" 0%");
 	manual_system_maintenance(true);
 
-	s_printf(gui->txt_buf, "#96FF00 基准文件夹:#\n%s\n#96FF00 分区偏移:# #FF8000 0x%08X#",
+	s_printf(gui->txt_buf, "#96FF00 基準資料夾:#\n%s\n#96FF00 分割槽偏移:# #FF8000 0x%08X#",
 		gui->base_path, sd_part_off);
 	lv_label_ins_text(gui->label_info, LV_LABEL_POS_LAST, gui->txt_buf);
 	manual_system_maintenance(true);
@@ -542,7 +542,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		emmc_part_t *user_part = emmc_part_find(&gpt_parsed, "USER");
 		if (!user_part)
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 未找到用户分区!#\n");
+			s_printf(gui->txt_buf, "\n#FFDD00 未找到使用者分割槽!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -560,7 +560,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		// Check for cancellation combo.
 		if (btn_read_vol() == (BTN_VOL_UP | BTN_VOL_DOWN))
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 备份emuMMC已取消!#\n");
+			s_printf(gui->txt_buf, "\n#FFDD00 備份emuMMC已取消!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -576,8 +576,8 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		while (!sdmmc_storage_read(&emmc_storage, lba_curr, num, buf))
 		{
 			s_printf(gui->txt_buf,
-				"\n#FFDD00 从eMMC读取%d个块时出现错误,#\n"
-				"#FFDD00 LBA 为 %08X, (第%d次重试).#",
+				"\n#FFDD00 從eMMC讀取%d個塊時出現錯誤,#\n"
+				"#FFDD00 LBA 為 %08X, (第%d次重試).#",
 				num, lba_curr, ++retryCount);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
@@ -585,7 +585,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 			msleep(150);
 			if (retryCount >= 3)
 			{
-				s_printf(gui->txt_buf, "#FF0000 操作已中止...#\n请重试...\n");
+				s_printf(gui->txt_buf, "#FF0000 操作已中止...#\n請重試...\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -606,8 +606,8 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		while (!sdmmc_storage_write(&sd_storage, sd_sector_off + lba_curr, num, buf))
 		{
 			s_printf(gui->txt_buf,
-				"\n#FFDD00 从SD卡读取%d个块时出现错误,#\n"
-				"#FFDD00 LBA 为 %08X, (第%d次重试).#",
+				"\n#FFDD00 從SD卡讀取%d個塊時出現錯誤,#\n"
+				"#FFDD00 LBA 為 %08X, (第%d次重試).#",
 				num, lba_curr, ++retryCount);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
@@ -615,7 +615,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 			msleep(150);
 			if (retryCount >= 3)
 			{
-				s_printf(gui->txt_buf, "#FF0000 操作已中止...#\n请重试...\n");
+				s_printf(gui->txt_buf, "#FF0000 操作已中止...#\n請重試...\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -623,7 +623,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 			}
 			else
 			{
-				s_printf(gui->txt_buf, "#FFDD00 正在重试...#\n");
+				s_printf(gui->txt_buf, "#FFDD00 正在重試...#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 			}
@@ -674,7 +674,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		strcpy(user_part.name, "USER");
 		nx_emmc_bis_init(&user_part, true, sd_sector_off);
 
-		s_printf(gui->txt_buf, "正在格式化用户分区... \n");
+		s_printf(gui->txt_buf, "正在格式化使用者分割槽... \n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -688,7 +688,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 
 		if (mkfs_error)
 		{
-			s_printf(gui->txt_buf, "#FF0000 失败 (%d) !#\n请重试...\n", mkfs_error);
+			s_printf(gui->txt_buf, "#FF0000 失敗 (%d) !#\n請重試...\n", mkfs_error);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 
 			return 0;
@@ -699,7 +699,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		nx_emmc_bis_end();
 		hos_bis_keys_clear();
 
-		s_printf(gui->txt_buf, "正在写入新的GPT分区表... ");
+		s_printf(gui->txt_buf, "正在寫入新的GPT分割槽表... ");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -719,7 +719,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 
 		if (gpt_entry_idx >= gpt->header.num_part_ents)
 		{
-			s_printf(gui->txt_buf, "\n#FF0000 没有用户分区...#\n请重试...\n");
+			s_printf(gui->txt_buf, "\n#FF0000 沒有使用者分割槽...#\n請重試...\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			free(gpt);
 
@@ -799,7 +799,7 @@ static int _emummc_raw_derive_bis_keys(emmc_tool_gui_t *gui, u32 resized_count)
 		// Clear EKS keys.
 		hos_eks_clear(HOS_KB_VERSION_MAX);
 
-		strcpy(txt_buf, "#FFDD00 BIS密钥校验失败!#\n");
+		strcpy(txt_buf, "#FFDD00 BIS金鑰校驗失敗!#\n");
 		error = true;
 	}
 
@@ -811,12 +811,12 @@ static int _emummc_raw_derive_bis_keys(emmc_tool_gui_t *gui, u32 resized_count)
 		lv_obj_set_style(dark_bg, &mbox_darken);
 		lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-		static const char * mbox_btn_map[] = { "\251", "\222关闭", "\251", "" };
+		static const char * mbox_btn_map[] = { "\251", "\222關閉", "\251", "" };
 		lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 		lv_mbox_set_recolor_text(mbox, true);
 		lv_obj_set_width(mbox, LV_HOR_RES / 9 * 5);
 
-		lv_mbox_set_text(mbox, "#C7EA46 BIS密钥生成#");
+		lv_mbox_set_text(mbox, "#C7EA46 BIS金鑰生成#");
 
 		lv_obj_t * lb_desc = lv_label_create(mbox, NULL);
 		lv_label_set_long_mode(lb_desc, LV_LABEL_LONG_BREAK);
@@ -856,19 +856,19 @@ void dump_emummc_raw(emmc_tool_gui_t *gui, int part_idx, u32 sector_start, u32 r
 
 	if (!sd_mount())
 	{
-		lv_label_set_text(gui->label_info, "#FFDD00 初始化SD卡失败!#");
+		lv_label_set_text(gui->label_info, "#FFDD00 初始化SD卡失敗!#");
 		goto out;
 	}
 
 	if (!emmc_initialize(false))
 	{
-		lv_label_set_text(gui->label_info, "#FFDD00 初始化eMMC失败!#");
+		lv_label_set_text(gui->label_info, "#FFDD00 初始化eMMC失敗!#");
 		goto out;
 	}
 
 	if (!_emummc_raw_derive_bis_keys(gui, resized_count))
 	{
-		s_printf(gui->txt_buf, "#FFDD00 要格式化用户分区, #\n#FFDD00 需要BIS密钥!#\n");
+		s_printf(gui->txt_buf, "#FFDD00 要格式化使用者分割槽, #\n#FFDD00 需要BIS金鑰!#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		emmc_end();
 		goto out;
@@ -901,7 +901,7 @@ void dump_emummc_raw(emmc_tool_gui_t *gui, int part_idx, u32 sector_start, u32 r
 		bootPart.name[4] = (u8)('0' + i);
 		bootPart.name[5] = 0;
 
-		s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 范围: 0x%08X - 0x%08X#\n\n",
+		s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 範圍: 0x%08X - 0x%08X#\n\n",
 			i, bootPart.name, bootPart.lba_start, bootPart.lba_end);
 		lv_label_set_text(gui->label_info, txt_buf);
 		s_printf(txt_buf, "%02d: %s... ", i, bootPart.name);
@@ -915,7 +915,7 @@ void dump_emummc_raw(emmc_tool_gui_t *gui, int part_idx, u32 sector_start, u32 r
 
 		if (!res)
 		{
-			s_printf(txt_buf, "#FFDD00 失败!#\n");
+			s_printf(txt_buf, "#FFDD00 失敗!#\n");
 			goto out_failed;
 		}
 		else
@@ -938,7 +938,7 @@ void dump_emummc_raw(emmc_tool_gui_t *gui, int part_idx, u32 sector_start, u32 r
 	rawPart.lba_end = RAW_AREA_NUM_SECTORS - 1;
 	strcpy(rawPart.name, "GPP");
 	{
-		s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 范围: 0x%08X - 0x%08X#\n\n",
+		s_printf(txt_buf, "#00DDFF %02d: %s#\n#00DDFF 範圍: 0x%08X - 0x%08X#\n\n",
 			i, rawPart.name, rawPart.lba_start, rawPart.lba_end);
 		lv_label_set_text(gui->label_info, txt_buf);
 		s_printf(txt_buf, "%02d: %s... ", i, rawPart.name);
@@ -948,7 +948,7 @@ void dump_emummc_raw(emmc_tool_gui_t *gui, int part_idx, u32 sector_start, u32 r
 		res = _dump_emummc_raw_part(gui, 2, part_idx, sector_start, &rawPart, resized_count);
 
 		if (!res)
-			s_printf(txt_buf, "#FFDD00 失败!#\n");
+			s_printf(txt_buf, "#FFDD00 失敗!#\n");
 		else
 			s_printf(txt_buf, "完成!\n");
 
@@ -962,7 +962,7 @@ out_failed:
 
 	if (res)
 	{
-		s_printf(txt_buf, "耗时: %d分 %d秒.\n完成!", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗時: %d分 %d秒.\n完成!", timer / 60, timer % 60);
 		strcpy(sdPath, gui->base_path);
 		strcat(sdPath, "raw_based");
 		FIL fp;
@@ -974,7 +974,7 @@ out_failed:
 		save_emummc_cfg(part_idx, sector_start, gui->base_path);
 	}
 	else
-		s_printf(txt_buf, "耗时: %d分 %d秒.", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗時: %d分 %d秒.", timer / 60, timer % 60);
 
 	lv_label_set_text(gui->label_finish, txt_buf);
 

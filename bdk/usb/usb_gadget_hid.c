@@ -337,7 +337,7 @@ static u8 _hid_transfer_start(usb_ctxt_t *usbs, u32 len)
 	u8 status = usb_ops.usb_device_ep1_in_write((u8 *)USB_EP_BULK_IN_BUF_ADDR, len, NULL, USB_XFER_SYNCED_CMD);
 	if (status == USB_ERROR_XFER_ERROR)
 	{
-		usbs->set_text(usbs->label, "#FFDD00 错误:# EP IN传输错误!");
+		usbs->set_text(usbs->label, "#FFDD00 錯誤:# EP IN傳輸錯誤!");
 		if (usb_ops.usbd_flush_endpoint)
 			usb_ops.usbd_flush_endpoint(USB_EP_BULK_IN);
 	}
@@ -395,7 +395,7 @@ int usb_device_gadget_hid(usb_ctxt_t *usbs)
 		gadget_type = USB_GADGET_HID_TOUCHPAD;
 	}
 
-	usbs->set_text(usbs->label, "#C7EA46 状态:# USB已启动");
+	usbs->set_text(usbs->label, "#C7EA46 狀態:# USB已啟動");
 
 	if (usb_ops.usb_device_init())
 	{
@@ -403,18 +403,18 @@ int usb_device_gadget_hid(usb_ctxt_t *usbs)
 		return 1;
 	}
 
-	usbs->set_text(usbs->label, "#C7EA46 状态:# 等待连接");
+	usbs->set_text(usbs->label, "#C7EA46 狀態:# 等待連線");
 
 	// Initialize Control Endpoint.
 	if (usb_ops.usb_device_enumerate(gadget_type))
 		goto error;
 
-	usbs->set_text(usbs->label, "#C7EA46 状态:# 等待HID报告请求");
+	usbs->set_text(usbs->label, "#C7EA46 狀態:# 等待HID報告請求");
 
 	if (usb_ops.usb_device_class_send_hid_report())
 		goto error;
 
-	usbs->set_text(usbs->label, "#C7EA46 状态:# 已启动HID仿真");
+	usbs->set_text(usbs->label, "#C7EA46 狀態:# 已啟動HID模擬");
 
 	u32 timer_sys = get_tmr_ms() + 5000;
 	while (true)
@@ -452,11 +452,11 @@ int usb_device_gadget_hid(usb_ctxt_t *usbs)
 		}
 	}
 
-	usbs->set_text(usbs->label, "#C7EA46 状态:# HID已结束");
+	usbs->set_text(usbs->label, "#C7EA46 狀態:# HID已結束");
 	goto exit;
 
 error:
-	usbs->set_text(usbs->label, "#FFDD00 错误:# 超时或取消");
+	usbs->set_text(usbs->label, "#FFDD00 錯誤:# 超時或取消");
 	res = 1;
 
 exit:

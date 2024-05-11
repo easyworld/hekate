@@ -2,9 +2,9 @@ name: Build Hekate
 
 on:
   push:
-    branches: [ master ]
+    branches: [ tc2 ]
   pull_request:
-    branches: [ master ]
+    branches: [ tc2 ]
   workflow_dispatch:
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
         cp output/nyx.bin hekate_extracted/bootloader/sys/nyx.bin
     
         # Define the new asset name
-        echo "new_asset_name=${original_asset_name}_sc" >> $GITHUB_ENV
+        echo "new_asset_name=${original_asset_name}_tc" >> $GITHUB_ENV
       shell: bash
 
     - name: Upload new zip as artifact
