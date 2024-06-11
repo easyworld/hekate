@@ -14,7 +14,7 @@ for path in paths:
                 for w in ll:
                     allChineseWords.add(w)
 
-allChineseWords.update(set(list("识别大气层侦安卓怀旧")))
+allChineseWords.update(set(list("識別大氣層偵安卓懷舊")))
 wordList = list(allChineseWords)
 wordList.sort()
 for w in wordList:

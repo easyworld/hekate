@@ -1755,7 +1755,7 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 
 	u32 idx = 0;
 	u32 lines_left = 20;
-	s_printf(txt_buf + strlen(txt_buf), "#FFBA00 索引 名称                      大小        偏移       扇區#\n");
+	s_printf(txt_buf + strlen(txt_buf), "#FFBA00 索引 名稱                      大小        偏移       扇區#\n");
 	LIST_FOREACH_ENTRY(emmc_part_t, part, &gpt, link)
 	{
 		int lines = strlen(part->name) > 25 ? 2 : 1;
