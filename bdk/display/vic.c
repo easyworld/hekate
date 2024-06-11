@@ -1,7 +1,7 @@
 /*
  * VIC driver for Tegra X1
  *
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -406,6 +406,9 @@ void vic_set_surface(vic_surface_t *sfc)
 	// Get format alpha type.
 	switch (sfc->pix_fmt)
 	{
+	case VIC_PIX_FORMAT_L8:
+	case VIC_PIX_FORMAT_X1B5G5R5:
+	case VIC_PIX_FORMAT_B5G5R5X1:
 	case VIC_PIX_FORMAT_X8B8G8R8:
 	case VIC_PIX_FORMAT_X8R8G8B8:
 	case VIC_PIX_FORMAT_B8G8R8X8:
@@ -536,13 +539,7 @@ int vic_compose()
 
 int vic_init()
 {
-	// Ease the stress to APB.
-	bpmp_freq_t prev_fid = bpmp_clk_rate_set(BPMP_CLK_NORMAL);
-
 	clock_enable_vic();
-
-	// Restore sys clock.
-	bpmp_clk_rate_set(prev_fid);
 
 	// Load Fetch Control Engine microcode.
 	for (u32 i = 0; i < sizeof(vic_fce_ucode) / sizeof(u32); i++)

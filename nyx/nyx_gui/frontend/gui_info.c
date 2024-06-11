@@ -917,7 +917,8 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		else
 			strcat(txt_buf, "#FFDD00 錯誤!#");
 
-		s_printf(txt_buf + strlen(txt_buf), "\n#FF8000 ID:# %08X (", touch_fw.fw_id);
+		s_printf(txt_buf + strlen(txt_buf), "\n#FF8000 ID:# %02X.%02X.%02X.%02X (",
+			(touch_fw.fw_id >> 24) & 0xFF, (touch_fw.fw_id >> 16) & 0xFF, (touch_fw.fw_id >> 8) & 0xFF, touch_fw.fw_id & 0xFF);
 
 		// Check panel pair info.
 		switch (touch_fw.fw_id)
@@ -1627,10 +1628,11 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 		break;
 	}
 
-	s_printf(txt_buf + strlen(txt_buf), "(%02X)\n%c%c%c%c%c%c\n%d.%d\n%04X\n%02d/%04d\n\n",
+	s_printf(txt_buf + strlen(txt_buf), "(%02X)\n%c%c%c%c%c%c (%02X)\n%d.%d\n%04X\n%02d/%04d\n\n",
 		emmc_storage.cid.manfid,
 		emmc_storage.cid.prod_name[0], emmc_storage.cid.prod_name[1], emmc_storage.cid.prod_name[2],
 		emmc_storage.cid.prod_name[3], emmc_storage.cid.prod_name[4], emmc_storage.cid.prod_name[5],
+		emmc_storage.cid.oemid,
 		emmc_storage.cid.prv & 0xF, emmc_storage.cid.prv >> 4,
 		emmc_storage.cid.serial, emmc_storage.cid.month, emmc_storage.cid.year);
 
@@ -1741,39 +1743,42 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	u32 boot_size = emmc_storage.ext_csd.boot_mult << 17;
 	u32 rpmb_size = emmc_storage.ext_csd.rpmb_mult << 17;
 	strcpy(txt_buf, "#00DDFF eMMC物理分割槽:#\n");
-	s_printf(txt_buf + strlen(txt_buf), "1: #96FF00 BOOT0# 大小: %6d KiB (扇區: 0x%08X)\n", boot_size / 1024, boot_size / EMMC_BLOCKSIZE);
-	s_printf(txt_buf + strlen(txt_buf), "2: #96FF00 BOOT1# 大小: %6d KiB (扇區: 0x%08X)\n", boot_size / 1024, boot_size / EMMC_BLOCKSIZE);
-	s_printf(txt_buf + strlen(txt_buf), "3: #96FF00 RPMB#  大小: %6d KiB (扇區: 0x%08X)\n", rpmb_size / 1024, rpmb_size / EMMC_BLOCKSIZE);
-	s_printf(txt_buf + strlen(txt_buf), "0: #96FF00 GPP#   大小: %6d MiB (扇區: 0x%08X)\n", emmc_storage.sec_cnt >> SECTORS_TO_MIB_COEFF, emmc_storage.sec_cnt);
-	strcat(txt_buf, "\n#00DDFF GPP (eMMC使用者) 分割槽表:#\n");
+	s_printf(txt_buf + strlen(txt_buf), "1: #96FF00 BOOT0#  大小: %6d KiB  扇區: 0x%08X\n", boot_size / 1024, boot_size / EMMC_BLOCKSIZE);
+	s_printf(txt_buf + strlen(txt_buf), "2: #96FF00 BOOT1#  大小: %6d KiB  扇區: 0x%08X\n", boot_size / 1024, boot_size / EMMC_BLOCKSIZE);
+	s_printf(txt_buf + strlen(txt_buf), "3: #96FF00 RPMB#   大小: %6d KiB  扇區: 0x%08X\n", rpmb_size / 1024, rpmb_size / EMMC_BLOCKSIZE);
+	s_printf(txt_buf + strlen(txt_buf), "0: #96FF00 GPP#    大小: %6d MiB  扇區: 0x%08X\n", emmc_storage.sec_cnt >> SECTORS_TO_MIB_COEFF, emmc_storage.sec_cnt);
+	strcat(txt_buf, "\n#00DDFF GPP(eMMC使用者)分割槽表:#\n");
 
 	emmc_set_partition(EMMC_GPP);
 	LIST_INIT(gpt);
 	emmc_gpt_parse(&gpt);
 
 	u32 idx = 0;
+	u32 lines_left = 20;
+	s_printf(txt_buf + strlen(txt_buf), "#FFBA00 索引 名称                      大小        偏移       扇區#\n");
 	LIST_FOREACH_ENTRY(emmc_part_t, part, &gpt, link)
 	{
-		if (idx > 10)
+		int lines = strlen(part->name) > 25 ? 2 : 1;
+		if ((lines_left - lines) <= 0)
 		{
 			strcat(txt_buf, "#FFDD00 分割槽表無法完全顯示在螢幕上!#");
 			break;
 		}
 
-		if (part->index < 2)
+		if (lines == 2)
 		{
-			s_printf(txt_buf + strlen(txt_buf), "%02d: #96FF00 %s#%s 大小: %d MiB (Sect: 0x%X), 起始地址: %06X\n",
-				part->index, part->name, !part->name[8] ? " " : "",
-				(part->lba_end - part->lba_start + 1) >> SECTORS_TO_MIB_COEFF,
-				part->lba_end - part->lba_start + 1, part->lba_start);
+			s_printf(txt_buf + strlen(txt_buf), "%02d: #96FF00 %s#\n                              %6d MiB  %8Xh  %8Xh\n",
+				part->index, part->name, (part->lba_end - part->lba_start + 1) >> SECTORS_TO_MIB_COEFF,
+				part->lba_start, part->lba_end - part->lba_start + 1);
 		}
 		else
 		{
-			s_printf(txt_buf + strlen(txt_buf), "%02d: #96FF00 %s#\n    大小: %7d MiB (Sect: 0x%07X), 起始地址: %07X\n",
+			s_printf(txt_buf + strlen(txt_buf), "%02d: #96FF00 %.25s# %6d MiB  %8Xh  %8Xh\n",
 				part->index, part->name, (part->lba_end - part->lba_start + 1) >> SECTORS_TO_MIB_COEFF,
-				part->lba_end - part->lba_start + 1, part->lba_start);
+				part->lba_start, part->lba_end - part->lba_start + 1);
 		}
 
+		lines_left -= lines;
 		idx++;
 	}
 	if (!idx)

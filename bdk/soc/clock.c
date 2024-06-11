@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <soc/bpmp.h>
 #include <soc/clock.h>
 #include <soc/hw_init.h>
 #include <soc/pmc.h>
@@ -153,7 +154,13 @@ void clock_enable_fuse(bool enable)
 
 void clock_enable_uart(u32 idx)
 {
+	// Ease the stress to APB.
+	bpmp_clk_rate_relaxed(true);
+
 	clock_enable(&_clock_uart[idx]);
+
+	// Restore OC.
+	bpmp_clk_rate_relaxed(false);
 }
 
 void clock_disable_uart(u32 idx)
@@ -247,7 +254,13 @@ void clock_disable_nvjpg()
 
 void clock_enable_vic()
 {
+	// Ease the stress to APB.
+	bpmp_clk_rate_relaxed(true);
+
 	clock_enable(&_clock_vic);
+
+	// Restore sys clock.
+	bpmp_clk_rate_relaxed(false);
 }
 
 void clock_disable_vic()
@@ -323,7 +336,13 @@ void clock_disable_coresight()
 
 void clock_enable_pwm()
 {
+	// Ease the stress to APB.
+	bpmp_clk_rate_relaxed(true);
+
 	clock_enable(&_clock_pwm);
+
+	// Restore OC.
+	bpmp_clk_rate_relaxed(false);
 }
 
 void clock_disable_pwm()
@@ -398,10 +417,8 @@ void clock_enable_plld(u32 divp, u32 divn, bool lowpower, bool tegra_t210)
 	if (lowpower && tegra_t210)
 		misc = 0x2D0000 | 0x0AAA; // Clock enable and PLLD_SDM_DIN:  2730 -> DIVN + 0.833.
 
-
-	// Set DISP1 clock source and parent clock.
-	if (lowpower)
-		CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_DISP1) = (2 << 29u) | CLK_SRC_DIV(1); // PLLD_OUT0.
+	// Set DISP1 clock source.
+	CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_DISP1) = 2 << 29u; // PLLD_OUT0.
 
 	// Set dividers and enable PLLD.
 	CLOCK(CLK_RST_CONTROLLER_PLLD_BASE)  = PLLCX_BASE_ENABLE | PLLCX_BASE_LOCK | plld_div;
@@ -464,10 +481,10 @@ void clock_enable_pllc(u32 divn)
 		;
 
 	// Disable PLLC_OUT1, enable reset and set div to 1.5.
-	CLOCK(CLK_RST_CONTROLLER_PLLC_OUT) = BIT(8);
+	CLOCK(CLK_RST_CONTROLLER_PLLC_OUT) = 1 << 8;
 
 	// Enable PLLC_OUT1 and bring it out of reset.
-	CLOCK(CLK_RST_CONTROLLER_PLLC_OUT) |= (PLLC_OUT1_CLKEN | PLLC_OUT1_RSTN_CLR);
+	CLOCK(CLK_RST_CONTROLLER_PLLC_OUT) |= PLLC_OUT1_CLKEN | PLLC_OUT1_RSTN_CLR;
 	msleep(1); // Wait a bit for PLL to stabilize.
 }
 

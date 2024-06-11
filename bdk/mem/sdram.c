@@ -184,6 +184,41 @@ emc_mr_data_t sdram_read_mrx(emc_mr_t mrx)
 	return data;
 }
 
+void sdram_div_disable(bool enable)
+{
+	static bool enabled = false;
+
+	if (hw_get_chip_id() == GP_HIDREV_MAJOR_T210 && enable == enabled)
+		return;
+
+	enabled = enable;
+
+	// Clear CC interrupt.
+	EMC(EMC_INTSTATUS) = BIT(4);
+	(void)EMC(EMC_INTSTATUS);
+
+	u32 clk_src_emc = _dram_cfg_08_10_12_14_samsung_hynix_4gb.emc_clock_source;
+
+	if (enable)
+	{
+		// Check if clock source is not the expected one.
+		if (CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_EMC) != clk_src_emc)
+			return;
+
+		// Clear div.
+		CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_EMC) = clk_src_emc & ~0xF;
+	}
+	else
+	{
+		// Restore MC/EMC clock.
+		CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_EMC) = clk_src_emc;
+	}
+
+	// Wait for CC interrupt.
+	while (!(EMC(EMC_INTSTATUS) & BIT(4)))
+		;
+}
+
 static void _sdram_config_t210(const sdram_params_t210_t *params)
 {
 	// Program DPD3/DPD4 regs (coldboot path).
@@ -1469,10 +1504,10 @@ static void _sdram_init_t210()
 	PMC(APBDEV_PMC_DDR_PWR) = PMC(APBDEV_PMC_DDR_PWR); // Normally params->pmc_ddr_pwr.
 
 	// Turn on MEM IO Power.
-	PMC(APBDEV_PMC_NO_IOPOWER) = params->pmc_no_io_power;
-	PMC(APBDEV_PMC_REG_SHORT)  = params->pmc_reg_short;
+	PMC(APBDEV_PMC_NO_IOPOWER) &= PMC_NO_IOPOWER_SDMMC1; // Only keep SDMMC1 state. (Was params->pmc_no_io_power).
+	PMC(APBDEV_PMC_REG_SHORT)   = params->pmc_reg_short;
 
-	PMC(APBDEV_PMC_DDR_CNTRL)  = params->pmc_ddr_ctrl;
+	PMC(APBDEV_PMC_DDR_CNTRL)   = params->pmc_ddr_ctrl;
 
 	// Patch 1 using BCT spare variables
 	if (params->emc_bct_spare0)
@@ -1492,10 +1527,10 @@ static void _sdram_init_t210b01()
 	usleep(params->pmc_vddp_sel_wait);
 
 	// Turn on MEM IO Power.
-	PMC(APBDEV_PMC_NO_IOPOWER) = params->pmc_no_io_power;
-	PMC(APBDEV_PMC_REG_SHORT)  = params->pmc_reg_short;
+	PMC(APBDEV_PMC_NO_IOPOWER) &= PMC_NO_IOPOWER_SDMMC1; // Only keep SDMMC1 state. (Was params->pmc_no_io_power).
+	PMC(APBDEV_PMC_REG_SHORT)   = params->pmc_reg_short;
 
-	PMC(APBDEV_PMC_DDR_CNTRL)  = params->pmc_ddr_ctrl;
+	PMC(APBDEV_PMC_DDR_CNTRL)   = params->pmc_ddr_ctrl;
 
 	// Patch 1 using BCT spare variables
 	if (params->emc_bct_spare0)

@@ -64,7 +64,8 @@ char *text_color;
 
 typedef struct _jc_lv_driver_t
 {
-	lv_indev_t *indev;
+	lv_indev_t *indev_jc;
+	lv_indev_t *indev_touch;
 // LV_INDEV_READ_PERIOD * JC_CAL_MAX_STEPS = 264 ms.
 #define JC_CAL_MAX_STEPS 8
 	u32 calibration_step;
@@ -107,10 +108,10 @@ static void _nyx_disp_init()
 	vic_compose();
 
 	// Switch to new window configuration.
-	display_init_framebuffer_pitch_vic();
+	display_init_window_a_pitch_vic();
 
 	// Enable logging on window D.
-	display_init_framebuffer_log();
+	display_init_window_d_console();
 	// Switch back the backlight.
 	display_backlight_brightness(h_cfg.backlight - 20, 1000);
 }
@@ -463,7 +464,7 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 		{
 			if (!console_enabled)
 			{
-				display_activate_console();
+				display_window_d_console_enable();
 				console_enabled = true;
 				gfx_con_getpos(&gfx_con.savedx, &gfx_con.savedy, &gfx_con.savedcol);
 				gfx_con_setpos(964, 630, GFX_COL_AUTO);
@@ -472,7 +473,7 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 			}
 			else
 			{
-				display_deactivate_console();
+				display_window_d_console_disable();
 				console_enabled = false;
 			}
 
@@ -489,10 +490,9 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 		gfx_con_getpos(&gfx_con.savedx, &gfx_con.savedy, &gfx_con.savedcol);
 		gfx_con_setpos(32, 630, GFX_COL_AUTO);
 		gfx_con.fntsz = 8;
-		gfx_printf("x: %4X, y: %4X | b: %06X | bt: %d %d | cx: %03X - %03X, cy: %03X - %03X",
-			jc_pad->lstick_x, jc_pad->lstick_y, jc_pad->buttons,
-			jc_pad->batt_info_l, jc_pad->batt_info_r,
-			jc_drv_ctx.cx_min, jc_drv_ctx.cx_max, jc_drv_ctx.cy_min, jc_drv_ctx.cy_max);
+		gfx_printf("x: %4X, y: %4X | rx: %4X, ry: %4X | b: %06X | bt: %d %d",
+			jc_pad->lstick_x, jc_pad->lstick_y, jc_pad->rstick_x, jc_pad->rstick_y,
+			jc_pad->buttons, jc_pad->batt_info_l, jc_pad->batt_info_r);
 		gfx_con_setpos(gfx_con.savedx, gfx_con.savedy, gfx_con.savedcol);
 		gfx_con.fntsz = 16;
 
@@ -585,7 +585,7 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 
 		jc_drv_ctx.cursor_hidden = false;
 		jc_drv_ctx.cursor_timeout = get_tmr_ms();
-		lv_indev_set_cursor(jc_drv_ctx.indev, jc_drv_ctx.cursor);
+		lv_indev_set_cursor(jc_drv_ctx.indev_jc, jc_drv_ctx.cursor);
 
 		// Un hide cursor.
 		lv_obj_set_opa_scale_enable(jc_drv_ctx.cursor, false);
@@ -597,7 +597,7 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 			if (((u32)get_tmr_ms() - jc_drv_ctx.cursor_timeout) > 3000)
 			{
 				// Remove cursor and hide it.
-				lv_indev_set_cursor(jc_drv_ctx.indev, NULL);
+				lv_indev_set_cursor(jc_drv_ctx.indev_jc, NULL);
 				lv_obj_set_opa_scale_enable(jc_drv_ctx.cursor, true);
 				lv_obj_set_opa_scale(jc_drv_ctx.cursor, LV_OPA_TRANSP);
 
@@ -923,7 +923,7 @@ static void _launch_hos(u8 autoboot, u8 autoboot_list)
 
 	sd_end();
 
-	hw_reinit_workaround(false, 0);
+	hw_deinit(false, 0);
 
 	(*main_ptr)();
 }
@@ -939,10 +939,7 @@ void reload_nyx()
 
 	sd_end();
 
-	hw_reinit_workaround(false, 0);
-
-	// Some cards (Sandisk U1), do not like a fast power cycle. Wait min 100ms.
-	sdmmc_storage_init_wait_sd();
+	hw_deinit(false, 0);
 
 	(*main_ptr)();
 }
@@ -1234,10 +1231,10 @@ static void _create_tab_about(lv_theme_t * th, lv_obj_t * parent)
 	lv_label_set_style(lbl_credits, &monospace_text);
 	lv_label_set_recolor(lbl_credits, true);
 	lv_label_set_static_text(lbl_credits,
-		"#C7EA46 hekate#  (c) 2018,      #C7EA46 naehrwert#, #C7EA46 st4rk#\n"
-		"        (c) 2018-2023, #C7EA46 CTCaer#\n"
+		"#C7EA46 hekate# (c) 2018,      #C7EA46 naehrwert#, #C7EA46 st4rk#\n"
+		"       (c) 2018-2024, #C7EA46 CTCaer#\n"
 		"\n"
-		"#C7EA46 Nyx GUI# (c) 2019-2023, #C7EA46 CTCaer#\n"
+		"#C7EA46 Nyx#    (c) 2019-2024, #C7EA46 CTCaer#\n"
 		"\n"
 		"Thanks to: #00CCFF derrek, nedwill, plutoo, #\n"
 		"           #00CCFF shuffle2, smea, thexyz, yellows8 #\n"
@@ -1245,18 +1242,19 @@ static void _create_tab_about(lv_theme_t * th, lv_obj_t * parent)
 		"Greetings to: fincs, hexkyz, SciresM,\n"
 		"              Shiny Quagsire, WinterMute\n"
 		"\n"
-		"Open source and free packages used:\n\n"
+		"Open source and free packages used:                    \n" // Label width alignment padding.
+		" - Littlev Graphics Library,\n"
+		"   Copyright (c) 2016-2018, Gabor Kiss-Vamosi\n\n"
 		" - FatFs R0.13c,\n"
-		"   Copyright (c) 2018, ChaN\n\n"
+		"   Copyright (c) 2006-2018, ChaN\n"
+		"   Copyright (c) 2018-2022, CTCaer\n\n"
 		" - bcl-1.2.0,\n"
 		"   Copyright (c) 2003-2006, Marcus Geelnard\n\n"
-		" - Atmosphere (Exosphere types/panic, proc id patches),\n"
-		"   Copyright (c) 2018-2019, Atmosphere-NX\n\n"
+		" - blz,\n"
+		"   Copyright (c) 2018, SciresM\n\n"
 		" - elfload,\n"
 		"   Copyright (c) 2014, Owen Shepherd\n"
-		"   Copyright (c) 2018, M4xw\n\n"
-		" - Littlev Graphics Library,\n"
-		"   Copyright (c) 2016 Gabor Kiss-Vamosi"
+		"   Copyright (c) 2018, M4xw"
 	);
 
 	lv_obj_t * lbl_octopus = lv_label_create(parent, NULL);
@@ -1321,15 +1319,8 @@ static void _update_status_bar(void *params)
 	max17050_get_property(MAX17050_Current, &batt_curr);
 
 	// Enable fan if more than 41 oC.
-	u32 soc_temp_dec = (soc_temp >> 8);
-	if (soc_temp_dec > 51)
-		set_fan_duty(102);
-	else if (soc_temp_dec > 46)
-		set_fan_duty(76);
-	else if (soc_temp_dec > 41)
-		set_fan_duty(51);
-	else if (soc_temp_dec < 40)
-		set_fan_duty(0);
+	u32 soc_temp_dec = soc_temp >> 8;
+	fan_set_from_temp(soc_temp_dec);
 
 	if (!label)
 		label = (char *)malloc(512);
@@ -2431,7 +2422,7 @@ void nyx_load_and_run()
 	indev_drv_jc.type = LV_INDEV_TYPE_POINTER;
 	indev_drv_jc.read = _jc_virt_mouse_read;
 	memset(&jc_drv_ctx, 0, sizeof(jc_lv_driver_t));
-	jc_drv_ctx.indev = lv_indev_drv_register(&indev_drv_jc);
+	jc_drv_ctx.indev_jc = lv_indev_drv_register(&indev_drv_jc);
 	close_btn = NULL;
 
 	// Initialize touch.
@@ -2440,7 +2431,7 @@ void nyx_load_and_run()
 	lv_indev_drv_init(&indev_drv_touch);
 	indev_drv_touch.type = LV_INDEV_TYPE_POINTER;
 	indev_drv_touch.read = _fts_touch_read;
-	lv_indev_drv_register(&indev_drv_touch);
+	jc_drv_ctx.indev_touch = lv_indev_drv_register(&indev_drv_touch);
 	touchpad.touch = false;
 
 	// Initialize temperature sensor.

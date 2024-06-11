@@ -1,6 +1,6 @@
 /*
 * Copyright (c) 2018 naehrwert
-* Copyright (c) 2018-2022 CTCaer
+* Copyright (c) 2018-2024 CTCaer
 *
 * This program is free software; you can redistribute it and/or modify it
 * under the terms and conditions of the GNU General Public License,
@@ -16,37 +16,35 @@
 */
 
 // Display A config.
-static const cfg_op_t _di_dc_setup_win_config[] = {
-	{DC_CMD_STATE_ACCESS, 0},
+static const reg_cfg_t _di_dc_setup_win_config[] = {
+	{DC_CMD_STATE_ACCESS, READ_MUX_ASSEMBLY | WRITE_MUX_ASSEMBLY},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
 	{DC_CMD_REG_ACT_CONTROL, WIN_A_ACT_HCNTR_SEL | WIN_B_ACT_HCNTR_SEL | WIN_C_ACT_HCNTR_SEL},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
 	{DC_DISP_DC_MCCIF_FIFOCTRL, 0},
 	{DC_DISP_DISP_MEM_HIGH_PRIORITY, 0},
 	{DC_DISP_DISP_MEM_HIGH_PRIORITY_TIMER, 0},
 	{DC_CMD_DISPLAY_POWER_CONTROL, PW0_ENABLE | PW1_ENABLE | PW2_ENABLE | PW3_ENABLE | PW4_ENABLE | PM0_ENABLE | PM1_ENABLE},
 	{DC_CMD_GENERAL_INCR_SYNCPT_CNTRL, SYNCPT_CNTRL_NO_STALL},
 	{DC_CMD_CONT_SYNCPT_VSYNC, SYNCPT_VSYNC_ENABLE | SYNCPT_VSYNC_INDX(9)},
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE | WIN_B_UPDATE | WIN_C_UPDATE},
-	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ},
-	{DC_CMD_STATE_ACCESS, 0},
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_A_UPDATE  | WIN_B_UPDATE  | WIN_C_UPDATE  | WIN_D_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ | WIN_D_ACT_REQ},
 
 	/* Setup Windows A/B/C */
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
+	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT | WINDOW_D_SELECT},
 	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_WIN_DV_CONTROL,  0},
 	/* Setup default YUV colorspace conversion coefficients */
-	{DC_WIN_CSC_YOF,   0xF0},
-	{DC_WIN_CSC_KYRGB, 0x12A},
-	{DC_WIN_CSC_KUR,   0},
-	{DC_WIN_CSC_KVR,   0x198},
-	{DC_WIN_CSC_KUG,   0x39B},
-	{DC_WIN_CSC_KVG,   0x32F},
-	{DC_WIN_CSC_KUB,   0x204},
-	{DC_WIN_CSC_KVB,   0},
+	{DC_WINC_CSC_YOF,   0xF0},
+	{DC_WINC_CSC_KYRGB, 0x12A},
+	{DC_WINC_CSC_KUR,   0},
+	{DC_WINC_CSC_KVR,   0x198},
+	{DC_WINC_CSC_KUG,   0x39B},
+	{DC_WINC_CSC_KVG,   0x32F},
+	{DC_WINC_CSC_KUB,   0x204},
+	{DC_WINC_CSC_KVB,   0},
 	/* End of color coefficients */
 
 	{DC_DISP_DISP_COLOR_CONTROL, BASE_COLOR_SIZE_888},
@@ -55,21 +53,18 @@ static const cfg_op_t _di_dc_setup_win_config[] = {
 	{DC_COM_PIN_OUTPUT_POLARITY(3), 0},
 	{DC_DISP_BLEND_BACKGROUND_COLOR, 0},
 	{DC_COM_CRC_CONTROL, 0},
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE | WIN_B_UPDATE | WIN_C_UPDATE},
-	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ},
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_A_UPDATE  | WIN_B_UPDATE  | WIN_C_UPDATE  | WIN_D_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ | WIN_D_ACT_REQ},
 	{DC_WINBUF_BLEND_LAYER_CONTROL, WIN_BLEND_BYPASS | WIN_BLEND_DEPTH(255)},
 	{DC_CMD_DISPLAY_COMMAND_OPTION0, 0},
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_DISP_DISP_WIN_OPTIONS, 0},
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_STOP},
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE | WIN_B_UPDATE | WIN_C_UPDATE},
-	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ}
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_A_UPDATE  | WIN_B_UPDATE  | WIN_C_UPDATE  | WIN_D_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ | WIN_D_ACT_REQ}
 };
 
 // DSI Init config.
-static const cfg_op_t _di_dsi_init_irq_pkt_config0[] = {
+static const reg_cfg_t _di_dsi_init_config0[] = {
 	{DSI_WR_DATA, 0},
 	{DSI_INT_ENABLE, 0},
 	{DSI_INT_STATUS, 0},
@@ -79,7 +74,7 @@ static const cfg_op_t _di_dsi_init_irq_pkt_config0[] = {
 	{DSI_INIT_SEQ_DATA_2, 0},
 	{DSI_INIT_SEQ_DATA_3, 0}
 };
-static const cfg_op_t _di_dsi_init_irq_pkt_config1[] = {
+static const reg_cfg_t _di_dsi_init_config1[] = {
 	{DSI_DCS_CMDS, 0},
 	{DSI_PKT_SEQ_0_LO, 0},
 	{DSI_PKT_SEQ_1_LO, 0},
@@ -95,7 +90,7 @@ static const cfg_op_t _di_dsi_init_irq_pkt_config1[] = {
 	{DSI_PKT_SEQ_5_HI, 0},
 	{DSI_CONTROL, 0}
 };
-static const cfg_op_t _di_dsi_init_pads_t210b01[] = {
+static const reg_cfg_t _di_dsi_init_pads_t210b01[] = {
 	{DSI_PAD_CONTROL_1, 0},
 	{DSI_PAD_CONTROL_2, 0},
 	{DSI_PAD_CONTROL_3, 0},
@@ -104,7 +99,7 @@ static const cfg_op_t _di_dsi_init_pads_t210b01[] = {
 	{DSI_PAD_CONTROL_6_B01, 0},
 	{DSI_PAD_CONTROL_7_B01, 0}
 };
-static const cfg_op_t _di_dsi_init_timing_pkt_config2[] = {
+static const reg_cfg_t _di_dsi_init_config2[] = {
 	{DSI_PAD_CONTROL_CD, 0},
 	{DSI_SOL_DELAY,     24},
 	{DSI_MAX_THRESHOLD, 480},
@@ -114,23 +109,21 @@ static const cfg_op_t _di_dsi_init_timing_pkt_config2[] = {
 	{DSI_PKT_LEN_2_3, 0},
 	{DSI_PKT_LEN_4_5, 0},
 	{DSI_PKT_LEN_6_7, 0},
-	{DSI_PAD_CONTROL_1, 0}
-};
-static const cfg_op_t _di_dsi_init_timing_pwrctrl_config[] = {
+	{DSI_PAD_CONTROL_1, 0},
+	{DSI_PHY_TIMING_0, 0x6070603},
 	{DSI_PHY_TIMING_1, 0x40A0E05},
 	{DSI_PHY_TIMING_2, 0x30109},
 	{DSI_BTA_TIMING,   0x190A14},
 	{DSI_TIMEOUT_0, DSI_TIMEOUT_LRX(0x2000) | DSI_TIMEOUT_HTX(0xFFFF)},
 	{DSI_TIMEOUT_1, DSI_TIMEOUT_PR(0x765)   | DSI_TIMEOUT_TA(0x2000)},
 	{DSI_TO_TALLY, 0},
-	{DSI_PAD_CONTROL_0, DSI_PAD_CONTROL_VS1_PULLDN(0) | DSI_PAD_CONTROL_VS1_PDIO(0)}, // Enable
+	{DSI_PAD_CONTROL_0, DSI_PAD_CONTROL_VS1_PULLDN(0) | DSI_PAD_CONTROL_VS1_PDIO(0)}, // Power up.
 	{DSI_POWER_CONTROL, DSI_POWER_CONTROL_ENABLE},
 	{DSI_POWER_CONTROL, DSI_POWER_CONTROL_ENABLE},
 	{DSI_POWER_CONTROL, 0},
 	{DSI_POWER_CONTROL, 0},
-	{DSI_PAD_CONTROL_1, 0}
-};
-static const cfg_op_t _di_dsi_init_timing_pkt_config3[] = {
+	{DSI_PAD_CONTROL_1, 0},
+	{DSI_PHY_TIMING_0, 0x6070603},
 	{DSI_PHY_TIMING_1, 0x40A0E05},
 	{DSI_PHY_TIMING_2, 0x30118},
 	{DSI_BTA_TIMING,   0x190A14},
@@ -148,7 +141,7 @@ static const cfg_op_t _di_dsi_init_timing_pkt_config3[] = {
 };
 
 // DSI panel JDI config.
-static const cfg_op_t _di_dsi_panel_init_config_jdi[] = {
+static const reg_cfg_t _di_dsi_panel_init_config_jdi[] = {
 	{DSI_WR_DATA, 0x0439},     // MIPI_DSI_DCS_LONG_WRITE: 4 bytes.
 	{DSI_WR_DATA, 0x9483FFB9}, // MIPI_DCS_PRIV_SET_EXTC. (Pass: FF 83 94).
 	{DSI_TRIGGER, DSI_TRIGGER_HOST},
@@ -195,7 +188,9 @@ static const cfg_op_t _di_dsi_panel_init_config_jdi[] = {
 };
 
 // DSI packet config.
-static const cfg_op_t _di_dsi_init_seq_pkt_final_config[] = {
+static const reg_cfg_t _di_dsi_init_seq_pkt_final_config[] = {
+	{DSI_PAD_CONTROL_1, 0},
+	{DSI_PHY_TIMING_0, 0x6070603},
 	{DSI_PHY_TIMING_1, 0x40A0E05},
 	{DSI_PHY_TIMING_2, 0x30172},
 	{DSI_BTA_TIMING,   0x190A14},
@@ -218,7 +213,7 @@ static const cfg_op_t _di_dsi_init_seq_pkt_final_config[] = {
 };
 
 // DSI mode config.
-static const cfg_op_t _di_dsi_mode_config[] = {
+static const reg_cfg_t _di_dsi_mode_config[] = {
 	{DSI_TRIGGER, 0},
 	{DSI_CONTROL, 0},
 	{DSI_SOL_DELAY, 6},
@@ -232,7 +227,7 @@ static const cfg_op_t _di_dsi_mode_config[] = {
 };
 
 // MIPI CAL config.
-static const cfg_op_t _di_mipi_pad_cal_config[] = {
+static const reg_cfg_t _di_mipi_pad_cal_config[] = {
 	{MIPI_CAL_MIPI_BIAS_PAD_CFG2,  0},
 	{MIPI_CAL_CIL_MIPI_CAL_STATUS, 0xF3F10000},
 	{MIPI_CAL_MIPI_BIAS_PAD_CFG0,  0},
@@ -240,13 +235,13 @@ static const cfg_op_t _di_mipi_pad_cal_config[] = {
 };
 
 // DSI pad config.
-static const cfg_op_t _di_dsi_pad_cal_config_t210[] = {
+static const reg_cfg_t _di_dsi_pad_cal_config_t210[] = {
 	{DSI_PAD_CONTROL_1, 0},
 	{DSI_PAD_CONTROL_2, 0},
 	{DSI_PAD_CONTROL_3, DSI_PAD_PREEMP_PD_CLK(0x3) | DSI_PAD_PREEMP_PU_CLK(0x3) | DSI_PAD_PREEMP_PD(0x03) | DSI_PAD_PREEMP_PU(0x3)},
 	{DSI_PAD_CONTROL_4, 0}
 };
-static const cfg_op_t _di_dsi_pad_cal_config_t210b01[] = {
+static const reg_cfg_t _di_dsi_pad_cal_config_t210b01[] = {
 	{DSI_PAD_CONTROL_1,     0},
 	{DSI_PAD_CONTROL_2,     0},
 	{DSI_PAD_CONTROL_3,     0},
@@ -257,19 +252,19 @@ static const cfg_op_t _di_dsi_pad_cal_config_t210b01[] = {
 };
 
 // MIPI CAL config.
-static const cfg_op_t _di_mipi_dsi_cal_offsets_config_t210[] = {
+static const reg_cfg_t _di_mipi_dsi_cal_prod_config_t210[] = {
 	{MIPI_CAL_DSIA_MIPI_CAL_CONFIG,   0x200200},
 	{MIPI_CAL_DSIB_MIPI_CAL_CONFIG,   0x200200},
 	{MIPI_CAL_DSIA_MIPI_CAL_CONFIG_2, 0x200002},
 	{MIPI_CAL_DSIB_MIPI_CAL_CONFIG_2, 0x200002}
 };
-static const cfg_op_t _di_mipi_dsi_cal_offsets_config_t210b01[] = {
+static const reg_cfg_t _di_mipi_dsi_cal_prod_config_t210b01[] = {
 	{MIPI_CAL_DSIA_MIPI_CAL_CONFIG,   0x200006},
 	{MIPI_CAL_DSIB_MIPI_CAL_CONFIG,   0x200006},
 	{MIPI_CAL_DSIA_MIPI_CAL_CONFIG_2, 0x260000},
 	{MIPI_CAL_DSIB_MIPI_CAL_CONFIG_2, 0x260000}
 };
-static const cfg_op_t _di_mipi_start_dsi_cal_config[] = {
+static const reg_cfg_t _di_mipi_dsi_cal_unused_config[] = {
 	{MIPI_CAL_CILA_MIPI_CAL_CONFIG,   0},
 	{MIPI_CAL_CILB_MIPI_CAL_CONFIG,   0},
 	{MIPI_CAL_CILC_MIPI_CAL_CONFIG,   0},
@@ -280,48 +275,11 @@ static const cfg_op_t _di_mipi_start_dsi_cal_config[] = {
 	{MIPI_CAL_DSID_MIPI_CAL_CONFIG,   0},
 	{MIPI_CAL_DSIB_MIPI_CAL_CONFIG_2, 0},
 	{MIPI_CAL_DSIC_MIPI_CAL_CONFIG_2, 0},
-	{MIPI_CAL_DSID_MIPI_CAL_CONFIG_2, 0},
-	{MIPI_CAL_MIPI_CAL_CTRL,          0x2A000001} // Set Prescale and filter and start calibration.
+	{MIPI_CAL_DSID_MIPI_CAL_CONFIG_2, 0}
 };
 
 // Display A enable config.
-static const cfg_op_t _di_dc_video_enable_config[] = {
-	{DC_CMD_STATE_ACCESS, 0},
-
-	/* Setup Windows A/B/C */
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
-	{DC_WIN_DV_CONTROL,  0},
-	/* Setup default YUV colorspace conversion coefficients */
-	{DC_WIN_CSC_YOF,   0xF0},
-	{DC_WIN_CSC_KYRGB, 0x12A},
-	{DC_WIN_CSC_KUR,   0},
-	{DC_WIN_CSC_KVR,   0x198},
-	{DC_WIN_CSC_KUG,   0x39B},
-	{DC_WIN_CSC_KVG,   0x32F},
-	{DC_WIN_CSC_KUB,   0x204},
-	{DC_WIN_CSC_KVB,   0},
-	/* End of color coefficients */
-
-	{DC_DISP_DISP_COLOR_CONTROL, BASE_COLOR_SIZE_888},
-	{DC_DISP_DISP_INTERFACE_CONTROL, DISP_DATA_FORMAT_DF1P1C},
-	{DC_COM_PIN_OUTPUT_POLARITY(1), LSC0_OUTPUT_POLARITY_LOW},
-	{DC_COM_PIN_OUTPUT_POLARITY(3), 0},
-	{DC_DISP_BLEND_BACKGROUND_COLOR, 0},
-	{DC_COM_CRC_CONTROL, 0},
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE | WIN_B_UPDATE | WIN_C_UPDATE},
-	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ},
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
-	{DC_WINBUF_BLEND_LAYER_CONTROL, WIN_BLEND_BYPASS | WIN_BLEND_DEPTH(255)},
-	{DC_CMD_DISPLAY_COMMAND_OPTION0, 0},
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
-	{DC_DISP_DISP_WIN_OPTIONS, 0},
-	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_STOP},
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE | WIN_B_UPDATE | WIN_C_UPDATE},
-	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ | WIN_B_ACT_REQ | WIN_C_ACT_REQ},
-	{DC_CMD_STATE_ACCESS, 0},
-
+static const reg_cfg_t _di_dc_video_enable_config[] = {
 	/* Set panel timings */
 	{DC_DISP_DISP_TIMING_OPTIONS, VSYNC_H_POSITION(0)},
 	{DC_DISP_REF_TO_SYNC, V_REF_TO_SYNC(1)    | H_REF_TO_SYNC(0)},
@@ -334,57 +292,53 @@ static const cfg_op_t _di_dc_video_enable_config[] = {
 	{DC_DISP_SHIFT_CLOCK_OPTIONS, SC1_H_QUALIFIER_NONE | SC0_H_QUALIFIER_NONE},
 	{DC_COM_PIN_OUTPUT_ENABLE(1), 0},
 	{DC_DISP_DATA_ENABLE_OPTIONS, DE_SELECT_ACTIVE | DE_CONTROL_NORMAL},
-	{DC_DISP_DISP_INTERFACE_CONTROL, DISP_DATA_FORMAT_DF1P1C},
 	{DC_DISP_DISP_CLOCK_CONTROL, 0},
-	{DC_CMD_DISPLAY_COMMAND_OPTION0, 0},
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
-	{DC_DISP_DISP_WIN_OPTIONS, 0},
+
+	/* Start continuous display. */
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_C_DISPLAY},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
-	{DC_CMD_STATE_ACCESS, READ_MUX | WRITE_MUX},
-	{DC_DISP_FRONT_PORCH, V_FRONT_PORCH(10) | H_FRONT_PORCH(136)},
-	{DC_CMD_STATE_ACCESS, 0},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
 	{DC_CMD_GENERAL_INCR_SYNCPT, SYNCPT_GENERAL_COND(COND_REG_WR_SAFE) | SYNCPT_GENERAL_INDX(1)},
+	{DC_CMD_GENERAL_INCR_SYNCPT, SYNCPT_GENERAL_COND(COND_REG_WR_SAFE) | SYNCPT_GENERAL_INDX(1)},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
-	{DC_CMD_STATE_ACCESS, 0},
-	{DC_DISP_DISP_CLOCK_CONTROL, PIXEL_CLK_DIVIDER_PCD1 | SHIFT_CLK_DIVIDER(4)},
-	{DC_DISP_DISP_COLOR_CONTROL, BASE_COLOR_SIZE_888},
-	{DC_CMD_DISPLAY_COMMAND_OPTION0, 0}
+	{DC_DISP_DISP_CLOCK_CONTROL, PIXEL_CLK_DIVIDER_PCD1 | SHIFT_CLK_DIVIDER(4)}, // 4: div3.
 };
 
 // Display A disable config.
-static const cfg_op_t _di_dc_video_disable_config[] = {
-	{DC_DISP_FRONT_PORCH, V_FRONT_PORCH(10) | H_FRONT_PORCH(136)},
+static const reg_cfg_t _di_dc_video_disable_config[] = {
 	{DC_CMD_INT_MASK, 0},
-	{DC_CMD_STATE_ACCESS, 0},
+	{DC_CMD_STATE_ACCESS, READ_MUX_ASSEMBLY | WRITE_MUX_ASSEMBLY},
 	{DC_CMD_INT_ENABLE, 0},
 	{DC_CMD_CONT_SYNCPT_VSYNC, 0},
+
+	/* Stop display. */
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_STOP},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
+	{DC_CMD_GENERAL_INCR_SYNCPT, SYNCPT_GENERAL_COND(COND_REG_WR_SAFE) | SYNCPT_GENERAL_INDX(1)},
 	{DC_CMD_GENERAL_INCR_SYNCPT, SYNCPT_GENERAL_COND(COND_REG_WR_SAFE) | SYNCPT_GENERAL_INDX(1)},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
-	// LCD panels should sleep for 40ms here.
+	// TODO: LCD panels should sleep for 40ms here.
 	{DC_CMD_DISPLAY_POWER_CONTROL, 0},
 	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ},
 };
 
 // DSI deinit config.
-static const cfg_op_t _di_dsi_timing_deinit_config[] = {
+static const reg_cfg_t _di_dsi_timing_deinit_config[] = {
 	{DSI_POWER_CONTROL, 0},
 	{DSI_PAD_CONTROL_1, 0},
-	{DSI_PHY_TIMING_0, 0x6070601}, //mariko changes
+	{DSI_PHY_TIMING_0, 0x6070603},
 	{DSI_PHY_TIMING_1, 0x40A0E05},
 	{DSI_PHY_TIMING_2, 0x30118},
 	{DSI_BTA_TIMING,   0x190A14},
-	{DSI_TIMEOUT_0, DSI_TIMEOUT_LRX(0x2000) | DSI_TIMEOUT_HTX(0xFFFF) },
+	{DSI_TIMEOUT_0, DSI_TIMEOUT_LRX(0x2000) | DSI_TIMEOUT_HTX(0xFFFF)},
 	{DSI_TIMEOUT_1, DSI_TIMEOUT_PR(0x1343)  | DSI_TIMEOUT_TA(0x2000)},
 	{DSI_TO_TALLY, 0},
 	{DSI_HOST_CONTROL, DSI_HOST_CONTROL_CRC_RESET | DSI_HOST_CONTROL_TX_TRIG_HOST | DSI_HOST_CONTROL_CS | DSI_HOST_CONTROL_ECC},
@@ -397,7 +351,7 @@ static const cfg_op_t _di_dsi_timing_deinit_config[] = {
 };
 
 // DSI panel JDI deinit config.
-static const cfg_op_t _di_dsi_panel_deinit_config_jdi[] = {
+static const reg_cfg_t _di_dsi_panel_deinit_config_jdi[] = {
 	{DSI_WR_DATA, 0x439},      // MIPI_DSI_DCS_LONG_WRITE: 4 bytes.
 	{DSI_WR_DATA, 0x9483FFB9}, // MIPI_DCS_PRIV_SET_EXTC. (Pass: FF 83 94).
 	{DSI_TRIGGER, DSI_TRIGGER_HOST},
@@ -423,7 +377,7 @@ static const cfg_op_t _di_dsi_panel_deinit_config_jdi[] = {
 };
 
 // DSI panel AUO deinit config.
-static const cfg_op_t _di_dsi_panel_deinit_config_auo[] = {
+static const reg_cfg_t _di_dsi_panel_deinit_config_auo[] = {
 	{DSI_WR_DATA, 0x439},      // MIPI_DSI_DCS_LONG_WRITE: 4 bytes.
 	{DSI_WR_DATA, 0x9483FFB9}, // MIPI_DCS_PRIV_SET_EXTC. (Pass: FF 83 94).
 	{DSI_TRIGGER, DSI_TRIGGER_HOST},
@@ -464,24 +418,24 @@ static const cfg_op_t _di_dsi_panel_deinit_config_auo[] = {
 	{DSI_TRIGGER, DSI_TRIGGER_HOST}
 };
 
-static const cfg_op_t _di_init_config_invert[] = {
+/*
+static const reg_cfg_t _di_init_config_invert[] = {
 	{DSI_WR_DATA, 0x239},
 	{DSI_WR_DATA, 0x02C1}, // INV_EN.
 	{DSI_TRIGGER, DSI_TRIGGER_HOST},
 };
+*/
 
 // Display A Window A one color config.
-static const cfg_op_t _di_win_one_color[] = {
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT},
+static const reg_cfg_t _di_win_one_color[] = {
+	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT | WINDOW_B_SELECT | WINDOW_C_SELECT | WINDOW_D_SELECT},
 	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_DISP_DISP_WIN_OPTIONS, DSI_ENABLE},
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_C_DISPLAY} // Continuous display.
 };
 
 // Display A Window A linear pitch config.
-static const cfg_op_t _di_win_framebuffer_pitch[] = {
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_C_SELECT | WINDOW_B_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
+static const reg_cfg_t _di_winA_pitch[] = {
 	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT},
 	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_DISP_DISP_WIN_OPTIONS, DSI_ENABLE},
@@ -500,14 +454,12 @@ static const cfg_op_t _di_win_framebuffer_pitch[] = {
 	{DC_WINBUF_ADDR_V_OFFSET, 0},
 	{DC_WIN_WIN_OPTIONS, WIN_ENABLE}, // Enable window AD.
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_C_DISPLAY}, // Continuous display.
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_A_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ}
 };
 
 // Display A Window A linear pitch + Win D support config.
-static const cfg_op_t _di_win_framebuffer_pitch_vic[] = {
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_D_SELECT | WINDOW_C_SELECT | WINDOW_B_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
+static const reg_cfg_t _di_winA_pitch_vic[] = {
 	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT},
 	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_DISP_DISP_WIN_OPTIONS, DSI_ENABLE},
@@ -526,14 +478,12 @@ static const cfg_op_t _di_win_framebuffer_pitch_vic[] = {
 	{DC_WINBUF_ADDR_V_OFFSET, 0},
 	{DC_WIN_WIN_OPTIONS, WIN_ENABLE}, // Enable window AD.
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_C_DISPLAY}, // Continuous display.
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_A_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ}
 };
 
 // Display A Window A linear pitch inverse + Win D support config.
-static const cfg_op_t _di_win_framebuffer_pitch_inv[] = {
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_D_SELECT | WINDOW_C_SELECT | WINDOW_B_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
+static const reg_cfg_t _di_winA_pitch_inv[] = {
 	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT},
 	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_DISP_DISP_WIN_OPTIONS, DSI_ENABLE},
@@ -552,14 +502,12 @@ static const cfg_op_t _di_win_framebuffer_pitch_inv[] = {
 	{DC_WINBUF_ADDR_V_OFFSET, 1279}, // Linear: 1279, Block: 0.
 	{DC_WIN_WIN_OPTIONS, WIN_ENABLE | V_DIRECTION}, // Enable window AD.
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_C_DISPLAY}, // Continuous display.
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_A_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ}
 };
 
 // Display A Window A block linear config.
-static const cfg_op_t _di_win_framebuffer_block[] = {
-	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_D_SELECT | WINDOW_C_SELECT | WINDOW_B_SELECT},
-	{DC_WIN_WIN_OPTIONS, 0},
+static const reg_cfg_t _di_winA_block[] = {
 	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_A_SELECT},
 	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_DISP_DISP_WIN_OPTIONS, DSI_ENABLE},
@@ -578,12 +526,12 @@ static const cfg_op_t _di_win_framebuffer_block[] = {
 	{DC_WINBUF_ADDR_V_OFFSET, 0}, // Linear: 1279, Block: 0.
 	{DC_WIN_WIN_OPTIONS, WIN_ENABLE | SCAN_COLUMN | H_DIRECTION}, // Enable window AD. | SCAN_COLUMN | H_DIRECTION.
 	{DC_CMD_DISPLAY_COMMAND, DISP_CTRL_MODE_C_DISPLAY}, // Continuous display.
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_A_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_A_UPDATE},
 	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_A_ACT_REQ}
 };
 
 // Display A Window D config.
-static const cfg_op_t _di_win_framebuffer_log[] = {
+static const reg_cfg_t _di_winD_log[] = {
 	{DC_CMD_DISPLAY_WINDOW_HEADER, WINDOW_D_SELECT},
 	{DC_WIN_WIN_OPTIONS, 0},
 	{DC_WIN_COLOR_DEPTH, WIN_COLOR_DEPTH_B8G8R8A8},
@@ -601,6 +549,6 @@ static const cfg_op_t _di_win_framebuffer_log[] = {
 	{DC_WINBUF_ADDR_V_OFFSET, 0},
 	{DC_WINBUF_BLEND_LAYER_CONTROL, WIN_BLEND_ENABLE | WIN_K1(200) | WIN_BLEND_DEPTH(0)},
 	{DC_WINBUF_BLEND_MATCH_SELECT, WIN_BLEND_FACT_SRC_COLOR_MATCH_SEL_K1 | WIN_BLEND_FACT_DST_COLOR_MATCH_SEL_NEG_K1},
-	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE | WIN_D_UPDATE},
-	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_D_ACT_REQ}
+	{DC_CMD_STATE_CONTROL, GENERAL_UPDATE  | WIN_D_UPDATE},
+	{DC_CMD_STATE_CONTROL, GENERAL_ACT_REQ | WIN_D_ACT_REQ},
 };

@@ -46,44 +46,7 @@ const volatile ipl_ver_meta_t __attribute__((section ("._ipl_version"))) ipl_ver
 
 volatile nyx_storage_t *nyx_str = (nyx_storage_t *)NYX_STORAGE_ADDR;
 
-void emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage)
-{
-	static char emmc_sn[9] = {0};
-
-	// Check if not valid S/N and get actual eMMC S/N.
-	if (!storage && !emmc_sn[0])
-	{
-		if (!emmc_initialize(false))
-			strcpy(emmc_sn, "00000000");
-		else
-		{
-			itoa(emmc_storage.cid.serial, emmc_sn, 16);
-			emmc_end();
-		}
-	}
-	else
-		itoa(storage->cid.serial, emmc_sn, 16);
-
-	// Create main folder.
-	strcpy(path, "backup");
-	f_mkdir(path);
-
-	// Create eMMC S/N folder.
-	strcat(path, "/");
-	strcat(path, emmc_sn);
-	f_mkdir(path);
-
-	// Create sub folder if defined. Dir slash must be included.
-	strcat(path, sub_dir);  // Can be a null-terminator.
-	if (strlen(sub_dir))
-		f_mkdir(path);
-
-	// Add filename.
-	strcat(path, "/");
-	strcat(path, filename); // Can be a null-terminator.
-}
-
-void check_power_off_from_hos()
+static void _check_power_off_from_hos()
 {
 	// Power off on alarm wakeup from HOS shutdown. For modchips/dongles.
 	u8 hos_wakeup = i2c_recv_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_IRQTOP);
@@ -252,7 +215,7 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 		else
 			_reloc_patcher(PATCHED_RELOC_ENTRY, EXT_PAYLOAD_ADDR, ALIGN(size, 0x10));
 
-		hw_reinit_workaround(false, byte_swap_32(*(u32 *)(buf + size - sizeof(u32))));
+		hw_deinit(false, byte_swap_32(*(u32 *)(buf + size - sizeof(u32))));
 	}
 	else
 	{
@@ -262,18 +225,20 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 		u32 magic = 0;
 		char *magic_ptr = buf + COREBOOT_VER_OFF;
 		memcpy(&magic, magic_ptr + strlen(magic_ptr) - 4, 4);
-		hw_reinit_workaround(true, magic);
+		hw_deinit(true, magic);
 	}
-
-	// Some cards (Sandisk U1), do not like a fast power cycle. Wait min 100ms.
-	sdmmc_storage_init_wait_sd();
 
 	void (*update_ptr)()      = (void *)RCM_PAYLOAD_ADDR;
 	void (*ext_payload_ptr)() = (void *)EXT_PAYLOAD_ADDR;
 
 	// Launch our payload.
 	if (!update)
+	{
+		// Some cards (Sandisk U1), do not like a fast power cycle. Wait min 100ms.
+		sdmmc_storage_init_wait_sd();
+
 		(*ext_payload_ptr)();
+	}
 	else
 	{
 		// Set updated flag to skip check on launch.
@@ -292,20 +257,18 @@ out:
 static void _launch_payloads()
 {
 	u8 max_entries = 61;
+	ment_t *ments  = NULL;
 	char *filelist = NULL;
 	char *file_sec = NULL;
 	char *dir = NULL;
-
-	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 3));
 
 	gfx_clear_grey(0x1B);
 	gfx_con_setpos(0, 0);
 
 	if (!sd_mount())
-	{
-		free(ments);
 		goto failed_sd_mount;
-	}
+
+	ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 3));
 
 	dir = (char *)malloc(256);
 	memcpy(dir, "bootloader/payloads", 20);
@@ -354,9 +317,6 @@ static void _launch_payloads()
 	else
 		EPRINTF("No payloads found.");
 
-	free(ments);
-	free(filelist);
-
 	if (file_sec)
 	{
 		memcpy(dir + strlen(dir), "/", 2);
@@ -366,8 +326,10 @@ static void _launch_payloads()
 	}
 
 failed_sd_mount:
-	sd_end();
 	free(dir);
+	free(ments);
+	free(filelist);
+	sd_end();
 
 	btn_wait();
 }
@@ -377,6 +339,7 @@ static void _launch_ini_list()
 	u8 max_entries = 61;
 	char *special_path = NULL;
 	char *emummc_path  = NULL;
+	ment_t *ments      = NULL;
 	ini_sec_t *cfg_sec = NULL;
 
 	LIST_INIT(ini_list_sections);
@@ -395,7 +358,7 @@ static void _launch_ini_list()
 	}
 
 	// Build configuration menu.
-	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 3));
+	ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 3));
 	ments[0].type    = MENT_BACK;
 	ments[0].caption = "Back";
 
@@ -458,7 +421,6 @@ static void _launch_ini_list()
 	}
 	else
 		EPRINTF("No extra configs found.");
-	free(ments);
 
 parse_failed:
 	if (!cfg_sec)
@@ -494,6 +456,7 @@ wrong_emupath:
 	}
 
 out:
+	free(ments);
 
 	btn_wait();
 }
@@ -502,9 +465,11 @@ static void _launch_config()
 {
 	u8 max_entries = 61;
 	char *special_path = NULL;
-	char *emummc_path = NULL;
+	char *emummc_path  = NULL;
 
+	ment_t *ments      = NULL;
 	ini_sec_t *cfg_sec = NULL;
+
 	LIST_INIT(ini_sections);
 
 	gfx_clear_grey(0x1B);
@@ -520,7 +485,7 @@ static void _launch_config()
 	ini_parse(&ini_sections, "bootloader/hekate_ipl.ini", false);
 
 	// Build configuration menu.
-	ment_t *ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 6));
+	ments = (ment_t *)malloc(sizeof(ment_t) * (max_entries + 6));
 	ments[0].type    = MENT_BACK;
 	ments[0].caption = "Back";
 
@@ -597,8 +562,6 @@ static void _launch_config()
 		return;
 	}
 
-	free(ments);
-
 parse_failed:
 	if (!cfg_sec)
 	{
@@ -637,6 +600,8 @@ wrong_emupath:
 
 out:
 	sd_end();
+
+	free(ments);
 
 	h_cfg.emummc_force_disable = false;
 
@@ -885,7 +850,7 @@ static void _auto_launch()
 	}
 
 	if (h_cfg.autohosoff && !(b_cfg.boot_cfg & BOOT_CFG_AUTOBOOT_EN))
-		check_power_off_from_hos();
+		_check_power_off_from_hos();
 
 	if (h_cfg.autoboot_list || (boot_from_id && !cfg_sec))
 	{
@@ -1295,7 +1260,7 @@ static void _check_low_battery()
 			if (!screen_on)
 			{
 				display_init();
-				u32 *fb = display_init_framebuffer_pitch();
+				u32 *fb = display_init_window_a_pitch();
 				gfx_init_ctxt(fb, 720, 1280, 720);
 
 				gfx_set_rect_rgb(battery_icon,         BATTERY_EMPTY_WIDTH, BATTERY_EMPTY_BATT_HEIGHT, 16, battery_icon_y_pos);
@@ -1332,7 +1297,7 @@ out:
 	max77620_low_battery_monitor_config(true);
 }
 
-static void _r2p_get_config_t210b01()
+static void _r2c_get_config_t210b01()
 {
 	rtc_reboot_reason_t rr;
 	if (!max77620_rtc_get_reboot_reason(&rr))
@@ -1372,7 +1337,7 @@ static void _r2p_get_config_t210b01()
 
 static void _ipl_reload()
 {
-	hw_reinit_workaround(false, 0);
+	hw_deinit(false, 0);
 
 	// Reload hekate.
 	void (*ipl_ptr)() = (void *)IPL_LOAD_ADDR;
@@ -1383,7 +1348,7 @@ static void _about()
 {
 	static const char credits[] =
 		"\nhekate   (c) 2018,      naehrwert, st4rk\n\n"
-		"         (c) 2018-2023, CTCaer\n\n"
+		"         (c) 2018-2024, CTCaer\n\n"
 		" ___________________________________________\n\n"
 		"Thanks to: %kderrek, nedwill, plutoo,\n"
 		"           shuffle2, smea, thexyz, yellows8%k\n"
@@ -1393,11 +1358,12 @@ static void _about()
 		" ___________________________________________\n\n"
 		"Open source and free packages used:\n\n"
 		" - FatFs R0.13c\n"
-		"   (c) 2018, ChaN\n\n"
+		"   (c) 2006-2018, ChaN\n"
+		"   (c) 2018-2022, CTCaer\n\n"
 		" - bcl-1.2.0\n"
 		"   (c) 2003-2006, Marcus Geelnard\n\n"
-		" - Atmosphere (Exo st/types, prc id patches)\n"
-		"   (c) 2018-2019, Atmosphere-NX\n\n"
+		" - blz\n"
+		"   (c) 2018, SciresM\n\n"
 		" - elfload\n"
 		"   (c) 2014, Owen Shepherd\n"
 		"   (c) 2018, M4xw\n"
@@ -1478,7 +1444,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.1.1", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.2.0", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 
@@ -1487,10 +1453,10 @@ void ipl_main()
 	// Do initial HW configuration. This is compatible with consecutive reruns without a reset.
 	hw_init();
 
-	// Pivot the stack so we have enough space.
-	pivot_stack(IPL_STACK_TOP);
+	// Pivot the stack under IPL. (Only max 4KB is needed).
+	pivot_stack(IPL_LOAD_ADDR);
 
-	// Tegra/Horizon configuration goes to 0x80000000+, package2 goes to 0xA9800000, we place our heap in between.
+	// Place heap at a place outside of L4T/HOS configuration and binaries.
 	heap_init((void *)IPL_HEAP_START);
 
 #ifdef DEBUG_UART_PORT
@@ -1504,11 +1470,14 @@ void ipl_main()
 	// Set bootloader's default configuration.
 	set_default_configuration();
 
-	// Prep RTC regs for read. Needed for T210B01 R2P.
+	// Prep RTC regs for read. Needed for T210B01 R2C.
 	max77620_rtc_prep_read();
 
 	// Initialize display.
 	display_init();
+
+	// Overclock BPMP.
+	bpmp_clk_rate_set(h_cfg.t210b01 ? BPMP_CLK_DEFAULT_BOOST : BPMP_CLK_LOWER_BOOST);
 
 	// Mount SD Card.
 	h_cfg.errors |= !sd_mount() ? ERR_SD_BOOT_EN : 0;
@@ -1534,19 +1503,17 @@ void ipl_main()
 
 skip_lp0_minerva_config:
 	// Initialize display window, backlight and gfx console.
-	u32 *fb = display_init_framebuffer_pitch();
+	u32 *fb = display_init_window_a_pitch();
 	gfx_init_ctxt(fb, 720, 1280, 720);
 	gfx_con_init();
 
+	// Initialize backlight PWM.
 	display_backlight_pwm_init();
 	//display_backlight_brightness(h_cfg.backlight, 1000);
 
-	// Overclock BPMP.
-	bpmp_clk_rate_set(h_cfg.t210b01 ? BPMP_CLK_DEFAULT_BOOST : BPMP_CLK_LOWER_BOOST);
-
-	// Get R2P config from RTC.
+	// Get R2C config from RTC.
 	if (h_cfg.t210b01)
-		_r2p_get_config_t210b01();
+		_r2c_get_config_t210b01();
 
 	// Show exceptions, HOS errors, library errors and L4T kernel panics.
 	_show_errors();

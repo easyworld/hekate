@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -91,6 +91,24 @@ static void _config_oscillators()
 	CLOCK(CLK_RST_CONTROLLER_SCLK_BURST_POLICY)  = 0x20004444; // Set BPMP/SCLK source to Run and PLLP_OUT2 (204MHz).
 	CLOCK(CLK_RST_CONTROLLER_SUPER_SCLK_DIVIDER) = 0x80000000; // Enable SUPER_SDIV to 1.
 	CLOCK(CLK_RST_CONTROLLER_CLK_SYSTEM_RATE)    = 2;          // Set HCLK div to 1 and PCLK div to 3.
+}
+
+void hw_config_arbiter(bool reset)
+{
+	if (reset)
+	{
+		ARB_PRI(ARB_PRIO_CPU_PRIORITY) = 0x0040090;
+		ARB_PRI(ARB_PRIO_COP_PRIORITY) = 0x12024C2;
+		ARB_PRI(ARB_PRIO_VCP_PRIORITY) = 0x2201209;
+		ARB_PRI(ARB_PRIO_DMA_PRIORITY) = 0x320365B;
+	}
+	else
+	{
+		ARB_PRI(ARB_PRIO_CPU_PRIORITY) = 0x12412D1;
+		ARB_PRI(ARB_PRIO_COP_PRIORITY) = 0x0000000;
+		ARB_PRI(ARB_PRIO_VCP_PRIORITY) = 0x220244A;
+		ARB_PRI(ARB_PRIO_DMA_PRIORITY) = 0x320369B;
+	}
 }
 
 // The uart is skipped for Copper, Hoag and Calcio. Used in Icosa, Iowa and Aula.
@@ -268,7 +286,7 @@ static void _config_se_brom()
 	APB_MISC(APB_MISC_PP_STRAPPING_OPT_A) = (APB_MISC(APB_MISC_PP_STRAPPING_OPT_A) & 0xF0) | (7 << 10);
 }
 
-static void _config_regulators(bool tegra_t210)
+static void _config_regulators(bool tegra_t210, bool nx_hoag)
 {
 	// Set RTC/AO domain to POR voltage.
 	if (tegra_t210)
@@ -277,22 +295,27 @@ static void _config_regulators(bool tegra_t210)
 	// Disable low battery shutdown monitor.
 	max77620_low_battery_monitor_config(false);
 
-	// Disable SDMMC1 IO/Core power.
+	// Make sure SDMMC1 IO/Core are powered off.
 	max7762x_regulator_enable(REGULATOR_LDO2, false);
 	gpio_write(GPIO_PORT_E, GPIO_PIN_4, GPIO_LOW);
 	sd_power_cycle_time_start = get_tmr_ms();
 
-	// Disable LCD DVDD to make sure it's in a reset state.
+	// Power on all relevant rails in case we came out of warmboot. Only keep MEM/MEM_COMP and SDMMC1 states.
+	PMC(APBDEV_PMC_NO_IOPOWER) &= PMC_NO_IOPOWER_MEM_COMP | PMC_NO_IOPOWER_SDMMC1 | PMC_NO_IOPOWER_MEM;
+
+	// Disable DSI AVDD to make sure it's in a reset state.
 	max7762x_regulator_enable(REGULATOR_LDO0, false);
 
+	// Disable backup battery charger.
 	i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_CNFGBBC, MAX77620_CNFGBBC_RESISTOR_1K);
-	i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_ONOFFCNFG1,
-		MAX77620_ONOFFCNFG1_RSVD | (3 << MAX77620_ONOFFCNFG1_MRT_SHIFT)); // PWR delay for forced shutdown off.
+
+	// Set PWR delay for forced shutdown off to 6s.
+	i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_ONOFFCNFG1, MAX77620_ONOFFCNFG1_RSVD | (3 << MAX77620_ONOFFCNFG1_MRT_SHIFT));
 
 	if (tegra_t210)
 	{
 		// Configure all Flexible Power Sequencers for MAX77620.
-		i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_FPS_CFG0, (7 << MAX77620_FPS_TIME_PERIOD_SHIFT));
+		i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_FPS_CFG0, (7 << MAX77620_FPS_TIME_PERIOD_SHIFT) | (0 << MAX77620_FPS_EN_SRC_SHIFT));
 		i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_FPS_CFG1, (7 << MAX77620_FPS_TIME_PERIOD_SHIFT) | (1 << MAX77620_FPS_EN_SRC_SHIFT));
 		i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_FPS_CFG2, (7 << MAX77620_FPS_TIME_PERIOD_SHIFT));
 		max77620_regulator_config_fps(REGULATOR_LDO4);
@@ -301,13 +324,13 @@ static void _config_regulators(bool tegra_t210)
 		max77620_regulator_config_fps(REGULATOR_SD1);
 		max77620_regulator_config_fps(REGULATOR_SD3);
 
-		i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_FPS_GPIO3,
-			(4 << MAX77620_FPS_TIME_PERIOD_SHIFT) | (2 << MAX77620_FPS_PD_PERIOD_SHIFT)); // 3.x+
+		// Set GPIO3 to FPS0 for SYS 3V3 EN. Enabled when FPS0 is enabled.
+		i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_FPS_GPIO3, (4 << MAX77620_FPS_PU_PERIOD_SHIFT) | (2 << MAX77620_FPS_PD_PERIOD_SHIFT));
 
 		// Set vdd_core voltage to 1.125V.
 		max7762x_regulator_set_voltage(REGULATOR_SD0, 1125000);
 
-		// Fix CPU/GPU after L4T warmboot.
+		// Power down CPU/GPU regulators after L4T warmboot.
 		max77620_config_gpio(5, MAX77620_GPIO_OUTPUT_DISABLE);
 		max77620_config_gpio(6, MAX77620_GPIO_OUTPUT_DISABLE);
 
@@ -315,8 +338,26 @@ static void _config_regulators(bool tegra_t210)
 		max77621_config_default(REGULATOR_CPU0, MAX77621_CTRL_POR_CFG);
 		max77621_config_default(REGULATOR_GPU0, MAX77621_CTRL_POR_CFG);
 	}
-	else // Tegra X1+ set vdd_core voltage to 1.05V.
+	else
+	{
+		// Tegra X1+ set vdd_core voltage to 1.05V.
 		max7762x_regulator_set_voltage(REGULATOR_SD0, 1050000);
+
+		// Power on SD2 regulator for supplying LDO0/1/8.
+		max7762x_regulator_set_voltage(REGULATOR_SD2, 1325000);
+
+		// Set slew rate and enable SD2 regulator.
+		i2c_send_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_SD2_CFG, (1 << MAX77620_SD_SR_SHIFT)                                  |
+																	  (MAX77620_POWER_MODE_NORMAL << MAX77620_SD_POWER_MODE_SHIFT) |
+																	  MAX77620_SD_CFG1_FSRADE_SD_ENABLE);
+
+		// Enable LDO8 on HOAG as it also powers I2C1 IO pads.
+		if (nx_hoag)
+		{
+			max7762x_regulator_set_voltage(REGULATOR_LDO8, 2800000);
+			max7762x_regulator_enable(REGULATOR_LDO8, true);
+		}
+	}
 }
 
 void hw_init()
@@ -355,18 +396,6 @@ void hw_init()
 	// Initialize pin configuration.
 	_config_gpios(nx_hoag);
 
-#ifdef DEBUG_UART_PORT
-	#if   (DEBUG_UART_PORT == UART_B)
-		gpio_config(GPIO_PORT_G, GPIO_PIN_0, GPIO_MODE_SPIO);
-	#elif (DEBUG_UART_PORT == UART_C)
-		gpio_config(GPIO_PORT_D, GPIO_PIN_1, GPIO_MODE_SPIO);
-	#endif
-	pinmux_config_uart(DEBUG_UART_PORT);
-	clock_enable_uart(DEBUG_UART_PORT);
-	uart_init(DEBUG_UART_PORT, DEBUG_UART_BAUDRATE, UART_AO_TX_AO_RX);
-	uart_invert(DEBUG_UART_PORT, DEBUG_UART_INVERT, UART_INVERT_TXD);
-#endif
-
 	// Enable CL-DVFS clock unconditionally to avoid issues with I2C5 sharing.
 	clock_enable_cl_dvfs();
 
@@ -380,18 +409,11 @@ void hw_init()
 	// Initialize I2C5, mandatory for PMIC.
 	i2c_init(I2C_5);
 
-	// Enable LDO8 on HOAG as it also powers I2C1 IO pads.
-	if (nx_hoag)
-	{
-		max7762x_regulator_set_voltage(REGULATOR_LDO8, 2800000);
-		max7762x_regulator_enable(REGULATOR_LDO8, true);
-	}
+	// Initialize various regulators based on Erista/Mariko platform.
+	_config_regulators(tegra_t210, nx_hoag);
 
 	// Initialize I2C1 for various power related devices.
 	i2c_init(I2C_1);
-
-	// Initialize various regulators based on Erista/Mariko platform.
-	_config_regulators(tegra_t210);
 
 	_config_pmc_scratch(); // Missing from 4.x+
 
@@ -406,6 +428,9 @@ void hw_init()
 		PMC(APBDEV_PMC_TZRAM_SEC_DISABLE)     = PMC_TZRAM_DISABLE_REG_WRITE | PMC_TZRAM_DISABLE_REG_READ;
 	}
 
+	// Set arbiter.
+	hw_config_arbiter(false);
+
 	// Initialize External memory controller and configure DRAM parameters.
 	sdram_init();
 
@@ -413,9 +438,22 @@ void hw_init()
 
 	// Enable HOST1X used by every display module (DC, VIC, NVDEC, NVENC, TSEC, etc).
 	clock_enable_host1x();
+
+#ifdef DEBUG_UART_PORT
+	// Setup debug uart port.
+	#if   (DEBUG_UART_PORT == UART_B)
+		gpio_config(GPIO_PORT_G, GPIO_PIN_0, GPIO_MODE_SPIO);
+	#elif (DEBUG_UART_PORT == UART_C)
+		gpio_config(GPIO_PORT_D, GPIO_PIN_1, GPIO_MODE_SPIO);
+	#endif
+	pinmux_config_uart(DEBUG_UART_PORT);
+	clock_enable_uart(DEBUG_UART_PORT);
+	uart_init(DEBUG_UART_PORT, DEBUG_UART_BAUDRATE, UART_AO_TX_AO_RX);
+	uart_invert(DEBUG_UART_PORT, DEBUG_UART_INVERT, UART_INVERT_TXD);
+#endif
 }
 
-void hw_reinit_workaround(bool coreboot, u32 bl_magic)
+void hw_deinit(bool coreboot, u32 bl_magic)
 {
 	bool tegra_t210 = hw_get_chip_id() == GP_HIDREV_MAJOR_T210;
 
@@ -426,7 +464,7 @@ void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 	// Disable temperature sensor, touchscreen, 5V regulators, Joy-Con and VIC.
 	vic_end();
 	tmp451_end();
-	set_fan_duty(0);
+	fan_set_duty(0);
 	touch_power_off();
 	jc_deinit();
 	regulator_5v_disable(REGULATOR_5V_ALL);
@@ -438,6 +476,9 @@ void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 
 	// Flush/disable MMU cache.
 	bpmp_mmu_disable();
+
+	// Reset arbiter.
+	hw_config_arbiter(true);
 
 	// Re-enable clocks to Audio Processing Engine as a workaround to hanging.
 	if (tegra_t210)
@@ -458,7 +499,7 @@ void hw_reinit_workaround(bool coreboot, u32 bl_magic)
 		gpio_config(GPIO_PORT_D, GPIO_PIN_1, GPIO_MODE_SPIO);
 
 		// Reinstate SD controller power.
-		PMC(APBDEV_PMC_NO_IOPOWER) &= ~(PMC_NO_IOPOWER_SDMMC1_IO_EN);
+		PMC(APBDEV_PMC_NO_IOPOWER) &= ~PMC_NO_IOPOWER_SDMMC1;
 	}
 
 	// Seamless display or display power off.

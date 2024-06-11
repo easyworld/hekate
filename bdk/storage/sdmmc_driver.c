@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -109,8 +109,8 @@ void sdmmc_save_tap_value(sdmmc_t *sdmmc)
 
 static int _sdmmc_config_tap_val(sdmmc_t *sdmmc, u32 type)
 {
-	const u32 dqs_trim_val = 40; // 24 if HS533/HS667.
-	const u8  tap_values_t210[4] = { 4, 0, 3, 0 };
+	static const u32 dqs_trim_val = 40; // 24 if HS533/HS667.
+	static const u8  tap_values_t210[4] = { 4, 0, 3, 0 };
 
 	u32 tap_val = 0;
 
@@ -222,6 +222,9 @@ static void _sdmmc_autocal_execute(sdmmc_t *sdmmc, u32 power)
 	{
 		sdmmc->regs->autocalcfg &= ~SDHCI_TEGRA_AUTOCAL_ENABLE;
 		_sdmmc_pad_config_fallback(sdmmc, power);
+#ifdef ERROR_EXTRA_PRINTING
+		EPRINTFARGS("SDMMC%d: Comp Pad cal timeout!", sdmmc->id + 1);
+#endif
 	}
 
 	// Disable E_INPUT (SD) or enable E_PWRD (eMMC) to conserve power.
@@ -403,7 +406,7 @@ static void _sdmmc_card_clock_enable(sdmmc_t *sdmmc)
 	sdmmc->card_clock_enabled = 1;
 }
 
-static void _sdmmc_sd_clock_disable(sdmmc_t *sdmmc)
+static void _sdmmc_card_clock_disable(sdmmc_t *sdmmc)
 {
 	sdmmc->card_clock_enabled = 0;
 	sdmmc->regs->clkcon &= ~SDHCI_CLOCK_CARD_EN;
@@ -934,7 +937,7 @@ static u32 _sdmmc_check_mask_interrupt(sdmmc_t *sdmmc, u16 *pout, u16 mask)
 	if (norintsts & SDHCI_INT_ERROR)
 	{
 #ifdef ERROR_EXTRA_PRINTING
-		EPRINTFARGS("SDMMC%d: norintsts %08X, errintsts %08X\n", sdmmc->id + 1, norintsts, errintsts);
+		EPRINTFARGS("SDMMC%d: norintsts %08X, errintsts %08X", sdmmc->id + 1, norintsts, errintsts);
 #endif
 		sdmmc->regs->errintsts = errintsts;
 		return SDMMC_MASKINT_ERROR;
@@ -1152,7 +1155,7 @@ static int _sdmmc_execute_cmd_inner(sdmmc_t *sdmmc, sdmmc_cmd_t *cmd, sdmmc_req_
 	int result = _sdmmc_wait_response(sdmmc);
 #ifdef ERROR_EXTRA_PRINTING
 	if (!result)
-		EPRINTFARGS("SDMMC%d: Transfer timeout!", sdmmc->id + 1);
+		EPRINTFARGS("SDMMC%d: Transfer error!", sdmmc->id + 1);
 #endif
 	DPRINTF("rsp(%d): %08X, %08X, %08X, %08X\n", result,
 		sdmmc->regs->rspreg0, sdmmc->regs->rspreg1, sdmmc->regs->rspreg2, sdmmc->regs->rspreg3);
@@ -1273,16 +1276,7 @@ static int _sdmmc_config_sdmmc1(bool t210b01)
 	if (!sdmmc_get_sd_inserted())
 		return 0;
 
-	/*
-	* Pinmux config:
-	*  DRV_TYPE = DRIVE_2X (for 33 Ohm driver)
-	*  E_SCHMT  = ENABLE (for 1.8V),  DISABLE (for 3.3V)
-	*  E_INPUT  = ENABLE
-	*  TRISTATE = PASSTHROUGH
-	*  APB_MISC_GP_SDMMCx_CLK_LPBK_CONTROL = SDMMCx_CLK_PAD_E_LPBK for CLK
-	*/
-
-	// Enable deep loopback for SDMMC1 CLK pad.
+	// Enable deep loopback for SDMMC1 CLK pad so reads work.
 	APB_MISC(APB_MISC_GP_SDMMC1_CLK_LPBK_CONTROL) = 1;
 
 	// Configure SDMMC1 CLK pinmux, based on state and SoC type.
@@ -1302,18 +1296,18 @@ static int _sdmmc_config_sdmmc1(bool t210b01)
 		_sdmmc_config_sdmmc1_schmitt();
 
 	// Make sure the SDMMC1 controller is powered.
-	PMC(APBDEV_PMC_NO_IOPOWER) |= PMC_NO_IOPOWER_SDMMC1_IO_EN;
+	PMC(APBDEV_PMC_NO_IOPOWER) |=  PMC_NO_IOPOWER_SDMMC1;
 	usleep(1000);
-	PMC(APBDEV_PMC_NO_IOPOWER) &= ~(PMC_NO_IOPOWER_SDMMC1_IO_EN);
+	PMC(APBDEV_PMC_NO_IOPOWER) &= ~PMC_NO_IOPOWER_SDMMC1;
 	(void)PMC(APBDEV_PMC_NO_IOPOWER); // Commit write.
 
-	// Set enable SD card power.
+	// Enable SD card power. Powers LDO2 also.
 	PINMUX_AUX(PINMUX_AUX_DMIC3_CLK) = PINMUX_PULL_DOWN | 2;
 	gpio_direction_output(GPIO_PORT_E, GPIO_PIN_4, GPIO_HIGH);
 	usleep(10000);
 
 	// Inform IO pads that voltage is gonna be 3.3V.
-	PMC(APBDEV_PMC_PWR_DET_VAL) |= PMC_PWR_DET_SDMMC1_IO_EN;
+	PMC(APBDEV_PMC_PWR_DET_VAL) |= PMC_PWR_DET_33V_SDMMC1;
 	(void)PMC(APBDEV_PMC_PWR_DET_VAL); // Commit write.
 
 	// Enable SD card IO power.
@@ -1366,8 +1360,8 @@ int sdmmc_init(sdmmc_t *sdmmc, u32 id, u32 power, u32 bus_width, u32 type)
 	u16 divisor;
 	u8 vref_sel = 7;
 
-	const u8 trim_values_t210[4]    = {  2,  8,  3,  8 };
-	const u8 trim_values_t210b01[4] = { 14, 13, 15, 13 };
+	static const u8 trim_values_t210[4]    = {  2,  8,  3,  8 };
+	static const u8 trim_values_t210b01[4] = { 14, 13, 15, 13 };
 	const u8 *trim_values;
 
 	if (id > SDMMC_4 || id == SDMMC_3)
@@ -1403,18 +1397,17 @@ int sdmmc_init(sdmmc_t *sdmmc, u32 id, u32 power, u32 bus_width, u32 type)
 	// Disable clock if enabled.
 	if (clock_sdmmc_is_not_reset_and_enabled(id))
 	{
-		_sdmmc_sd_clock_disable(sdmmc);
+		_sdmmc_card_clock_disable(sdmmc);
 		_sdmmc_commit_changes(sdmmc);
 	}
 
 	// Configure and enable selected clock.
 	clock_sdmmc_get_card_clock_div(&clock, &divisor, type);
 	clock_sdmmc_enable(id, clock);
+	sdmmc->clock_stopped = 0;
 
 	// Make sure all sdmmc registers are reset.
 	_sdmmc_reset_all(sdmmc);
-
-	sdmmc->clock_stopped = 0;
 
 	// Set default pad IO trimming configuration.
 	sdmmc->regs->iospare |= BIT(19);      // Enable 1 cycle delayed cmd_oen.
@@ -1456,23 +1449,23 @@ void sdmmc1_disable_power()
 	// T210B01 WAR: Set pads to discharge state.
 	_sdmmc_config_sdmmc1_pads(true);
 
-	// Disable SD card IO power regulator.
+	// Disable SD card IO power.
 	max7762x_regulator_enable(REGULATOR_LDO2, false);
 	usleep(4000);
 
-	// Disable SD card IO power pin.
+	// Disable SD card power.
 	gpio_write(GPIO_PORT_E, GPIO_PIN_4, GPIO_LOW);
 
 	// T210/T210B01 WAR: Set start timer for IO and Controller power discharge.
 	sd_power_cycle_time_start = get_tmr_ms();
-	usleep(1000); // To power cycle, min 1ms without power is needed.
+	usleep(10000); // To power cycle, min 1ms without power is needed.
 
 	// Disable SDMMC1 controller power.
-	PMC(APBDEV_PMC_NO_IOPOWER) |= PMC_NO_IOPOWER_SDMMC1_IO_EN;
+	PMC(APBDEV_PMC_NO_IOPOWER) |= PMC_NO_IOPOWER_SDMMC1;
 	(void)PMC(APBDEV_PMC_NO_IOPOWER); // Commit write.
 
 	// Inform IO pads that next voltage might be 3.3V.
-	PMC(APBDEV_PMC_PWR_DET_VAL) |= PMC_PWR_DET_SDMMC1_IO_EN;
+	PMC(APBDEV_PMC_PWR_DET_VAL) |= PMC_PWR_DET_33V_SDMMC1;
 	(void)PMC(APBDEV_PMC_PWR_DET_VAL); // Commit write.
 
 	// T210B01 WAR: Restore pads to reset state.
@@ -1486,7 +1479,7 @@ void sdmmc_end(sdmmc_t *sdmmc)
 {
 	if (!sdmmc->clock_stopped)
 	{
-		_sdmmc_sd_clock_disable(sdmmc);
+		_sdmmc_card_clock_disable(sdmmc);
 		// Disable SDMMC power.
 		_sdmmc_set_io_power(sdmmc, SDMMC_POWER_OFF);
 		_sdmmc_commit_changes(sdmmc);
@@ -1547,7 +1540,7 @@ int sdmmc_enable_low_voltage(sdmmc_t *sdmmc)
 	usleep(150);
 
 	// Inform IO pads that we switched to 1.8V.
-	PMC(APBDEV_PMC_PWR_DET_VAL) &= ~(PMC_PWR_DET_SDMMC1_IO_EN);
+	PMC(APBDEV_PMC_PWR_DET_VAL) &= ~PMC_PWR_DET_33V_SDMMC1;
 	(void)PMC(APBDEV_PMC_PWR_DET_VAL); // Commit write.
 
 	// Enable schmitt trigger for better duty cycle and low jitter clock.

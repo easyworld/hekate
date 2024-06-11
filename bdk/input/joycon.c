@@ -1,7 +1,7 @@
 /*
  * Joy-Con UART driver for Nintendo Switch
  *
- * Copyright (c) 2019-2023 CTCaer
+ * Copyright (c) 2019-2024 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -104,10 +104,10 @@ enum
 enum
 {
 	JC_BATT_EMTPY = 0,
-	JC_BATT_CRIT  = 2,
-	JC_BATT_LOW   = 4,
-	JC_BATT_MID   = 6,
-	JC_BATT_FULL  = 8
+	JC_BATT_CRIT  = 1,
+	JC_BATT_LOW   = 2,
+	JC_BATT_MID   = 3,
+	JC_BATT_FULL  = 4
 };
 
 static const u8 sio_init[] = {
@@ -234,7 +234,7 @@ typedef struct _jc_hid_in_rpt_t
 	u8 stick_h_right;
 	u8 stick_m_right;
 	u8 stick_v_right;
-	u8 vib_decider; // right:8, left:8. (bit3 en, bit2-0 buffer avail).
+	u8 vib_decider; // right:4, left:4 (bit3 en, bit2-0 buffer avail).
 	u8 submcd_ack;
 	u8 subcmd;
 	u8 subcmd_data[];
@@ -407,11 +407,15 @@ static void _jc_detect()
 	if (!jc_gamepad.sio_mode)
 	{
 		// Turn on Joy-Con detect. (UARTB/C TX). UART CTS also if HW flow control and irq is enabled.
-		PINMUX_AUX(PINMUX_AUX_UART2_TX) = PINMUX_INPUT_ENABLE | PINMUX_TRISTATE;
-		PINMUX_AUX(PINMUX_AUX_UART3_TX) = PINMUX_INPUT_ENABLE | PINMUX_TRISTATE;
+		PINMUX_AUX(PINMUX_AUX_UART2_TX) = PINMUX_INPUT_ENABLE;
+		PINMUX_AUX(PINMUX_AUX_UART3_TX) = PINMUX_INPUT_ENABLE;
 		gpio_direction_input(GPIO_PORT_G, GPIO_PIN_0);
 		gpio_direction_input(GPIO_PORT_D, GPIO_PIN_1);
 		usleep(20);
+
+		//! HW BUG: Unlatch gpio buffer.
+		(void)gpio_read(GPIO_PORT_H, GPIO_PIN_6);
+		(void)gpio_read(GPIO_PORT_E, GPIO_PIN_6);
 
 		// Read H6/E6 which are shared with UART TX pins.
 		jc_r.detected = !gpio_read(GPIO_PORT_H, GPIO_PIN_6);
@@ -532,8 +536,8 @@ static u8 _jc_hid_pkt_id_incr()
 
 static void _jc_send_hid_cmd(u8 uart, u8 subcmd, u8 *data, u16 size)
 {
-	const u8 rumble_neutral[8] = { 0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40 };
-	const u8 rumble_init[8]    = { 0xc2, 0xc8, 0x03, 0x72, 0xc2, 0xc8, 0x03, 0x72 };
+	static const u8 rumble_neutral[8] = { 0x00, 0x01, 0x40, 0x40, 0x00, 0x01, 0x40, 0x40 };
+	static const u8 rumble_init[8]    = { 0xc2, 0xc8, 0x03, 0x72, 0xc2, 0xc8, 0x03, 0x72 };
 
 	u8 temp[0x30] = {0};
 
@@ -596,13 +600,13 @@ static void _jc_charging_decider(u8 batt, u8 uart)
 	u32 system_batt_enough = max17050_get_cached_batt_volt() > 4000;
 
 	// Power supply control based on battery levels and charging.
-	if ((batt >> 1 << 1) < JC_BATT_LOW) // Level without checking charging.
+	if ((batt >> 1) < JC_BATT_LOW) // Level without checking charging.
 		_jc_power_supply(uart, true);
-	else if (batt > (system_batt_enough ? JC_BATT_FULL : JC_BATT_MID)) // Addresses the charging bit.
+	else if (batt > (system_batt_enough ? JC_BATT_FULL : JC_BATT_MID) << 1) // Addresses the charging bit.
 		_jc_power_supply(uart, false);
 }
 
-static void _jc_parse_wired_hid(joycon_ctxt_t *jc, const u8* packet, u32 size)
+static void _jc_parse_wired_hid(joycon_ctxt_t *jc, const u8 *packet, int size)
 {
 	u32 btn_tmp;
 	jc_hid_in_rpt_t *hid_pkt = (jc_hid_in_rpt_t *)packet;
@@ -610,7 +614,14 @@ static void _jc_parse_wired_hid(joycon_ctxt_t *jc, const u8* packet, u32 size)
 	switch (hid_pkt->cmd)
 	{
 	case JC_HORI_INPUT_RPT:
+		if (!(jc->type & JC_ID_HORI))
+			return;
+
 	case JC_HID_INPUT_RPT:
+		// Discard incomplete hid packets.
+		if (size < 12)
+			break;
+
 		btn_tmp = hid_pkt->btn_right | hid_pkt->btn_shared << 8 | hid_pkt->btn_left << 16;
 
 		if (jc->type & JC_ID_L)
@@ -670,8 +681,12 @@ static void _jc_parse_wired_hid(joycon_ctxt_t *jc, const u8* packet, u32 size)
 	}
 }
 
-static void _jc_parse_wired_init(joycon_ctxt_t *jc, const u8* data, u32 size)
+static void _jc_parse_wired_init(joycon_ctxt_t *jc, const u8 *data, int size)
 {
+	// Discard empty packets.
+	if (size <= 0)
+		return;
+
 	switch (data[0])
 	{
 	case JC_WIRED_CMD_GET_INFO:
@@ -694,13 +709,13 @@ static void _jc_parse_wired_init(joycon_ctxt_t *jc, const u8* data, u32 size)
 	}
 }
 
-static void _jc_uart_pkt_parse(joycon_ctxt_t *jc, const jc_wired_hdr_t *pkt, size_t size)
+static void _jc_uart_pkt_parse(joycon_ctxt_t *jc, const jc_wired_hdr_t *pkt, int size)
 {
 	switch (pkt->cmd)
 	{
 	case JC_HORI_INPUT_RPT_CMD:
 	case JC_WIRED_HID:
-		_jc_parse_wired_hid(jc, pkt->payload, (pkt->data[0] << 8) | pkt->data[1]);
+		_jc_parse_wired_hid(jc, pkt->payload, size - sizeof(jc_wired_hdr_t));
 		break;
 	case JC_WIRED_INIT_REPLY:
 		_jc_parse_wired_init(jc, pkt->data, size - sizeof(jc_uart_hdr_t) - 1);
@@ -715,11 +730,15 @@ static void _jc_uart_pkt_parse(joycon_ctxt_t *jc, const jc_wired_hdr_t *pkt, siz
 	jc->last_received_time = get_tmr_ms();
 }
 
-static void _jc_sio_parse_payload(joycon_ctxt_t *jc, u8 cmd, const u8* payload, u32 size)
+static void _jc_sio_parse_payload(joycon_ctxt_t *jc, u8 cmd, const u8 *payload, int size)
 {
 	switch (cmd)
 	{
 	case JC_SIO_CMD_STATUS:
+		// Discard incomplete packets.
+		if (size < 12)
+			break;
+
 		jc_sio_hid_in_rpt_t *hid_pkt = (jc_sio_hid_in_rpt_t *)payload;
 		jc_gamepad.buttons = hid_pkt->btn_right | hid_pkt->btn_shared << 8 | hid_pkt->btn_left << 16;
 		jc_gamepad.home    = !gpio_read(GPIO_PORT_V, GPIO_PIN_3);
@@ -740,7 +759,7 @@ static void _jc_sio_parse_payload(joycon_ctxt_t *jc, u8 cmd, const u8* payload, 
 	}
 }
 
-static void _jc_sio_uart_pkt_parse(joycon_ctxt_t *jc, const jc_sio_in_rpt_t *pkt, u32 size)
+static void _jc_sio_uart_pkt_parse(joycon_ctxt_t *jc, const jc_sio_in_rpt_t *pkt, int size)
 {
 	if (pkt->crc_hdr != _jc_crc((u8 *)pkt, sizeof(jc_sio_in_rpt_t) - 1, 0))
 		return;
@@ -757,7 +776,7 @@ static void _jc_sio_uart_pkt_parse(joycon_ctxt_t *jc, const jc_sio_in_rpt_t *pkt
 		break;
 	case JC_SIO_CMD_IAP_VER:
 	case JC_SIO_CMD_STATUS:
-		_jc_sio_parse_payload(jc, cmd, pkt->payload, pkt->payload_size);
+		_jc_sio_parse_payload(jc, cmd, pkt->payload, size - sizeof(jc_sio_in_rpt_t));
 		break;
 	case JC_SIO_CMD_UNK02:
 	case JC_SIO_CMD_UNK20:
@@ -784,7 +803,7 @@ static void _jc_rcv_pkt(joycon_ctxt_t *jc)
 	jc_wired_hdr_t *jc_pkt = (jc_wired_hdr_t *)jc->buf;
 	if (!jc->sio_mode && !memcmp(jc_pkt->uart_hdr.magic, "\x19\x81\x03", 3))
 	{
-		_jc_uart_pkt_parse(jc, jc_pkt, jc_pkt->uart_hdr.total_size_lsb + sizeof(jc_uart_hdr_t));
+		_jc_uart_pkt_parse(jc, jc_pkt, len);
 
 		return;
 	}
@@ -793,7 +812,7 @@ static void _jc_rcv_pkt(joycon_ctxt_t *jc)
 	jc_sio_in_rpt_t *sio_pkt = (jc_sio_in_rpt_t *)(jc->buf);
 	if (jc->sio_mode && sio_pkt->cmd == JC_SIO_INPUT_RPT && (sio_pkt->ack & JC_SIO_CMD_ACK) == JC_SIO_CMD_ACK)
 	{
-		_jc_sio_uart_pkt_parse(jc, sio_pkt, sio_pkt->payload_size + sizeof(jc_sio_in_rpt_t));
+		_jc_sio_uart_pkt_parse(jc, sio_pkt, len);
 
 		return;
 	}
@@ -842,7 +861,7 @@ static void _jc_req_nx_pad_status(joycon_ctxt_t *jc)
 	else
 		_joycon_send_raw(jc->uart, hori_pad_status, sizeof(hori_pad_status));
 
-	jc->last_status_req_time = get_tmr_ms() + 15;
+	jc->last_status_req_time = get_tmr_ms() + (!jc->sio_mode ? 15 : 7);
 }
 
 static bool _jc_validate_pairing_info(u8 *buf, bool *is_hos)
@@ -1196,16 +1215,10 @@ void jc_init_hw()
 		pinmux_config_uart(UART_B);
 	pinmux_config_uart(UART_C);
 
-	// Ease the stress to APB.
-	bpmp_freq_t prev_fid = bpmp_clk_rate_set(BPMP_CLK_NORMAL);
-
 	// Enable UART B and C clocks.
 	if (!jc_gamepad.sio_mode)
 		clock_enable_uart(UART_B);
 	clock_enable_uart(UART_C);
-
-	// Restore OC.
-	bpmp_clk_rate_set(prev_fid);
 
 	jc_init_done = true;
 #endif

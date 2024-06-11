@@ -672,7 +672,7 @@ DPRINTF("Parsed GPT\n");
 		goto out;
 
 	// Read in package2 header and get package2 real size.
-	const u32 BCT_SIZE = SZ_16K;
+	static const u32 BCT_SIZE = SZ_16K;
 	bctBuf = (u8 *)malloc(BCT_SIZE);
 	emmc_part_read(pkg2_part, BCT_SIZE / EMMC_BLOCKSIZE, 1, bctBuf);
 	u32 *hdr = (u32 *)(bctBuf + 0x100);
@@ -759,6 +759,7 @@ int hos_launch(ini_sec_t *cfg)
 	volatile secmon_mailbox_t *secmon_mailbox;
 
 	minerva_change_freq(FREQ_1600);
+	sdram_div_disable(true);
 	list_init(&ctxt.kip1_list);
 
 	ctxt.cfg = cfg;
@@ -839,7 +840,7 @@ int hos_launch(ini_sec_t *cfg)
 	if (!ctxt.stock)
 	{
 		u32 fuses = fuse_read_odm(7);
-		if ((h_cfg.autonogc &&
+		if ((h_cfg.autonogc && // Prevent GC fuse burning (sysMMC and emuMMC).
 			  (
 				(!(fuses &    ~0xF) && (ctxt.pkg1_id->fuses >=  5)) || // LAFW v2,  4.0.0+
 				(!(fuses &  ~0x3FF) && (ctxt.pkg1_id->fuses >= 11)) || // LAFW v3,  9.0.0+
@@ -848,12 +849,12 @@ int hos_launch(ini_sec_t *cfg)
 				(!(fuses & ~0x3FFF) && (ctxt.pkg1_id->fuses >= 15))    // LAFW v5, 12.0.2+
 			  )
 			)
-		|| ((emummc_enabled) &&
+		|| ((emummc_enabled) && // Force NOGC if already burnt (only emuMMC).
 			  (
-				((fuses & 0x400)  && (ctxt.pkg1_id->fuses <= 10)) || // HOS  9.0.0+ fuses burnt.
-				((fuses & 0x2000) && (ctxt.pkg1_id->fuses <= 13)) || // HOS 11.0.0+ fuses burnt.
-				// Detection broken! Use kip1patch=nogc              // HOS 12.0.0+
-				((fuses & 0x4000) && (ctxt.pkg1_id->fuses <= 14))    // HOS 12.0.2+ fuses burnt.
+				((fuses & BIT(10)) && (ctxt.pkg1_id->fuses <= 10)) || // HOS  9.0.0+ fuses burnt.
+				((fuses & BIT(13)) && (ctxt.pkg1_id->fuses <= 13)) || // HOS 11.0.0+ fuses burnt.
+				// Detection broken! Use kip1patch=nogc               // HOS 12.0.0+
+				((fuses & BIT(14)) && (ctxt.pkg1_id->fuses <= 14))    // HOS 12.0.2+ fuses burnt.
 			  )
 			))
 			config_kip1patch(&ctxt, "nogc");
@@ -1016,7 +1017,7 @@ int hos_launch(ini_sec_t *cfg)
 			}
 
 			// In case a kernel patch option is set; allows to disable SVC verification or/and enable debug mode.
-			kernel_patch_t *kernel_patchset = ctxt.pkg2_kernel_id->kernel_patchset;
+			const kernel_patch_t *kernel_patchset = ctxt.pkg2_kernel_id->kernel_patchset;
 			if (kernel_patchset != NULL)
 			{
 				gfx_printf("%kPatching kernel%k\n", TXT_CLR_ORANGE, TXT_CLR_DEFAULT);
@@ -1165,6 +1166,7 @@ int hos_launch(ini_sec_t *cfg)
 
 	// Disable display. This must be executed before secmon to provide support for all fw versions.
 	display_end();
+	clock_disable_host1x();
 
 	// Override uCID if set.
 	EMC(EMC_SCRATCH0) = ctxt.ucid;
@@ -1173,8 +1175,12 @@ int hos_launch(ini_sec_t *cfg)
 	CLOCK(CLK_RST_CONTROLLER_RST_DEV_L_SET) = BIT(CLK_L_USBD);
 	CLOCK(CLK_RST_CONTROLLER_RST_DEV_H_SET) = BIT(CLK_H_AHBDMA) | BIT(CLK_H_APBDMA) | BIT(CLK_H_USB2);
 
+	// Reset arbiter.
+	hw_config_arbiter(true);
+
 	// Scale down RAM OC if enabled.
 	minerva_prep_boot_freq();
+	sdram_div_disable(false);
 
 	// Flush cache and disable MMU.
 	bpmp_mmu_disable();
@@ -1189,6 +1195,7 @@ int hos_launch(ini_sec_t *cfg)
 
 error:
 	_free_launch_components(&ctxt);
+	sdram_div_disable(false);
 	emmc_end();
 
 	EPRINTF("\nFailed to launch HOS!");
