@@ -55,7 +55,7 @@ jobs:
       shell: bash
 
     - name: Upload new zip as artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.new_asset_name }}
         path: hekate_extracted/
