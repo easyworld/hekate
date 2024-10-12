@@ -120,7 +120,7 @@ static void _reloc_patcher(u32 payload_dst, u32 payload_src, u32 payload_size)
 	}
 }
 
-bool is_ipl_updated(void *buf, char *path, bool force)
+bool is_ipl_updated(void *buf, const char *path, bool force)
 {
 	ipl_ver_meta_t *update_ft = (ipl_ver_meta_t *)(buf + PATCHED_RELOC_SZ + sizeof(boot_cfg_t));
 
@@ -257,9 +257,9 @@ static void _launch_payloads()
 {
 	u8 max_entries = 61;
 	ment_t *ments  = NULL;
-	char *filelist = NULL;
 	char *file_sec = NULL;
 	char *dir = NULL;
+	dirlist_t *filelist = NULL;
 
 	gfx_clear_grey(0x1B);
 	gfx_con_setpos(0, 0);
@@ -286,11 +286,11 @@ static void _launch_payloads()
 
 		while (true)
 		{
-			if (i > max_entries || !filelist[i * 256])
+			if (i > max_entries || !filelist->name[i])
 				break;
 			ments[i + 2].type    = INI_CHOICE;
-			ments[i + 2].caption = &filelist[i * 256];
-			ments[i + 2].data    = &filelist[i * 256];
+			ments[i + 2].caption = filelist->name[i];
+			ments[i + 2].data    = filelist->name[i];
 
 			i++;
 		}
@@ -1446,7 +1446,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.2.1", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.2.2", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 

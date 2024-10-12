@@ -587,7 +587,10 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		strcpy(fuses_hos_version, "16.0.0 - 16.1.0");
 		break;
 	case 19:
-		strcpy(fuses_hos_version, "17.0.0+");
+		strcpy(fuses_hos_version, "17.0.0 - 18.1.0");
+		break;
+	case 20:
+		strcpy(fuses_hos_version, "19.0.0+");
 		break;
 	case 255:
 		strcpy(fuses_hos_version, "#FFD000 超出正常熔斷次數#");
@@ -1756,7 +1759,7 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	emmc_gpt_parse(&gpt);
 
 	u32 idx = 0;
-	u32 lines_left = 20;
+	int lines_left = 20;
 	s_printf(txt_buf + strlen(txt_buf), "#FFBA00 索引 名稱                      大小        偏移       扇區#\n");
 	LIST_FOREACH_ENTRY(emmc_part_t, part, &gpt, link)
 	{
@@ -2304,10 +2307,9 @@ static lv_res_t _create_window_battery_status(lv_obj_t *btn)
 
 	lv_label_set_static_text(lb_desc2,
 		"#00DDFF 電池充電晶片資訊:#\n"
-		"輸入電壓限制:\n"
 		"輸入電流限制:\n"
-		"最低電壓限制:\n"
-		"快充電流限制:\n"
+		"系統電壓限制:\n"
+		"充電電流限制:\n"
 		"充電電壓限制:\n"
 		"充電狀態:\n"
 		"溫度狀態:\n\n"
@@ -2325,12 +2327,9 @@ static lv_res_t _create_window_battery_status(lv_obj_t *btn)
 	lv_obj_t * lb_val2 = lv_label_create(val2, lb_desc);
 
 	// Charger IC info.
-	bq24193_get_property(BQ24193_InputVoltageLimit, &value);
-	s_printf(txt_buf, "\n%d mV\n", value);
-
 	int iinlim = 0;
 	bq24193_get_property(BQ24193_InputCurrentLimit, &iinlim);
-	s_printf(txt_buf + strlen(txt_buf), "%d mA\n", iinlim);
+	s_printf(txt_buf, "\n%d mA\n", iinlim);
 
 	bq24193_get_property(BQ24193_SystemMinimumVoltage, &value);
 	s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
@@ -2400,8 +2399,8 @@ static lv_res_t _create_window_battery_status(lv_obj_t *btn)
 	if (!usb_pd.pdo_no)
 		strcat(txt_buf, "\n非PD");
 
-	// Limit to 5 profiles so it can fit.
-	usb_pd.pdo_no = MIN(usb_pd.pdo_no, 5);
+	// Limit to 6 profiles so it can fit.
+	usb_pd.pdo_no = MIN(usb_pd.pdo_no, 6);
 
 	for (u32 i = 0; i < usb_pd.pdo_no; i++)
 	{

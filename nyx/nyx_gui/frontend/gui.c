@@ -694,7 +694,7 @@ lv_img_dsc_t *bmp_to_lvimg_obj(const char *path)
 		img_desc->header.always_zero = 0;
 		img_desc->header.w = bmpData.size_x;
 		img_desc->header.h = bmpData.size_y;
-		img_desc->header.cf = (bitmap[28] == 32) ? LV_IMG_CF_TRUE_COLOR_ALPHA : LV_IMG_CF_TRUE_COLOR;
+		img_desc->header.cf = (bitmap[28] == 32) ? LV_IMG_CF_TRUE_COLOR_ALPHA : LV_IMG_CF_TRUE_COLOR; // Only LV_IMG_CF_TRUE_COLOR_ALPHA is actually allowed.
 		img_desc->data_size = bmpData.size - bmpData.offset;
 		img_desc->data = (u8 *)offset_copy;
 
@@ -1394,7 +1394,7 @@ static lv_res_t _create_mbox_payloads(lv_obj_t *btn)
 		goto out_end;
 	}
 
-	char *filelist = dirlist("bootloader/payloads", NULL, false, false);
+	dirlist_t *filelist = dirlist("bootloader/payloads", NULL, false, false);
 	sd_unmount();
 
 	u32 i = 0;
@@ -1402,9 +1402,9 @@ static lv_res_t _create_mbox_payloads(lv_obj_t *btn)
 	{
 		while (true)
 		{
-			if (!filelist[i * 256])
+			if (!filelist->name[i])
 				break;
-			lv_list_add(list, NULL, &filelist[i * 256], launch_payload);
+			lv_list_add(list, NULL, filelist->name[i], launch_payload);
 			i++;
 		}
 		free(filelist);
@@ -1440,15 +1440,15 @@ static lv_res_t _launch_more_cfg_action(lv_obj_t *btn)
 static lv_res_t _win_launch_close_action(lv_obj_t * btn)
 {
 	// Cleanup icons.
-	for (u32 i = 0; i < 8; i++)
+	for (u32 i = 0; i < (n_cfg.entries_5_col ? 10 : 8); i++)
 	{
-		lv_obj_t *btn = launch_ctxt.btn[i];
-		lv_btn_ext_t *ext = lv_obj_get_ext_attr(btn);
+		lv_obj_t *btns = launch_ctxt.btn[i];
+		lv_btn_ext_t *ext = lv_obj_get_ext_attr(btns);
 		if (ext->idx)
 		{
 			// This gets latest object, which is the button overlay. So iterate 2 times.
-			lv_obj_t * img = lv_obj_get_child(btn, NULL);
-			img = lv_obj_get_child(btn, img);
+			lv_obj_t * img = lv_obj_get_child(btns, NULL);
+			img = lv_obj_get_child(btns, img);
 
 			lv_img_dsc_t *src = (lv_img_dsc_t *)lv_img_get_src(img);
 
@@ -1832,7 +1832,7 @@ ini_parsing:
 		}
 
 		// Add button mask/radius and align icon.
-		lv_obj_t *btn = lv_btn_create(launch_ctxt.btn[curr_btn_idx], NULL);
+		lv_obj_t *btns = lv_btn_create(launch_ctxt.btn[curr_btn_idx], NULL);
 		u32 btn_width = 200;
 		u32 btn_height = 200;
 		if (img_noborder)
@@ -1848,25 +1848,25 @@ ini_parsing:
 			lv_btn_set_style(launch_ctxt.btn[curr_btn_idx], LV_BTN_STYLE_REL, &btn_home_noborder_rel);
 			lv_btn_set_style(launch_ctxt.btn[curr_btn_idx], LV_BTN_STYLE_PR, &btn_home_noborder_rel);
 		}
-		lv_obj_set_size(btn, btn_width, btn_height);
-		lv_btn_set_style(btn, LV_BTN_STYLE_REL, img_noborder ? &btn_home_noborder_rel : &btn_home_transp_rel);
-		lv_btn_set_style(btn, LV_BTN_STYLE_PR, &btn_home_transp_pr);
+		lv_obj_set_size(btns, btn_width, btn_height);
+		lv_btn_set_style(btns, LV_BTN_STYLE_REL, img_noborder ? &btn_home_noborder_rel : &btn_home_transp_rel);
+		lv_btn_set_style(btns, LV_BTN_STYLE_PR, &btn_home_transp_pr);
 		if (img)
 			lv_obj_align(img, NULL, LV_ALIGN_CENTER, 0, 0);
 		if (img_noborder)
-			lv_obj_align(btn, NULL, LV_ALIGN_CENTER, 0, 0);
+			lv_obj_align(btns, NULL, LV_ALIGN_CENTER, 0, 0);
 
 		// Set autoboot index.
-		ext = lv_obj_get_ext_attr(btn);
+		ext = lv_obj_get_ext_attr(btns);
 		ext->idx = entry_idx;
 		ext = lv_obj_get_ext_attr(launch_ctxt.btn[curr_btn_idx]); // Redundancy.
 		ext->idx = entry_idx;
 
 		// Set action.
 		if (!more_cfg)
-			lv_btn_set_action(btn, LV_BTN_ACTION_CLICK, _launch_action);
+			lv_btn_set_action(btns, LV_BTN_ACTION_CLICK, _launch_action);
 		else
-			lv_btn_set_action(btn, LV_BTN_ACTION_CLICK, _launch_more_cfg_action);
+			lv_btn_set_action(btns, LV_BTN_ACTION_CLICK, _launch_more_cfg_action);
 
 		// Set button's label text.
 		lv_label_set_text(launch_ctxt.label[curr_btn_idx], ini_sec->name);
@@ -2461,9 +2461,12 @@ void nyx_load_and_run()
 	// Gui loop.
 	if (h_cfg.t210b01)
 	{
-		// Minerva not supported on T210B01 yet. No power saving.
+		// Minerva not supported on T210B01 yet. Slight power saving via spinlock.
 		while (true)
+		{
 			lv_task_handler();
+			usleep(400);
+		}
 	}
 	else
 	{

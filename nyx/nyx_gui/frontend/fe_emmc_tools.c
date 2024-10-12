@@ -105,7 +105,7 @@ static void _get_valid_partition(u32 *sector_start, u32 *sector_size, u32 *part_
 		*sector_start = *sector_start + 0x8000;
 }
 
-static lv_obj_t *create_mbox_text(char *text, bool button_ok)
+static lv_obj_t *create_mbox_text(const char *text, bool button_ok)
 {
 	lv_obj_t *dark_bg = lv_obj_create(lv_scr_act(), NULL);
 	lv_obj_set_style(dark_bg, &mbox_darken);
@@ -137,7 +137,7 @@ static void _update_filename(char *outFilename, u32 sdPathLen, u32 currPartIdx)
 		itoa(currPartIdx, &outFilename[sdPathLen], 10);
 }
 
-static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32 lba_curr, char *outFilename, emmc_part_t *part)
+static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32 lba_curr, const char *outFilename, const emmc_part_t *part)
 {
 	FIL fp;
 	FIL hashFp;
@@ -1118,7 +1118,7 @@ multipart_not_allowed:
 			manual_system_maintenance(true);
 		}
 
-		return 0;
+		return -1;
 	}
 	else if (!use_multipart && (((u32)((u64)f_size(&fp) >> (u64)9)) != totalSectors)) // Check total restore size vs emmc size.
 	{
@@ -1475,10 +1475,13 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 
 			if (!res)
 				s_printf(txt_buf, "#FFDD00 失敗!#\n");
-			else
+			else if (res > 0)
 				s_printf(txt_buf, "完成!\n");
 
-			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
+			if (res >= 0)
+				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
+			else
+				res = 0;
 			manual_system_maintenance(true);
 		}
 	}
@@ -1508,10 +1511,13 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 
 			if (!res)
 				s_printf(txt_buf, "#FFDD00 失敗!#\n");
-			else
+			else if (res > 0)
 				s_printf(txt_buf, "完成!\n");
 
-			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
+			if (res >= 0)
+				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
+			else
+				res = 0;
 			manual_system_maintenance(true);
 		}
 		emmc_gpt_free(&gpt);
@@ -1544,10 +1550,13 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 
 			if (!res)
 				s_printf(txt_buf, "#FFDD00 失敗!#\n");
-			else
+			else if (res > 0)
 				s_printf(txt_buf, "完成!\n");
 
-			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
+			if (res >= 0)
+				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
+			else
+				res = 0;
 			manual_system_maintenance(true);
 		}
 	}
