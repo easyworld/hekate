@@ -93,12 +93,12 @@ CUSTOMDEFINES += -DGFX_INC=$(GFX_INC) -DFFCFG_INC=$(FFCFG_INC)
 #CUSTOMDEFINES += -DDEBUG_UART_LV_LOG
 
 #TODO: Considering reinstating some of these when pointer warnings have been fixed.
-WARNINGS := -Wall -Wsign-compare -Wno-array-bounds -Wno-stringop-overread -Wno-stringop-overflow
+WARNINGS := -Wall -Wsign-compare -Wtype-limits -Wno-array-bounds -Wno-stringop-overread -Wno-stringop-overflow
 #-fno-delete-null-pointer-checks
 #-Wstack-usage=byte-size -fstack-usage
 
-ARCH := -march=armv4t -mtune=arm7tdmi -mthumb-interwork
-CFLAGS = $(ARCH) -O2 -g -gdwarf-4 -nostdlib -ffunction-sections -fdata-sections -fomit-frame-pointer -std=gnu11 $(WARNINGS) $(CUSTOMDEFINES)
+ARCH := -march=armv4t -mtune=arm7tdmi -mthumb-interwork $(WARNINGS)
+CFLAGS = $(ARCH) -O2 -g -gdwarf-4 -nostdlib -ffunction-sections -fdata-sections -fomit-frame-pointer -std=gnu11 $(CUSTOMDEFINES)
 LDFLAGS = $(ARCH) -nostartfiles -lgcc -Wl,--nmagic,--gc-sections -Xlinker --defsym=NYX_LOAD_ADDR=$(NYX_LOAD_ADDR)
 
 ################################################################################
@@ -107,7 +107,7 @@ LDFLAGS = $(ARCH) -nostartfiles -lgcc -Wl,--nmagic,--gc-sections -Xlinker --defs
 
 all: $(TARGET).bin
 	@echo "--------------------------------------"
-	@echo -n "Nyx size:     "
+	@echo -n "Nyx size: "
 	$(eval BIN_SIZE = $(shell wc -c < $(OUTPUTDIR)/$(TARGET).bin))
 	@echo $(BIN_SIZE)" Bytes"
 	@echo "--------------------------------------"
@@ -118,11 +118,11 @@ clean:
 	@rm -rf $(OUTPUTDIR)
 
 $(TARGET).bin: $(BUILDDIR)/$(TARGET)/$(TARGET).elf
-	$(OBJCOPY) -S -O binary $< $(OUTPUTDIR)/$@
+	@$(OBJCOPY) -S -O binary $< $(OUTPUTDIR)/$@
 
 $(BUILDDIR)/$(TARGET)/$(TARGET).elf: $(OBJS)
 	@$(CC) $(LDFLAGS) -T $(SOURCEDIR)/link.ld $^ -o $@
-	@echo "Nyx was built with the following flags:\nCFLAGS:  "$(CFLAGS)"\nLDFLAGS: "$(LDFLAGS)
+	@printf "$(TARGET) was built with the following flags:\nCFLAGS:  $(CFLAGS)\nLDFLAGS: $(LDFLAGS)\n"
 
 $(BUILDDIR)/$(TARGET)/%.o: %.c
 	@echo Building $@

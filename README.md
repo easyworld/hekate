@@ -50,13 +50,14 @@ Custom Graphical Nintendo Switch bootloader, firmware patcher, tools, and many m
 |  \|__ background.bmp     | Nyx - Custom background. User provided.                               |
 |  \|__ icon_switch.bmp    | Nyx - Default icon for CFWs.                                          |
 |  \|__ icon_payload.bmp   | Nyx - Default icon for Payloads.                                      |
-| bootloader/sys/          | hekate and Nyx system modules folder.                                 |
-|  \|__ emummc.kipm        | emuMMC KIP1 module. !Important!                                       |
-|  \|__ libsys_lp0.bso     | LP0 (sleep mode) module. Important!                                   |
-|  \|__ libsys_minerva.bso | Minerva Training Cell. Used for DRAM Frequency training. !Important!  |
-|  \|__ nyx.bin            | Nyx - hekate's GUI. !Important!                                       |
-|  \|__ res.pak            | Nyx resources package. !Important!                                    |
-|  \|__ thk.bin            | Atmosphère Tsec Hovi Keygen. !Important!                              |
+| bootloader/sys/          | hekate and Nyx system modules folder. !Important!                     |
+|  \|__ emummc.kipm        | emuMMC KIP1 module.                                                   |
+|  \|__ libsys_lp0.bso     | LP0 (sleep mode) module.                                              |
+|  \|__ libsys_minerva.bso | Minerva Training Cell. Used for DRAM Frequency training.              |
+|  \|__ nyx.bin            | Nyx - hekate's GUI.                                                   |
+|  \|__ res.pak            | Nyx resources package.                                                |
+|  \|__ thk.bin            | Atmosphère Tsec Hovi Keygen.                                          |
+|  \|__ /l4t/              | Folder with firmware relevant to L4T (Linux/Android).                 |
 | bootloader/screenshots/  | Folder where Nyx screenshots are saved                                |
 | bootloader/payloads/     | For the `Payloads` menu. All CFW bootloaders, tools, Linux payloads are supported. Autoboot only supported by including them into an ini. |
 | bootloader/libtools/     | Reserved                                                              |
@@ -76,9 +77,9 @@ There are four possible type of entries. "**[ ]**": Boot entry, "**{ }**": Capti
 
 ### hekate Global Configuration keys/values (when entry is *[config]*):
 
-| Config option      | Description                                                |
-| ------------------ | ---------------------------------------------------------- |
-| autoboot=0         | 0: Disable, #: Boot entry number to auto boot.             |
+| Config option      | Description                                                    |
+| ------------------ | -------------------------------------------------------------- |
+| autoboot=0         | 0: Disable, #: Boot entry number to auto boot.                 |
 | autoboot_list=0    | 0: Read `autoboot` boot entry from hekate_ipl.ini, 1: Read from ini folder (ini files are ASCII ordered). |
 | bootwait=3         | 0: Disable (It also disables bootlogo. Having **VOL-** pressed since injection goes to menu.), #: Time to wait for **VOL-** to enter menu. Max: 20s. |
 | noticker=0         | 0: Animated line is drawn during custom bootlogo, signifying time left to skip to menu. 1: Disable. |
@@ -86,7 +87,7 @@ There are four possible type of entries. "**[ ]**": Boot entry, "**{ }**": Capti
 | autonogc=1         | 0: Disable, 1: Automatically applies nogc patch if unburnt fuses found and a >= 4.0.0 HOS is booted. |
 | bootprotect=0      | 0: Disable, 1: Protect bootloader folder from being corrupted by disallowing reading or editing in HOS. |
 | updater2p=0        | 0: Disable, 1: Force updates (if needed) the reboot2payload binary to be hekate. |
-| backlight=100      | Screen backlight level. 0-255.                             |
+| backlight=100      | Screen backlight level. 0-255.                                 |
 
 
 ### Boot entry key/value combinations:
@@ -98,18 +99,20 @@ There are four possible type of entries. "**[ ]**": Boot entry, "**{ }**": Capti
 | kernel={FILE path}     | Replaces the kernel binary                                 |
 | kip1={FILE path}       | Replaces/Adds kernel initial process. Multiple can be set. |
 | kip1={FOLDER path}/*   | Loads every .kip/.kip1 inside a folder. Compatible with single kip1 keys. |
-| fss0={FILE path}       | Takes an Atmosphere `package3` binary (formerly fusee-secondary.bin) and `extracts` all needed parts from it. kips, exosphere, warmboot and mesophere if enabled. |
-| fss0experimental=1     | Enables loading of experimental content from a FSS0 storage |
+| pkg3={FILE path}       | Takes an Atmosphere `package3` binary and `extracts` all needed parts from it. kips, exosphere, warmboot and mesophere. |
+| fss0={FILE path}       | Same as above. !Deprecated! |
+| pkg3ex=1               | Enables loading of experimental content from a PKG3/FSS0 storage |
+| pkg3kip1skip={KIP name} | Skips loading a kip from `pkg3`/`fss0`. Allows multiple and `,` as separator. The name must exactly match the name in `PKG3`. |
 | exofatal={FILE path}   | Replaces the exosphere fatal binary for Mariko             |
 | ---------------------- | ---------------------------------------------------------- |
-| kip1patch=patchname    | Enables a kip1 patch. Specify with multiple lines and/or in one line with `,` as separator. If actual patch is not found, a warning will show up |
+| kip1patch=patchname    | Enables a kip1 patch. Allows multiple and `,` as separator. If actual patch is not found, a warning will show up. |
 | emupath={FOLDER path}  | Forces emuMMC to use the selected one. (=emuMMC/RAW1, =emuMMC/SD00, etc). emuMMC must be created by hekate because it uses the raw_based/file_based files. |
 | emummcforce=1          | Forces the use of emuMMC. If emummc.ini is disabled or not found, then it causes an error. |
 | emummc_force_disable=1 | Disables emuMMC, if it's enabled.                           |
 | stock=1                | OFW via hekate bootloader. Disables unneeded kernel patching and CFW kips when running stock. `If emuMMC is enabled, emummc_force_disable=1` is required. emuMMC is not supported on stock. If additional KIPs are needed other than OFW's, you can define them with `kip1` key. No kip should be used that relies on Atmosphère patching, because it will hang. If `NOGC` is needed, use `kip1patch=nogc`. |
 | fullsvcperm=1          | Disables SVC verification (full services permission). Doesn't work with Mesosphere as kernel. |
 | debugmode=1            | Enables Debug mode. Obsolete when used with exosphere as secmon. |
-| atmosphere=1           | Enables Atmosphère patching. Not needed when `fss0` is used. |
+| kernelprocid=1         | Enables stock kernel process id send/recv patching. Not needed when `pkg3`/`fss0` is used. |
 | ---------------------- | ---------------------------------------------------------- |
 | payload={FILE path}    | Payload launching. Tools, Android/Linux, CFW bootloaders, etc. Any key above when used with that, doesn't get into account. |
 | ---------------------- | ---------------------------------------------------------- |
@@ -119,6 +122,7 @@ There are four possible type of entries. "**[ ]**": Boot entry, "**{ }**": Capti
 | ram_oc_vdd2=1100       | L4T RAM VDD2 Voltage. Set VDD2 (T210B01) or VDD2/VDDQ (T210) voltage. 1050-1175. |
 | ram_oc_vddq=600        | L4T RAM VDDQ Voltage. Set VDDQ (T210B01). 550-650.         |
 | uart_port=0            | Enables logging on serial port for L4T uboot/kernel.       |
+| sld_type=0x31444C53    | Controls the type of seamless display support. 0x0: Disable, 0x31444C53: L4T seamless display. |
 | Additional keys        | Each distro supports more keys. Check README_CONFIG.txt  for more info. |
 | ---------------------- | ---------------------------------------------------------- |
 | bootwait=3             | Overrides global bootwait from `[config]`.                 |
@@ -129,11 +133,11 @@ There are four possible type of entries. "**[ ]**": Boot entry, "**{ }**": Capti
 
 **Note1**: When using the wildcard (`/*`) with `kip1` you can still use the normal `kip1` after that to load extra single kips.
 
-**Note2**: When using FSS0 it parses exosphere, warmboot and all core kips. You can override the first 2 by using `secmon`/`warmboot` after defining `fss0`.
+**Note2**: When using PKG3/FSS0 it parses exosphere, warmboot and all core kips. You can override the first 2 by using `secmon`/`warmboot` after defining `pkg3`/`fss0`.
 You can define `kip1` to load an extra kip or many via the wildcard (`/*`) usage.
 
-**Warning**: Careful when you define *fss0 core* kips when using `fss0` or the folder (when using `/*`) includes them.
-This is in case the kips are incompatible between them. If compatible, you can override `fss0` kips with no issues (useful for testing with intermediate kip changes). In such cases, the `kip1` line must be under `fss0` line.
+**Warning**: Careful when you override *pkg3/fss core* kips with `kip1`.
+That's in case the kips are incompatible between them. If compatible, you can override `pkg3`/`fss0` kips with no issues (useful for testing with intermediate kip changes). In such cases, the `kip1` line must be **after** `pkg3`/`fss0` line.
 
 
 ### Boot entry key/value combinations for Exosphère:
@@ -155,7 +159,7 @@ This is in case the kips are incompatible between them. If compatible, you can o
 
 ### Payload storage:
 
-hekate has a boot storage in the binary that helps it configure it outside of BPMP enviroment:
+hekate has a boot storage in the binary that helps it configure it outside of BPMP environment:
 
 | Offset / Name           | Description                                                       |
 | ----------------------- | ----------------------------------------------------------------- |
@@ -188,9 +192,9 @@ hekate has a boot storage in the binary that helps it configure it outside of BP
 
 ```
 hekate  (c) 2018,      naehrwert, st4rk.
-        (c) 2018-2024, CTCaer.
+        (c) 2018-2025, CTCaer.
 
-Nyx GUI (c) 2019-2024, CTCaer.
+Nyx GUI (c) 2019-2025, CTCaer.
 
 Thanks to: derrek, nedwill, plutoo, shuffle2, smea, thexyz, yellows8.
 Greetings to: fincs, hexkyz, SciresM, Shiny Quagsire, WinterMute.

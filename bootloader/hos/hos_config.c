@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -21,7 +21,7 @@
 
 #include "hos.h"
 #include "hos_config.h"
-#include "fss.h"
+#include "pkg3.h"
 #include <libs/fatfs/ff.h>
 
 //#define DPRINTF(...) gfx_printf(__VA_ARGS__)
@@ -58,7 +58,7 @@ static int _config_kip1(launch_ctxt_t *ctxt, const char *value)
 {
 	u32 size;
 
-	if (!memcmp(value + strlen(value) - 1, "*", 1))
+	if (value[strlen(value) - 1] == '*')
 	{
 		char *dir = (char *)malloc(256);
 		strcpy(dir, value);
@@ -119,9 +119,6 @@ static int _config_kip1(launch_ctxt_t *ctxt, const char *value)
 
 int config_kip1patch(launch_ctxt_t *ctxt, const char *value)
 {
-	if (value == NULL)
-		return 0;
-
 	int len = strlen(value);
 	if (!len)
 		return 0;
@@ -188,12 +185,12 @@ static int _config_emummc_forced(launch_ctxt_t *ctxt, const char *value)
 	return 1;
 }
 
-static int _config_atmosphere(launch_ctxt_t *ctxt, const char *value)
+static int _config_kernel_proc_id(launch_ctxt_t *ctxt, const char *value)
 {
 	if (*value == '1')
 	{
-		DPRINTF("Enabled atmosphere patching\n");
-		ctxt->atmosphere = true;
+		DPRINTF("Enabled kernel process id send/recv patching\n");
+		ctxt->patch_krn_proc_id = true;
 	}
 	return 1;
 }
@@ -258,9 +255,9 @@ static int _config_exo_cal0_writes_enable(launch_ctxt_t *ctxt, const char *value
 	return 1;
 }
 
-static int _config_fss(launch_ctxt_t *ctxt, const char *value)
+static int _config_pkg3(launch_ctxt_t *ctxt, const char *value)
 {
-	return parse_fss(ctxt, value);
+	return parse_pkg3(ctxt, value);
 }
 
 static int _config_exo_fatal_payload(launch_ctxt_t *ctxt, const char *value)
@@ -287,6 +284,7 @@ typedef struct _cfg_handler_t
 } cfg_handler_t;
 
 static const cfg_handler_t _config_handlers[] = {
+	{ "stock",            _config_stock },
 	{ "warmboot",         _config_warmboot },
 	{ "secmon",           _config_secmon },
 	{ "kernel",           _config_kernel },
@@ -294,9 +292,12 @@ static const cfg_handler_t _config_handlers[] = {
 	{ "kip1patch",        config_kip1patch },
 	{ "fullsvcperm",      _config_svcperm },
 	{ "debugmode",        _config_debugmode },
-	{ "stock",            _config_stock },
-	{ "atmosphere",       _config_atmosphere },
-	{ "fss0",             _config_fss },
+	{ "kernelprocid",     _config_kernel_proc_id },
+
+	// To override elements from PKG3, it should be set before others.
+	{ "pkg3",             _config_pkg3 },
+	{ "fss0",             _config_pkg3 },
+
 	{ "exofatal",         _config_exo_fatal_payload},
 	{ "emummcforce",      _config_emummc_forced },
 	{ "nouserexceptions", _config_dis_exo_user_exceptions },
@@ -310,10 +311,15 @@ static const cfg_handler_t _config_handlers[] = {
 
 int parse_boot_config(launch_ctxt_t *ctxt)
 {
+	if (!ctxt->cfg)
+		return 1;
+
+	// Check each config key.
 	LIST_FOREACH_ENTRY(ini_kv_t, kv, &ctxt->cfg->kvs, link)
 	{
 		for (u32 i = 0; _config_handlers[i].key; i++)
 		{
+			// If key matches, call its handler.
 			if (!strcmp(_config_handlers[i].key, kv->key))
 			{
 				if (!_config_handlers[i].handler(ctxt, kv->val))
@@ -323,6 +329,8 @@ int parse_boot_config(launch_ctxt_t *ctxt)
 
 					return 0;
 				}
+
+				break;
 			}
 		}
 	}

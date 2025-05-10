@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -24,9 +24,9 @@
 #include <libs/lvgl/lv_themes/lv_theme_hekate.h>
 #include <libs/lvgl/lvgl.h>
 
-#define CLOCK_MIN_YEAR 2024
+#define CLOCK_MIN_YEAR 2025
 #define CLOCK_MAX_YEAR (CLOCK_MIN_YEAR + 10)
-#define CLOCK_YEARLIST "2024\n2025\n2026\n2027\n2028\n2029\n2030\n2031\n2032\n2033\n2034"
+#define CLOCK_YEARLIST "2025\n2026\n2027\n2028\n2029\n2030\n2031\n2032\n2033\n2034\n2035"
 
 extern hekate_config h_cfg;
 extern nyx_config n_cfg;
@@ -432,7 +432,7 @@ static lv_res_t _save_theme_color_action(lv_obj_t *btn)
 	// Save nyx config.
 	create_nyx_config_entry(true);
 
-	reload_nyx();
+	reload_nyx(NULL, false);
 
 	return LV_RES_OK;
 }
@@ -1168,13 +1168,11 @@ static lv_res_t _action_win_nyx_options_close(lv_obj_t *btn)
 	lv_obj_set_opa_scale(status_bar.mid, LV_OPA_0);
 	lv_obj_set_click(status_bar.mid, false);
 
-	lv_win_close_action(btn);
-
-	close_btn = NULL;
+	lv_res_t res = nyx_win_close_action_custom(btn);
 
 	_check_nyx_changes();
 
-	return LV_RES_INV;
+	return res;
 }
 
 lv_res_t create_win_nyx_options(lv_obj_t *parrent_btn)

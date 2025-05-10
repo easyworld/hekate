@@ -444,8 +444,10 @@ parse_failed:
 			launch_l4t(cfg_sec, entry_idx, 1, h_cfg.t210b01);
 		}
 	}
-	else if (!hos_launch(cfg_sec))
+	else
 	{
+		hos_launch(cfg_sec);
+
 wrong_emupath:
 		if (emummc_path)
 		{
@@ -587,8 +589,10 @@ parse_failed:
 			launch_l4t(cfg_sec, entry_idx, 0, h_cfg.t210b01);
 		}
 	}
-	else if (!hos_launch(cfg_sec))
+	else
 	{
+		hos_launch(cfg_sec);
+
 wrong_emupath:
 		if (emummc_path)
 		{
@@ -1350,7 +1354,7 @@ static void _about()
 {
 	static const char credits[] =
 		"\nhekate   (c) 2018,      naehrwert, st4rk\n\n"
-		"         (c) 2018-2024, CTCaer\n\n"
+		"         (c) 2018-2025, CTCaer\n\n"
 		" ___________________________________________\n\n"
 		"Thanks to: %kderrek, nedwill, plutoo,\n"
 		"           shuffle2, smea, thexyz, yellows8%k\n"
@@ -1446,7 +1450,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.2.2", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.3.0", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 

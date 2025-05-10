@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -174,20 +174,30 @@ typedef struct _sd_ssr
 	u8  app_class;
 	u8  au_size;
 	u8  uhs_au_size;
+	u8  perf_enhance;
 	u32 protected_size;
 } sd_ssr_t;
+
+typedef struct _sd_ext_reg_t
+{
+	u8  cmdq;
+	u8  cmdq_ext;
+	u8  cache;
+	u8  cache_ext;
+	int valid;
+} sd_ext_reg_t;
 
 /*! SDMMC storage context. */
 typedef struct _sdmmc_storage_t
 {
 	sdmmc_t *sdmmc;
-	u32 rca;
-	int has_sector_access;
-	u32 sec_cnt;
-	int is_low_voltage;
-	u32 partition;
 	int initialized;
-	u32 card_power_limit;
+	int is_low_voltage;
+	int has_sector_access;
+	u32 rca;
+	u32 sec_cnt;
+	u32 partition;
+	u32 max_power;
 	u8  raw_cid[0x10];
 	u8  raw_csd[0x10];
 	u8  raw_scr[8];
@@ -197,6 +207,7 @@ typedef struct _sdmmc_storage_t
 	mmc_ext_csd_t ext_csd;
 	sd_scr_t      scr;
 	sd_ssr_t      ssr;
+	sd_ext_reg_t  ser;
 } sdmmc_storage_t;
 
 typedef struct _sd_func_modes_t
@@ -221,9 +232,13 @@ int  sdmmc_storage_vendor_sandisk_report(sdmmc_storage_t *storage, void *buf);
 
 int  mmc_storage_get_ext_csd(sdmmc_storage_t *storage, void *buf);
 
+int  sd_storage_get_ext_reg(sdmmc_storage_t *storage, u8 fno, u8 page, u16 offset, u32 len, void *buf);
 int  sd_storage_get_fmodes(sdmmc_storage_t *storage, u8 *buf, sd_func_modes_t *functions);
 int  sd_storage_get_scr(sdmmc_storage_t *storage, u8 *buf);
 int  sd_storage_get_ssr(sdmmc_storage_t *storage, u8 *buf);
 u32  sd_storage_get_ssr_au(sdmmc_storage_t *storage);
+
+void sd_storage_get_ext_regs(sdmmc_storage_t *storage, u8 *buf);
+int  sd_storage_parse_perf_enhance(sdmmc_storage_t *storage, u8 fno, u8 page, u16 offset, u8 *buf);
 
 #endif

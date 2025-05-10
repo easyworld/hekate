@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -46,7 +46,8 @@ enum {
 	HOS_KB_VERSION_1700 = 16,
 	HOS_KB_VERSION_1800 = 17,
 	HOS_KB_VERSION_1900 = 18,
-	HOS_KB_VERSION_MAX  = HOS_KB_VERSION_1900
+	HOS_KB_VERSION_2000 = 19,
+	HOS_KB_VERSION_MAX  = HOS_KB_VERSION_2000
 };
 
 #define HOS_TSEC_VERSION 4 //! TODO: Update on TSEC Root Key changes.
@@ -104,16 +105,16 @@ typedef struct _launch_ctxt_t
 	u32   kernel_size;
 
 	link_t kip1_list;
-	char*  kip1_patches;
+	char  *kip1_patches;
 
 	bool svcperm;
 	bool debugmode;
 	bool stock;
 	bool emummc_forced;
 
-	void *fss0;
-	u32   fss0_hosver;
-	bool  atmosphere;
+	void *pkg3;
+	u32   pkg3_hosver;
+	bool  patch_krn_proc_id;
 
 	int ucid;
 
@@ -128,8 +129,6 @@ typedef struct _merge_kip_t
 	link_t link;
 } merge_kip_t;
 
-void hos_eks_clear(u32 kb);
-int  hos_launch(ini_sec_t *cfg);
-int  hos_keygen(void *keyblob, u32 kb, tsec_ctxt_t *tsec_ctxt, bool stock, bool is_exo);
+void hos_launch(ini_sec_t *cfg);
 
 #endif

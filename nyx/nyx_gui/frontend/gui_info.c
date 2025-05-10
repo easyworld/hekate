@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  * Copyright (c) 2018 balika011
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -23,6 +23,8 @@
 #include "../hos/hos.h"
 #include "../hos/pkg1.h"
 #include <libs/fatfs/ff.h>
+
+#include <stdlib.h>
 
 #define SECTORS_TO_MIB_COEFF 11
 
@@ -351,9 +353,21 @@ out:
 	return LV_RES_OK;
 }
 
-static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
+static lv_obj_t *hw_info_ver = NULL;
+static lv_res_t _action_win_hw_info_status_close(lv_obj_t *btn)
 {
-	lv_obj_t *win = nyx_create_standard_window(SYMBOL_CHIP" 硬體和Fuses資訊");
+	if (hw_info_ver)
+	{
+		lv_obj_del(hw_info_ver);
+		hw_info_ver = NULL;
+	}
+
+	return nyx_win_close_action_custom(btn);
+}
+
+static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
+{
+	lv_obj_t *win = nyx_create_window_custom_close_btn(SYMBOL_CHIP" 硬體和Fuses資訊", _action_win_hw_info_status_close);
 	lv_win_add_btn(win, NULL, SYMBOL_DOWNLOAD" 提取fuses資訊", _fuse_dump_window_action);
 	lv_win_add_btn(win, NULL, SYMBOL_INFO" CAL0資訊", _create_mbox_cal0);
 
@@ -364,6 +378,14 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 	lv_label_set_long_mode(lb_desc, LV_LABEL_LONG_BREAK);
 	lv_label_set_recolor(lb_desc, true);
 	lv_label_set_style(lb_desc, &monospace_text);
+
+	char version[32];
+	s_printf(version, "%s%d.%d.%d%c", NYX_VER_RL ? "v" : "", NYX_VER_MJ, NYX_VER_MN, NYX_VER_HF, NYX_VER_RL > 'A' ? NYX_VER_RL : 0);
+	lv_obj_t * lbl_ver = lv_label_create(lv_scr_act(), NULL);
+	lv_label_set_style(lbl_ver, &hint_small_style_white);
+	lv_label_set_text(lbl_ver, version);
+	lv_obj_align(lbl_ver, status_bar.bar_bg, LV_ALIGN_OUT_TOP_RIGHT, -LV_DPI * 9 / 23, -LV_DPI * 2 / 13);
+	hw_info_ver = lbl_ver;
 
 	lv_label_set_static_text(lb_desc,
 		"#FF8000 SoC:#\n"
@@ -590,7 +612,10 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		strcpy(fuses_hos_version, "17.0.0 - 18.1.0");
 		break;
 	case 20:
-		strcpy(fuses_hos_version, "19.0.0+");
+		strcpy(fuses_hos_version, "19.0.0 - 19.0.1");
+		break;
+	case 21:
+		strcpy(fuses_hos_version, "20.0.0+");
 		break;
 	case 255:
 		strcpy(fuses_hos_version, "#FFD000 超出正常熔斷次數#");
@@ -663,7 +688,7 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 	u32 ranks    = EMC(EMC_ADR_CFG) + 1;
 	u32 channels = (EMC(EMC_FBIO_CFG7) >> 1) & 3;
 	channels = (channels & 1) + ((channels & 2) >> 1);
-	s_printf(txt_buf, "#00DDFF %s SDRAM ##FF8000 (Ch 0 | Ch 1):#\n#FF8000 供應商:# ", h_cfg.t210b01 ? "LPDDR4X" : "LPDDR4");
+	s_printf(txt_buf, "#00DDFF %s SDRAM ##FF8000 (模組 0 | 1):#\n#FF8000 供應商:# ", h_cfg.t210b01 ? "LPDDR4X" : "LPDDR4");
 	switch (ram_vendor.chip0.rank0_ch0)
 	{
 	case 1:
@@ -735,49 +760,76 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 		s_printf(txt_buf + strlen(txt_buf), "#FF8000 未知# (%d)", ram_vendor.chip1.rank0_ch0);
 		break;
 	}
-	s_printf(txt_buf + strlen(txt_buf), "\n#FF8000 版本號:#  %X.%02X #FF8000 |# %X.%02X\n#FF8000 儲存密度:# %d",
-		ram_rev0.chip0.rank0_ch0, ram_rev1.chip0.rank0_ch0, ram_rev0.chip1.rank0_ch0, ram_rev1.chip1.rank0_ch0, ranks * channels);
+
+	s_printf(txt_buf + strlen(txt_buf), "\n#FF8000 版本號:#  %X.%02X #FF8000 |# %X.%02X\n#FF8000 儲存密度:# ",
+		ram_rev0.chip0.rank0_ch0, ram_rev1.chip0.rank0_ch0, ram_rev0.chip1.rank0_ch0, ram_rev1.chip1.rank0_ch0);
+
+	u32 actual_ranks = (ram_vendor.chip0.rank0_ch0 == ram_vendor.chip0.rank1_ch0 &&
+						ram_vendor.chip0.rank0_ch1 == ram_vendor.chip0.rank1_ch1 &&
+						ram_rev0.chip0.rank0_ch0 == ram_rev0.chip0.rank1_ch0 &&
+						ram_rev0.chip0.rank0_ch1 == ram_rev0.chip0.rank1_ch1 &&
+						ram_rev1.chip0.rank0_ch0 == ram_rev1.chip0.rank1_ch0 &&
+						ram_rev1.chip0.rank0_ch1 == ram_rev1.chip0.rank1_ch1 &&
+						ram_density.chip0.rank0_ch0 == ram_density.chip0.rank1_ch0 &&
+						ram_density.chip0.rank0_ch1 == ram_density.chip0.rank1_ch1)
+					   ? 2 : 1;
+	bool rank_bad = ranks != actual_ranks;
+	s_printf(txt_buf + strlen(txt_buf), "%s %d x %s", rank_bad ? "#FFDD00" : "", actual_ranks * channels, rank_bad ? "#" : "");
+
 	switch ((ram_density.chip0.rank0_ch0 & 0x3C) >> 2)
 	{
 	case 2:
-		strcat(txt_buf, " x 512MB");
+		strcat(txt_buf, "512MB");
 		break;
 	case 3:
-		strcat(txt_buf, " x 768MB");
+		strcat(txt_buf, "768MB");
 		break;
 	case 4:
-		strcat(txt_buf, " x 1GB");
+		strcat(txt_buf, "1GB");
 		break;
 	case 5:
-		strcat(txt_buf, " x 1.5GB");
+		strcat(txt_buf, "1.5GB");
 		break;
 	case 6:
-		strcat(txt_buf, " x 2GB");
+		strcat(txt_buf, "2GB");
 		break;
 	default:
-		s_printf(txt_buf + strlen(txt_buf), " x 未知 (%d)", (ram_density.chip0.rank0_ch0 & 0x3C) >> 2);
+		s_printf(txt_buf + strlen(txt_buf), "未知 (%d)", (ram_density.chip0.rank0_ch0 & 0x3C) >> 2);
 		break;
 	}
-	s_printf(txt_buf + strlen(txt_buf), " #FF8000 |# %d", ranks * channels);
+
+	actual_ranks = (ram_vendor.chip1.rank0_ch0 == ram_vendor.chip1.rank1_ch0 &&
+					ram_vendor.chip1.rank0_ch1 == ram_vendor.chip1.rank1_ch1 &&
+					ram_rev0.chip1.rank0_ch0 == ram_rev0.chip1.rank1_ch0 &&
+					ram_rev0.chip1.rank0_ch1 == ram_rev0.chip1.rank1_ch1 &&
+					ram_rev1.chip1.rank0_ch0 == ram_rev1.chip1.rank1_ch0 &&
+					ram_rev1.chip1.rank0_ch1 == ram_rev1.chip1.rank1_ch1 &&
+					ram_density.chip1.rank0_ch0 == ram_density.chip1.rank1_ch0 &&
+					ram_density.chip1.rank0_ch1 == ram_density.chip1.rank1_ch1)
+				   ? 2 : 1;
+	rank_bad = ranks != actual_ranks;
+
+	s_printf(txt_buf + strlen(txt_buf), " #FF8000 |# %s %d x %s", rank_bad ? "#FFDD00" : "", actual_ranks * channels, rank_bad ? "#" : "");
+
 	switch ((ram_density.chip1.rank0_ch0 & 0x3C) >> 2)
 	{
 	case 2:
-		strcat(txt_buf, " x 512MB");
+		strcat(txt_buf, "512MB");
 		break;
 	case 3:
-		strcat(txt_buf, " x 768MB");
+		strcat(txt_buf, "768MB");
 		break;
 	case 4:
-		strcat(txt_buf, " x 1GB");
+		strcat(txt_buf, "1GB");
 		break;
 	case 5:
-		strcat(txt_buf, " x 1.5GB");
+		strcat(txt_buf, "1.5GB");
 		break;
 	case 6:
-		strcat(txt_buf, " x 2GB");
+		strcat(txt_buf, "2GB");
 		break;
 	default:
-		s_printf(txt_buf + strlen(txt_buf), " x 未知 (%d)", (ram_density.chip1.rank0_ch0 & 0x3C) >> 2);
+		s_printf(txt_buf + strlen(txt_buf), "未知 (%d)", (ram_density.chip1.rank0_ch0 & 0x3C) >> 2);
 		break;
 	}
 	strcat(txt_buf, "\n\n");
@@ -940,13 +992,13 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 			if (touch_panel)
 				panel_ic_paired = touch_panel->idx == 0; // NISSHA NFT-K12D.
 			break;
-		case 0x98000004: // New 6.2" panel?
-		case 0x50000001:
-		case 0x50000002:
-			strcat(txt_buf, "FST2 UNK");
-			if (touch_panel)
-				panel_ic_paired = touch_panel->idx == 0;
-			break;
+		// case 0x98000004: // New 6.2" panel?
+		// case 0x50000001:
+		// case 0x50000002:
+		// 	strcat(txt_buf, "FST2 UNK");
+		// 	if (touch_panel)
+		// 		panel_ic_paired = touch_panel->idx == 0;
+		// 	break;
 		case 0x001A0300:
 		case 0x32000102:
 			strcat(txt_buf, "4CD60D/2");
@@ -974,7 +1026,7 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 				panel_ic_paired = touch_panel->idx == 4; // 三星 BH2109.
 			break;
 		default:
-			strcat(txt_buf, "#FF8000 未知#");
+			strcat(txt_buf, "#FF8000 請聯絡作者#");
 			break;
 		}
 
@@ -998,9 +1050,6 @@ static lv_res_t _create_window_fuses_info_status(lv_obj_t *btn)
 
 	lv_obj_set_width(lb_desc2, lv_obj_get_width(desc2));
 	lv_obj_align(desc2, val, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 4, 0);
-
-	if (!btn)
-		_create_mbox_cal0(NULL);
 
 	return LV_RES_OK;
 }
@@ -1299,12 +1348,11 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 	static const char * mbox_btn_map[] = { "\251", "\222確定", "\251", "" };
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
-	lv_obj_set_width(mbox, LV_HOR_RES / 7 * 4);
+	lv_obj_set_width(mbox, LV_HOR_RES * 3 / 7);
 
 	char *txt_buf = (char *)malloc(SZ_16K);
 
-	s_printf(txt_buf, "#FF8000 %s 效能測試#\n[Raw讀取] 中斷: 音量- 和 音量+",
-		sd_bench ? "SD卡" : "eMMC");
+	s_printf(txt_buf, "#FF8000 %s 效能測試#\n[Raw讀取] 中斷: 音量- & 音量+", sd_bench ? "SD卡" : "eMMC");
 
 	lv_mbox_set_text(mbox, txt_buf);
 	txt_buf[0] = 0;
@@ -1353,11 +1401,41 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		goto out;
 	}
 
+	// Set benchmark parameters.
+	const u32 sct_blk_seq = 0x8000;   // 16MB.  A2 spec denotes 4MB, but using older big AU.
+	const u32 sct_blk_4kb = 8;        // 4KB.
+	const u32 sct_rem_seq = 0x200000; // 1GB.   A2 spec.
+	const u32 sct_rem_4kb = 0x80000;  // 256MB. A2 spec.
+	const u32 sct_num_1mb = 0x800;    // 1MB.
+	const u32 size_bytes_seq = sct_rem_seq * SDMMC_DAT_BLOCKSIZE;
+	const u32 size_bytes_4kb = sct_rem_4kb * SDMMC_DAT_BLOCKSIZE;
+
+	// Set calculation divider. 1000 or 1024. (Does not affect IOPS).
+	u32 mb_div = 1000; // Unfortunately most software uses fake MB.
+
+	char *mbs_text;
+	switch (mb_div)
+	{
+	case 1000:
+		mbs_text = "MB/s";
+		break;
+	case 1024:
+		mbs_text = "MiB/s";
+		break;
+	}
+
+	// Set actual div in MB/MiB.
+	mb_div *= mb_div;
+
 	int error = 0;
 	u32 iters = 3;
-	u32 offset_chunk_start = ALIGN_DOWN(storage->sec_cnt / 3, 0x8000); // Align to 16MB.
+	u32 offset_chunk_start = ALIGN_DOWN(storage->sec_cnt / 3, sct_blk_seq); // Align to block.
 	if (storage->sec_cnt < 0xC00000)
 		iters -= 2; // 4GB card.
+
+	u32  rnd_off_cnt    = sct_rem_4kb / sct_blk_4kb;
+	u32 *random_offsets = malloc(rnd_off_cnt * sizeof(u32));
+	u32 *times_taken_4k = malloc(rnd_off_cnt * sizeof(u32));
 
 	for (u32 iter_curr = 0; iter_curr < iters; iter_curr++)
 	{
@@ -1365,18 +1443,18 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		u32 prevPct = 200;
 		u32 timer = 0;
 		u32 lba_curr = 0;
-		u32 sector = offset_chunk_start * iter_curr;
-		u32 sector_num = 0x8000;       // 16MB chunks.
-		u32 data_remaining = 0x200000; // 1GB.
+		u32 sector_off = offset_chunk_start * iter_curr;
+		u32 sector_num = sct_blk_seq;
+		u32 data_remaining = sct_rem_seq;
 
-		s_printf(txt_buf + strlen(txt_buf), "#C7EA46 %d/3# - 扇區偏移 #C7EA46 %08X#:\n", iter_curr + 1, sector);
+		s_printf(txt_buf + strlen(txt_buf), "#C7EA46 %d/3# - 扇區偏移 #C7EA46 %08X#:\n", iter_curr + 1, sector_off);
 
 		u32 render_min_ms = 66;
 		u32 render_timer  = get_tmr_ms() + render_min_ms;
 		while (data_remaining)
 		{
 			u32 time_taken = get_tmr_us();
-			error = !sdmmc_storage_read(storage, sector + lba_curr, sector_num, (u8 *)MIXD_BUF_ALIGNED);
+			error = !sdmmc_storage_read(storage, sector_off + lba_curr, sector_num, (u8 *)MIXD_BUF_ALIGNED);
 			time_taken = get_tmr_us() - time_taken;
 			timer += time_taken;
 
@@ -1384,7 +1462,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 			data_remaining -= sector_num;
 			lba_curr += sector_num;
 
-			pct = (lba_curr * 100) / 0x200000;
+			pct = (lba_curr * 100) / sct_rem_seq;
 			if (pct != prevPct && render_timer < get_tmr_ms())
 			{
 				lv_bar_set_value(bar, pct);
@@ -1402,10 +1480,10 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		}
 		lv_bar_set_value(bar, 100);
 
-		u32 rate_1k = ((u64)1024 * 1000 * 1000 * 1000) / timer;
-		s_printf(txt_buf + strlen(txt_buf),
-			" 順序 16MiB - 速率: #C7EA46 %3d.%02d MiB/s#\n",
-			rate_1k / 1000, (rate_1k % 1000) / 10);
+		// Calculate rate for transfer.
+		u32 rate_1k = (u64)size_bytes_seq * 1000 * 1000 * 1000 / mb_div / timer;
+		s_printf(txt_buf + strlen(txt_buf), " 順序16MB - 速率: #C7EA46 %3d.%02d %s#",
+			rate_1k / 1000, (rate_1k % 1000) / 10, mbs_text);
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_obj_align(lbl_status, NULL, LV_ALIGN_CENTER, 0, 0);
 		lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
@@ -1415,22 +1493,25 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		prevPct = 200;
 		timer = 0;
 		lba_curr = 0;
-		sector_num = 8;            // 4KB chunks.
-		data_remaining = 0x100000; // 512MB.
+		sector_num = sct_blk_4kb;
+		data_remaining = sct_rem_4kb;
 
+		u32 loop_idx = 0;
 		render_timer = get_tmr_ms() + render_min_ms;
 		while (data_remaining)
 		{
 			u32 time_taken = get_tmr_us();
-			error = !sdmmc_storage_read(storage, sector + lba_curr, sector_num, (u8 *)MIXD_BUF_ALIGNED);
+			error = !sdmmc_storage_read(storage, sector_off + lba_curr, sector_num, (u8 *)MIXD_BUF_ALIGNED);
 			time_taken = get_tmr_us() - time_taken;
+
 			timer += time_taken;
+			times_taken_4k[loop_idx++] = time_taken;
 
 			manual_system_maintenance(false);
 			data_remaining -= sector_num;
 			lba_curr += sector_num;
 
-			pct = (lba_curr * 100) / 0x100000;
+			pct = (lba_curr * 100) / sct_rem_4kb;
 			if (pct != prevPct && render_timer < get_tmr_ms())
 			{
 				lv_bar_set_value(bar, pct);
@@ -1448,49 +1529,64 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		}
 		lv_bar_set_value(bar, 100);
 
-		rate_1k = ((u64)512 * 1000 * 1000 * 1000) / timer;
-		u32 iops_1k = ((u64)512 * 1024 * 1000 * 1000 * 1000) / (4096 / 1024) / timer / 1000;
-		s_printf(txt_buf + strlen(txt_buf),
-			" 順序  4KiB - 速率: #C7EA46 %3d.%02d MiB/s#, IOPS: #C7EA46 %4d#\n",
-			rate_1k / 1000, (rate_1k % 1000) / 10, iops_1k);
+		qsort(times_taken_4k, loop_idx, sizeof(u32), qsort_compare_int); // Use int for faster compare. Value can't exceed 2s.
+
+		u32 pct95 = 0;
+		for (u32 i = 0; i < loop_idx * 95 / 100; i++)
+			pct95 += times_taken_4k[i];
+		pct95 /= loop_idx * 95 / 100;
+
+		u32 pct05 = 0;
+		for (u32 i = 0; i < loop_idx * 5 / 100; i++)
+			pct05 += times_taken_4k[loop_idx - 1 - i];
+		pct05 /= loop_idx * 5 / 100;
+
+		// Calculate rate and IOPS for transfer.
+		rate_1k = (u64)size_bytes_4kb * 1000 * 1000 * 1000 / mb_div / timer;
+		u32 iops = ((u64)(sct_rem_4kb / sct_num_1mb) * 1024 * 1000 * 1000 * 1000) / (4096 / 1024) / timer / 1000;
+		s_printf(txt_buf + strlen(txt_buf), "        平均 #C7EA46 95th#  #FF3C28 5th#\n");
+		s_printf(txt_buf + strlen(txt_buf), " 順序 4KB - 速率: #C7EA46 %3d.%02d %s# IOPS: #C7EA46 %4d# %4d %4d \n",
+			rate_1k / 1000, (rate_1k % 1000) / 10, mbs_text, iops, 1000000 / pct95, 1000000 / pct05);
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_obj_align(lbl_status, NULL, LV_ALIGN_CENTER, 0, 0);
 		lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
 		manual_system_maintenance(true);
 
 		u32 lba_idx = 0;
-		u32 *random_offsets = malloc(0x20000 * sizeof(u32));
-		u32  random_numbers[4];
-		for (u32 i = 0; i < 0x20000; i += 4)
+		u32 random_numbers[4];
+		for (u32 i = 0; i < rnd_off_cnt; i += 4)
 		{
 			// Generate new random numbers.
 			while (!se_gen_prng128(random_numbers))
 				;
-			// Clamp offsets to 512MB range.
-			random_offsets[i + 0] = random_numbers[0] % 0x100000;
-			random_offsets[i + 1] = random_numbers[1] % 0x100000;
-			random_offsets[i + 2] = random_numbers[2] % 0x100000;
-			random_offsets[i + 3] = random_numbers[3] % 0x100000;
+			// Clamp offsets to 256MB range.
+			random_offsets[i + 0] = random_numbers[0] % sct_rem_4kb;
+			random_offsets[i + 1] = random_numbers[1] % sct_rem_4kb;
+			random_offsets[i + 2] = random_numbers[2] % sct_rem_4kb;
+			random_offsets[i + 3] = random_numbers[3] % sct_rem_4kb;
 		}
 
 		pct = 0;
 		prevPct = 200;
 		timer = 0;
-		data_remaining = 0x100000; // 512MB.
+		data_remaining = sct_rem_4kb;
 
+		loop_idx = 0;
 		render_timer = get_tmr_ms() + render_min_ms;
 		while (data_remaining)
 		{
 			u32 time_taken = get_tmr_us();
-			error = !sdmmc_storage_read(storage, sector + random_offsets[lba_idx], sector_num, (u8 *)MIXD_BUF_ALIGNED);
+			error = !sdmmc_storage_read(storage, sector_off + random_offsets[lba_idx], sector_num, (u8 *)MIXD_BUF_ALIGNED);
 			time_taken = get_tmr_us() - time_taken;
+
 			timer += time_taken;
+			times_taken_4k[loop_idx++] = time_taken;
 
 			manual_system_maintenance(false);
 			data_remaining -= sector_num;
 			lba_idx++;
 
-			pct = (lba_idx * 100) / 0x20000;
+			pct = (lba_idx * 100) / rnd_off_cnt;
 			if (pct != prevPct && render_timer < get_tmr_ms())
 			{
 				lv_bar_set_value(bar, pct);
@@ -1504,29 +1600,39 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 			}
 
 			if (error)
-			{
-				free(random_offsets);
 				goto error;
-			}
 		}
 		lv_bar_set_value(bar, 100);
 
-		// Calculate rate and IOPS for 512MB transfer.
-		rate_1k = ((u64)512 * 1000 * 1000 * 1000) / timer;
-		iops_1k = ((u64)512 * 1024 * 1000 * 1000 * 1000) / (4096 / 1024) / timer / 1000;
-		s_printf(txt_buf + strlen(txt_buf),
-			" 隨機  4KiB - 速率: #C7EA46 %3d.%02d MiB/s#, IOPS: #C7EA46 %4d#\n",
-			rate_1k / 1000, (rate_1k % 1000) / 10, iops_1k);
+		qsort(times_taken_4k, loop_idx, sizeof(u32), qsort_compare_int); // Use int for faster compare. Value can't exceed 2s.
+
+		pct95 = 0;
+		for (u32 i = 0; i < loop_idx * 95 / 100; i++)
+			pct95 += times_taken_4k[i];
+		pct95 /= loop_idx * 95 / 100;
+
+		pct05 = 0;
+		for (u32 i = 0; i < loop_idx * 5 / 100; i++)
+			pct05 += times_taken_4k[loop_idx - 1 - i];
+		pct05 /= loop_idx * 5 / 100;
+
+		// Calculate rate and IOPS for transfer.
+		rate_1k = (u64)size_bytes_4kb * 1000 * 1000 * 1000 / mb_div / timer;
+		iops = ((u64)(sct_rem_4kb / sct_num_1mb) * 1024 * 1000 * 1000 * 1000) / (4096 / 1024) / timer / 1000;
+		s_printf(txt_buf + strlen(txt_buf), " 隨機 4KB - 速率: #C7EA46 %3d.%02d %s# IOPS: #C7EA46 %4d# %4d %4d \n",
+			rate_1k / 1000, (rate_1k % 1000) / 10, mbs_text, iops, 1000000 / pct95, 1000000 / pct05);
 		if (iter_curr == iters - 1)
-			txt_buf[strlen(txt_buf) - 1] = 0; // Cut off last line change.
+			txt_buf[strlen(txt_buf) - 1] = 0; // Cut off last new line.
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_obj_align(lbl_status, NULL, LV_ALIGN_CENTER, 0, 0);
 		lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
 		manual_system_maintenance(true);
-		free(random_offsets);
 	}
 
 error:
+	free(random_offsets);
+	free(times_taken_4k);
+
 	if (error)
 	{
 		if (error == -1)
@@ -1553,6 +1659,8 @@ error:
 		emmc_end();
 
 out:
+	s_printf(txt_buf, "#FF8000 %s Benchmark#\n[Raw Reads]", sd_bench ? "SD Card" : "eMMC");
+	lv_mbox_set_text(mbox, txt_buf);
 	free(txt_buf);
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, mbox_action); // Important. After set_text.
@@ -1811,8 +1919,8 @@ out_error:
 		lv_mbox_set_recolor_text(mbox, true);
 
 		s_printf(txt_buf,
-			"#FF8000 eMMC問題檢查#\n\n"
-			"#FFDD00 您的eMMC初始化為較慢模式,#\n"
+			"#FF8000 eMMC問題警告#\n\n"
+			"#FFDD00 你的eMMC以慢速模式初始化,#\n"
 			"#FFDD00 或發生初始化/讀取/寫入錯誤!#\n"
 			"#FFDD00 這可能意味著硬體問題!#\n\n"
 			"#00DDFF 匯流排速度:# %d MB/s\n\n"
@@ -1844,7 +1952,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	lv_win_add_btn(win, NULL, SYMBOL_SD" 效能測試", _create_mbox_sd_bench);
 
 	lv_obj_t *desc = lv_cont_create(win, NULL);
-	lv_obj_set_size(desc, LV_HOR_RES / 2 / 5 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
+	lv_obj_set_size(desc, LV_HOR_RES / 2 / 6 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
 
 	lv_obj_t * lb_desc = lv_label_create(desc, NULL);
 	lv_label_set_long_mode(lb_desc, LV_LABEL_LONG_BREAK);
@@ -1878,7 +1986,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	);
 
 	lv_obj_t *val = lv_cont_create(win, NULL);
-	lv_obj_set_size(val, LV_HOR_RES / 9 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
+	lv_obj_set_size(val, LV_HOR_RES / 12 * 3, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
 
 	lv_obj_t * lb_val = lv_label_create(val, lb_desc);
 
@@ -1985,7 +2093,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	}
 
 	// UHS-I max power limit is 400mA, no matter what the card says.
-	u32 card_power_limit_nominal = sd_storage.card_power_limit > 400 ? 400 : sd_storage.card_power_limit;
+	u32 max_power_nominal = sd_storage.max_power > 400 ? 400 : sd_storage.max_power;
 
 	s_printf(txt_buf + strlen(txt_buf), "(%02X)\n%c%c%c%c%c\n%c%c (%04X)\n%X\n%X\n%08x\n%02d/%04d\n\n%d mW (%d mA)\n",
 		sd_storage.cid.manfid,
@@ -1994,7 +2102,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 		(sd_storage.cid.oemid >> 8) & 0xFF, sd_storage.cid.oemid & 0xFF, sd_storage.cid.oemid,
 		sd_storage.cid.hwrev, sd_storage.cid.fwrev, sd_storage.cid.serial,
 		sd_storage.cid.month, sd_storage.cid.year,
-		card_power_limit_nominal * 3600 / 1000, sd_storage.card_power_limit);
+		max_power_nominal * 3600 / 1000, sd_storage.max_power);
 
 	switch (nyx_str->info.sd_init)
 	{
@@ -2020,7 +2128,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	lv_obj_align(val, desc, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
 
 	lv_obj_t *desc2 = lv_cont_create(win, NULL);
-	lv_obj_set_size(desc2, LV_HOR_RES / 2 / 4 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
+	lv_obj_set_size(desc2, LV_HOR_RES / 2 / 11 * 5, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
 
 	lv_obj_t * lb_desc2 = lv_label_create(desc2, lb_desc);
 
@@ -2037,10 +2145,10 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 		"防寫:"
 	);
 	lv_obj_set_width(lb_desc2, lv_obj_get_width(desc2));
-	lv_obj_align(desc2, val, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 2, 0);
+	lv_obj_align(desc2, val, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 5 * 3, 0);
 
 	lv_obj_t *val2 = lv_cont_create(win, NULL);
-	lv_obj_set_size(val2, LV_HOR_RES / 13 * 3, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
+	lv_obj_set_size(val2, LV_HOR_RES / 4, LV_VER_RES - (LV_DPI * 11 / 8) * 5 / 2);
 
 	lv_obj_t * lb_val2 = lv_label_create(val2, lb_desc);
 
@@ -2084,15 +2192,64 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	else
 		bus_speed = "SDR12";
 
+	char *cpe = NULL;
+	if (sd_storage.ssr.app_class == 2)
+	{
+		u8 *buf = zalloc(512);
+
+		// Directly get and parse ext reg for performance enhance.
+		sd_storage_parse_perf_enhance(&sd_storage, 2, 0, 0, buf);
+
+		bool has_perf_enhance = sd_storage.ser.cache &&
+							sd_storage.ser.cmdq  &&
+							sd_storage.ser.cache == sd_storage.ser.cache_ext &&
+							sd_storage.ser.cmdq  == sd_storage.ser.cmdq_ext;
+		if (has_perf_enhance)
+			cpe = "#FFDD00 "; // CMDQ/CACHE support via a quirk.
+		else
+			cpe = "#FF3C28 "; // Broken.
+
+		// Get and parse ext reg for performance enhance in spec.
+		sd_storage_get_ext_regs(&sd_storage, buf);
+
+		if (sd_storage.ser.valid)
+		{
+			has_perf_enhance = sd_storage.ser.cache &&
+							   sd_storage.ser.cmdq  &&
+							   sd_storage.ser.cache == sd_storage.ser.cache_ext &&
+							   sd_storage.ser.cmdq  == sd_storage.ser.cmdq_ext;
+
+			if (has_perf_enhance)
+				cpe = NULL; // CMDQ/CACHE support in spec.
+			else
+				cpe = "#FF3C28 "; // Broken.
+		}
+
+		free(buf);
+	}
+
 	s_printf(txt_buf,
-		"#00DDFF v%d.0#\n%02X\n%d MiB\n%X (CP %X)\n%d\n%d MB/s (%d MHz)\n%d (AU: %d %s\nU%d V%d A%d\n%s\n\n%s",
-		sd_storage.csd.structure + 1, sd_storage.csd.cmdclass,
-		sd_storage.sec_cnt >> 11, sd_storage.sec_cnt, sd_storage.ssr.protected_size >> 9,
-		sd_storage.ssr.bus_width, sd_storage.csd.busspeed,
+		"#00DDFF v%d.0#\n"
+		"%02X\n"
+		"%d MiB\n"
+		"%X (CP %X)\n"
+		"%d\n"
+		"%d MB/s (%d MHz)\n"
+		"%d (AU: %d %s\n"
+		"U%d V%d %sA%d%s\n"
+		"%s\n\n"
+		"%s",
+		sd_storage.csd.structure + 1,
+		sd_storage.csd.cmdclass,
+		sd_storage.sec_cnt >> 11,
+		sd_storage.sec_cnt, sd_storage.ssr.protected_size >> 9,
+		sd_storage.ssr.bus_width,
+		sd_storage.csd.busspeed,
 		(sd_storage.csd.busspeed > 10) ? (sd_storage.csd.busspeed * 2) : 50,
 		sd_storage.ssr.speed_class, uhs_au_size, uhs_au_mb ? "MiB)" : "KiB)",
-		sd_storage.ssr.uhs_grade, sd_storage.ssr.video_class, sd_storage.ssr.app_class,
-		bus_speed, wp_info);
+		sd_storage.ssr.uhs_grade, sd_storage.ssr.video_class, cpe ? cpe : "", sd_storage.ssr.app_class, cpe ? "#" : "",
+		bus_speed,
+		wp_info);
 
 	lv_label_set_text(lb_val2, txt_buf);
 
@@ -2109,47 +2266,29 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	lv_obj_set_size(desc3, LV_HOR_RES / 2 / 2 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
 
 	lv_obj_t * lb_desc3 = lv_label_create(desc3, lb_desc);
-	lv_label_set_text(lb_desc3, "#D4FF00 正在獲取FAT卷資訊...#");
+	lv_label_set_text(lb_desc3, "#D4FF00 正在獲取資訊...#");
 	lv_obj_set_width(lb_desc3, lv_obj_get_width(desc3));
 
 	lv_obj_align(desc3, desc, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 
 	manual_system_maintenance(true);
 
-	f_getfree("", &sd_fs.free_clst, NULL);
-
-	lv_label_set_text(lb_desc3,
-		"#00DDFF 發現FAT卷標:#\n"
-		"檔案系統:\n"
-		"簇大小:\n"
-		"剩餘/總大小:"
-	);
-	lv_obj_set_size(desc3, LV_HOR_RES / 2 / 5 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
-	lv_obj_set_width(lb_desc3, lv_obj_get_width(desc3));
+	lv_obj_set_size(desc3, LV_HOR_RES / 2 / 6 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
 	lv_obj_align(desc3, desc, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 
 	lv_obj_t *val3 = lv_cont_create(win, NULL);
-	lv_obj_set_size(val3, LV_HOR_RES / 13 * 3, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
+	lv_obj_set_size(val3, LV_HOR_RES / 12 * 3, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
 
 	lv_obj_t * lb_val3 = lv_label_create(val3, lb_desc);
+	lv_label_set_text(lb_val3, "");
 
-	s_printf(txt_buf, "\n%s\n%d %s\n%d/%d MiB",
-		sd_fs.fs_type == FS_EXFAT ? ("exFAT  "SYMBOL_SHRK) : ("FAT32"),
-		(sd_fs.csize > 1) ? (sd_fs.csize >> 1) : SD_BLOCKSIZE,
-		(sd_fs.csize > 1) ? "KiB" : "B",
-		(u32)(sd_fs.free_clst * sd_fs.csize >> SECTORS_TO_MIB_COEFF),
-		(u32)(sd_fs.n_fatent  * sd_fs.csize >> SECTORS_TO_MIB_COEFF));
-
-	lv_label_set_text(lb_val3, txt_buf);
-
-	lv_obj_set_width(lb_val3, lv_obj_get_width(val3));
 	lv_obj_align(val3, desc3, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
 
 	lv_obj_t *desc4 = lv_cont_create(win, NULL);
 	lv_obj_set_size(desc4, LV_HOR_RES / 2 / 2 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
 
 	lv_obj_t * lb_desc4 = lv_label_create(desc4, lb_desc);
-	lv_label_set_text(lb_desc4, "#D4FF00 正在獲取FAT卷標資訊...#");
+	lv_label_set_text(lb_desc4, "                             ");
 	lv_obj_set_width(lb_desc4, lv_obj_get_width(desc4));
 
 	lv_label_set_text(lb_desc4,
@@ -2158,12 +2297,12 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 		"讀/寫失敗:\n"
 		"讀/寫錯誤:"
 	);
-	lv_obj_set_size(desc4, LV_HOR_RES / 2 / 5 * 2, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
+	lv_obj_set_size(desc4, LV_HOR_RES / 2 / 11 * 5, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
 	lv_obj_set_width(lb_desc4, lv_obj_get_width(desc4));
-	lv_obj_align(desc4, val3, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 2, 0);
+	lv_obj_align(desc4, val3, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 5 * 3, 0);
 
 	lv_obj_t *val4 = lv_cont_create(win, NULL);
-	lv_obj_set_size(val4, LV_HOR_RES / 13 * 3, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
+	lv_obj_set_size(val4, LV_HOR_RES / 4, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
 
 	lv_obj_t * lb_val4 = lv_label_create(val4, lb_desc);
 
@@ -2176,7 +2315,31 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	lv_label_set_text(lb_val4, txt_buf);
 
 	lv_obj_set_width(lb_val4, lv_obj_get_width(val4));
-	lv_obj_align(val4, desc4, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 2, 0);
+	lv_obj_align(val4, desc4, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
+
+	manual_system_maintenance(true);
+
+	f_getfree("", &sd_fs.free_clst, NULL);
+
+	lv_label_set_text(lb_desc3,
+		"#00DDFF 發現FAT系統:#\n"
+		"檔案系統:\n"
+		"簇大小:\n"
+		"剩餘/總大小:"
+	);
+
+	lv_obj_set_width(lb_desc3, lv_obj_get_width(desc3));
+
+	s_printf(txt_buf, "\n%s\n%d %s\n%d/%d MiB",
+		sd_fs.fs_type == FS_EXFAT ? ("exFAT  "SYMBOL_SHRK) : ("FAT32"),
+		(sd_fs.csize > 1) ? (sd_fs.csize >> 1) : SD_BLOCKSIZE,
+		(sd_fs.csize > 1) ? "KiB" : "B",
+		(u32)(sd_fs.free_clst * sd_fs.csize >> SECTORS_TO_MIB_COEFF),
+		(u32)(sd_fs.n_fatent  * sd_fs.csize >> SECTORS_TO_MIB_COEFF));
+
+	lv_label_set_text(lb_val3, txt_buf);
+
+	lv_obj_set_width(lb_val3, lv_obj_get_width(val3));
 
 	free(txt_buf);
 	sd_unmount();
@@ -2552,7 +2715,7 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	lv_btn_set_fit(btn3, true, true);
 	lv_label_set_static_text(label_btn, SYMBOL_CIRCUIT"  硬體和Fuses");
 	lv_obj_align(btn3, line_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, LV_DPI / 2);
-	lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, _create_window_fuses_info_status);
+	lv_btn_set_action(btn3, LV_BTN_ACTION_CLICK, _create_window_hw_info_status);
 
 	// Create KFuses button.
 	lv_obj_t *btn4 = lv_btn_create(h1, btn);

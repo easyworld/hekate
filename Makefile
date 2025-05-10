@@ -48,7 +48,7 @@ OBJS += $(addprefix $(BUILDDIR)/$(TARGET)/, \
 
 # Horizon.
 OBJS += $(addprefix $(BUILDDIR)/$(TARGET)/, \
-	hos.o hos_config.o pkg1.o pkg2.o pkg2_ini_kippatch.o fss.o secmon_exo.o \
+	hos.o hos_config.o pkg1.o pkg2.o pkg3.o pkg2_ini_kippatch.o secmon_exo.o \
 )
 
 # Libraries.
@@ -76,15 +76,15 @@ CUSTOMDEFINES += -DGFX_INC=$(GFX_INC) -DFFCFG_INC=$(FFCFG_INC)
 
 # UART Logging: Max baudrate 12.5M.
 # DEBUG_UART_PORT - 0: UART_A, 1: UART_B, 2: UART_C.
-#CUSTOMDEFINES += -DDEBUG_UART_BAUDRATE=115200 -DDEBUG_UART_INVERT=0 -DDEBUG_UART_PORT=0
+#CUSTOMDEFINES += -DDEBUG_UART_BAUDRATE=115200 -DDEBUG_UART_INVERT=0 -DDEBUG_UART_PORT=1
 
 #TODO: Considering reinstating some of these when pointer warnings have been fixed.
-WARNINGS := -Wall -Wsign-compare -Wno-array-bounds -Wno-stringop-overread -Wno-stringop-overflow
+WARNINGS := -Wall -Wsign-compare -Wtype-limits -Wno-array-bounds -Wno-stringop-overread -Wno-stringop-overflow
 #-fno-delete-null-pointer-checks
 #-Wstack-usage=byte-size -fstack-usage
 
-ARCH := -march=armv4t -mtune=arm7tdmi -mthumb -mthumb-interwork
-CFLAGS = $(ARCH) -O2 -g -gdwarf-4 -nostdlib -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-inline -std=gnu11 $(WARNINGS) $(CUSTOMDEFINES)
+ARCH := -march=armv4t -mtune=arm7tdmi -mthumb -mthumb-interwork $(WARNINGS)
+CFLAGS = $(ARCH) -O2 -g -gdwarf-4 -nostdlib -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-inline -std=gnu11 $(CUSTOMDEFINES)
 LDFLAGS = $(ARCH) -nostartfiles -lgcc -Wl,--nmagic,--gc-sections -Xlinker --defsym=IPL_LOAD_ADDR=$(IPL_LOAD_ADDR)
 
 MODULEDIRS := $(wildcard modules/*)
@@ -101,15 +101,14 @@ TOOLS := $(TOOLSLZ) $(TOOLSB2C)
 all: $(TARGET).bin $(LDRDIR)
 	@printf ICTC49 >> $(OUTPUTDIR)/$(TARGET).bin
 	@echo "--------------------------------------"
-	@echo -n "Uncompr size: "
+	@echo "$(TARGET) size:"
+	@echo -n "Uncompr:  "
 	$(eval BIN_SIZE = $(shell wc -c < $(OUTPUTDIR)/$(TARGET)_unc.bin))
 	@echo $(BIN_SIZE)" Bytes"
-	@echo "Uncompr Max:  140288 Bytes + 3 KiB BSS"
 	@if [ ${BIN_SIZE} -gt 140288 ]; then echo "\e[1;33mUncompr size exceeds limit!\e[0m"; fi
-	@echo -n "Payload size: "
+	@echo -n "Payload:  "
 	$(eval BIN_SIZE = $(shell wc -c < $(OUTPUTDIR)/$(TARGET).bin))
 	@echo $(BIN_SIZE)" Bytes"
-	@echo "Payload Max:  126296 Bytes"
 	@if [ ${BIN_SIZE} -gt 126296 ]; then echo "\e[1;33mPayload size exceeds limit!\e[0m"; fi
 	@echo "--------------------------------------"
 
@@ -126,7 +125,7 @@ $(NYXDIR):
 
 $(LDRDIR): $(TARGET).bin
 	@$(TOOLSLZ)/lz77 $(OUTPUTDIR)/$(TARGET).bin
-	mv $(OUTPUTDIR)/$(TARGET).bin $(OUTPUTDIR)/$(TARGET)_unc.bin
+	@mv $(OUTPUTDIR)/$(TARGET).bin $(OUTPUTDIR)/$(TARGET)_unc.bin
 	@mv $(OUTPUTDIR)/$(TARGET).bin.00.lz payload_00
 	@mv $(OUTPUTDIR)/$(TARGET).bin.01.lz payload_01
 	@$(TOOLSB2C)/bin2c payload_00 > $(LDRDIR)/payload_00.h
@@ -139,11 +138,11 @@ $(TOOLS):
 	@$(MAKE) --no-print-directory -C $@ $(MAKECMDGOALS) -$(MAKEFLAGS)
 
 $(TARGET).bin: $(BUILDDIR)/$(TARGET)/$(TARGET).elf $(MODULEDIRS) $(NYXDIR) $(TOOLS)
-	$(OBJCOPY) -S -O binary $< $(OUTPUTDIR)/$@
+	@$(OBJCOPY) -S -O binary $< $(OUTPUTDIR)/$@
 
 $(BUILDDIR)/$(TARGET)/$(TARGET).elf: $(OBJS)
 	@$(CC) $(LDFLAGS) -T $(SOURCEDIR)/link.ld $^ -o $@
-	@echo "hekate was built with the following flags:\nCFLAGS:  "$(CFLAGS)"\nLDFLAGS: "$(LDFLAGS)
+	@printf "$(TARGET) was built with the following flags:\nCFLAGS:  $(CFLAGS)\nLDFLAGS: $(LDFLAGS)\n"
 
 $(BUILDDIR)/$(TARGET)/%.o: %.c
 	@echo Building $@
