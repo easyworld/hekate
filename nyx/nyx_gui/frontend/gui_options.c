@@ -1529,7 +1529,7 @@ void create_tab_options(lv_theme_t *th, lv_obj_t *parent)
 	label_txt2 = lv_label_create(sw_h3, NULL);
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
-		"如果啟動項使用#FF8000 FSS0#引導, 則會檢查reboot_payload.bin"
+		"如果啟動項使用#FF8000 FSS0#引導, 則會檢查reboot_payload.bin\n"
 		"並強制以hekate啟動.\n\n\n\n");
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn4, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, LV_DPI / 12);

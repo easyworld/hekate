@@ -2769,15 +2769,15 @@ lv_res_t create_window_partition_manager(lv_obj_t *btn)
 	switch (part_type_and)
 	{
 	case 0: // Disable Flash Android button if partition not found.
-		lv_label_set_static_text(label_btn, SYMBOL_DOWNLOAD"  Flash Android");
+		lv_label_set_static_text(label_btn, SYMBOL_DOWNLOAD"  刷寫Android");
 		lv_obj_set_click(btn_flash_android, false);
 		lv_btn_set_state(btn_flash_android, LV_BTN_STATE_INA);
 		break;
 	case 1: // Android 10/11.
-		lv_label_set_static_text(label_btn, SYMBOL_DOWNLOAD"  Flash Android 10/11");
+		lv_label_set_static_text(label_btn, SYMBOL_DOWNLOAD"  刷寫Android 10/11");
 		break;
 	case 2: // Android 13+
-		lv_label_set_static_text(label_btn, SYMBOL_DOWNLOAD"  Flash Android 13+");
+		lv_label_set_static_text(label_btn, SYMBOL_DOWNLOAD"  刷寫Android 13+");
 		break;
 	}
 	lv_obj_align(btn_flash_android, btn_flash_l4t, LV_ALIGN_OUT_RIGHT_MID, LV_DPI / 3, 0);

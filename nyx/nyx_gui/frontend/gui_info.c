@@ -1544,7 +1544,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		// Calculate rate and IOPS for transfer.
 		rate_1k = (u64)size_bytes_4kb * 1000 * 1000 * 1000 / mb_div / timer;
 		u32 iops = ((u64)(sct_rem_4kb / sct_num_1mb) * 1024 * 1000 * 1000 * 1000) / (4096 / 1024) / timer / 1000;
-		s_printf(txt_buf + strlen(txt_buf), "        平均 #C7EA46 95th#  #FF3C28 5th#\n");
+		s_printf(txt_buf + strlen(txt_buf), "       平均 #C7EA46 95th#  #FF3C28 5th#\n");
 		s_printf(txt_buf + strlen(txt_buf), " 順序 4KB - 速率: #C7EA46 %3d.%02d %s# IOPS: #C7EA46 %4d# %4d %4d \n",
 			rate_1k / 1000, (rate_1k % 1000) / 10, mbs_text, iops, 1000000 / pct95, 1000000 / pct05);
 		lv_label_set_text(lbl_status, txt_buf);
@@ -1619,7 +1619,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		// Calculate rate and IOPS for transfer.
 		rate_1k = (u64)size_bytes_4kb * 1000 * 1000 * 1000 / mb_div / timer;
 		iops = ((u64)(sct_rem_4kb / sct_num_1mb) * 1024 * 1000 * 1000 * 1000) / (4096 / 1024) / timer / 1000;
-		s_printf(txt_buf + strlen(txt_buf), " 隨機 4KB - 速率: #C7EA46 %3d.%02d %s# IOPS: #C7EA46 %4d# %4d %4d \n",
+		s_printf(txt_buf + strlen(txt_buf), " 隨機  4KB - 速率: #C7EA46 %3d.%02d %s# IOPS: #C7EA46 %4d# %4d %4d \n",
 			rate_1k / 1000, (rate_1k % 1000) / 10, mbs_text, iops, 1000000 / pct95, 1000000 / pct05);
 		if (iter_curr == iters - 1)
 			txt_buf[strlen(txt_buf) - 1] = 0; // Cut off last new line.
@@ -1659,7 +1659,7 @@ error:
 		emmc_end();
 
 out:
-	s_printf(txt_buf, "#FF8000 %s Benchmark#\n[Raw Reads]", sd_bench ? "SD Card" : "eMMC");
+	s_printf(txt_buf, "#FF8000 %s 效能測試#\n[Raw讀取]", sd_bench ? "SD卡" : "eMMC");
 	lv_mbox_set_text(mbox, txt_buf);
 	free(txt_buf);
 
