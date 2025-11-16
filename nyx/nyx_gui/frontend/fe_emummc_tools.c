@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018 naehrwert
  * Copyright (c) 2018 Rajko Stojadinovic
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -26,14 +26,13 @@
 #include "gui.h"
 #include "fe_emummc_tools.h"
 #include "../config.h"
+#include "../hos/hos.h"
 #include <libs/fatfs/diskio.h>
 #include <libs/fatfs/ff.h>
 
-#define OUT_FILENAME_SZ 128
-#define NAND_PATROL_SECTOR 0xC20
+#define OUT_FILENAME_SZ      128
 #define NUM_SECTORS_PER_ITER 8192 // 4MB Cache.
 
-extern hekate_config h_cfg;
 extern volatile boot_cfg_t *b_cfg;
 
 void load_emummc_cfg(emummc_cfg_t *emu_info)
@@ -593,7 +592,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 			}
 			else
 			{
-				s_printf(gui->txt_buf, "#FFDD00 Retrying...#\n");
+				s_printf(gui->txt_buf, "#FFDD00 重試中...#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 			}
@@ -674,11 +673,11 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		strcpy(user_part.name, "USER");
 		nx_emmc_bis_init(&user_part, true, sd_sector_off);
 
-		s_printf(gui->txt_buf, "正在格式化使用者分割槽... \n");
+		s_printf(gui->txt_buf, "正在格式化USER分割槽... ");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
-		// Format USER partition.
+		// Format USER partition as FAT32 with 16KB cluster and PRF2SAFE.
 		u8 *buff = malloc(SZ_4M);
 		int mkfs_error = f_mkfs("emu:", FM_FAT32 | FM_SFD | FM_PRF2, 16384, buff, SZ_4M);
 		free(buff);
@@ -727,7 +726,7 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		}
 
 		// Set new emuMMC size and USER size.
-		mbr.partitions[0].size_sct = resized_count;
+		mbr.partitions[0].size_sct = resized_count - 1; // Exclude MBR sector.
 		gpt->entries[gpt_entry_idx].lba_end = user_part.lba_end;
 
 		// Update Main GPT.
@@ -738,9 +737,10 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 		gpt->header.crc32 = crc32_calc(0, (const u8 *)&gpt->header, gpt->header.size);
 
 		// Update Backup GPT.
+		memcpy(&gpt_hdr_backup, &gpt->header, sizeof(gpt_header_t));
 		gpt_hdr_backup.my_lba = resized_count - 1;
+		gpt_hdr_backup.alt_lba = 1;
 		gpt_hdr_backup.part_ent_lba = resized_count - 33;
-		gpt_hdr_backup.part_ents_crc32 = gpt->header.part_ents_crc32;
 		gpt_hdr_backup.crc32 = 0; // Set to 0 for calculation.
 		gpt_hdr_backup.crc32 = crc32_calc(0, (const u8 *)&gpt_hdr_backup, gpt_hdr_backup.size);
 
@@ -766,16 +766,8 @@ static int _dump_emummc_raw_part(emmc_tool_gui_t *gui, int active_part, int part
 	return 1;
 }
 
-static int _emummc_raw_derive_bis_keys(emmc_tool_gui_t *gui, u32 resized_count)
+int emummc_raw_derive_bis_keys()
 {
-	if (!resized_count)
-		return 1;
-
-	bool error = false;
-
-	char *txt_buf = (char *)malloc(SZ_16K);
-	txt_buf[0] = 0;
-
 	// Generate BIS keys.
 	hos_bis_keygen();
 
@@ -797,16 +789,8 @@ static int _emummc_raw_derive_bis_keys(emmc_tool_gui_t *gui, u32 resized_count)
 	if (memcmp(&cal0->magic, "CAL0", 4))
 	{
 		// Clear EKS keys.
-		hos_eks_clear(HOS_KB_VERSION_MAX);
+		hos_eks_clear(HOS_MKEY_VER_MAX);
 
-		strcpy(txt_buf, "#FFDD00 BIS金鑰校驗失敗!#\n");
-		error = true;
-	}
-
-	free(cal0_buff);
-
-	if (error)
-	{
 		lv_obj_t *dark_bg = lv_obj_create(lv_scr_act(), NULL);
 		lv_obj_set_style(dark_bg, &mbox_darken);
 		lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
@@ -824,18 +808,17 @@ static int _emummc_raw_derive_bis_keys(emmc_tool_gui_t *gui, u32 resized_count)
 		lv_label_set_style(lb_desc, &monospace_text);
 		lv_obj_set_width(lb_desc, LV_HOR_RES / 9 * 4);
 
-		lv_label_set_text(lb_desc, txt_buf);
+		lv_label_set_text(lb_desc, "#FFDD00 BIS金鑰校驗失敗!#\n");
 		lv_mbox_add_btns(mbox, mbox_btn_map, mbox_action);
 
 		lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
 		lv_obj_set_top(mbox, true);
 
-		free(txt_buf);
-
+		free(cal0_buff);
 		return 0;
 	}
 
-	free(txt_buf);
+	free(cal0_buff);
 
 	return 1;
 }
@@ -866,7 +849,7 @@ void dump_emummc_raw(emmc_tool_gui_t *gui, int part_idx, u32 sector_start, u32 r
 		goto out;
 	}
 
-	if (!_emummc_raw_derive_bis_keys(gui, resized_count))
+	if (resized_count && !emummc_raw_derive_bis_keys())
 	{
 		s_printf(gui->txt_buf, "#FFDD00 要格式化使用者分割槽, #\n#FFDD00 需要BIS金鑰!#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);

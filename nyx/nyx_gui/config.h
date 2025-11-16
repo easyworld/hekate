@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -35,6 +35,7 @@ typedef struct _hekate_config
 	u32 bootprotect;
 	// Global temporary config.
 	bool t210b01;
+	bool devmode;
 	bool emummc_force_disable;
 	bool rcm_patched;
 	bool autorcm_enabled;
@@ -47,7 +48,8 @@ typedef struct _nyx_config
 	u32 theme_bg;
 	u32 theme_color;
 	u32 entries_5_col;
-	u32 timeoff;
+	u32 timeoffset;
+	u32 timedst;
 	u32 home_screen;
 	u32 verification;
 	u32 ums_emmc_rw;
@@ -55,6 +57,9 @@ typedef struct _nyx_config
 	u32 jc_force_right;
 	u32 bpmp_clock;
 } nyx_config;
+
+extern hekate_config h_cfg;
+extern nyx_config n_cfg;
 
 void set_default_configuration();
 void set_nyx_default_configuration();

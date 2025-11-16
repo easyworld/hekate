@@ -28,9 +28,6 @@
 #define CLOCK_MAX_YEAR (CLOCK_MIN_YEAR + 10)
 #define CLOCK_YEARLIST "2025\n2026\n2027\n2028\n2029\n2030\n2031\n2032\n2033\n2034\n2035"
 
-extern hekate_config h_cfg;
-extern nyx_config n_cfg;
-
 static lv_obj_t *autoboot_btn;
 static bool autoboot_first_time = true;
 
@@ -707,13 +704,20 @@ static lv_res_t _action_clock_edit(lv_obj_t *btns, const char * txt)
 		u32 new_epoch = max77620_rtc_date_to_epoch(&time);
 
 		// Stored in u32 and allow overflow for integer offset casting.
-		n_cfg.timeoff = new_epoch - epoch;
+		n_cfg.timeoffset = new_epoch - epoch;
 
 		// If canceled set 1 for invalidating first boot clock edit.
-		if (!n_cfg.timeoff)
-			n_cfg.timeoff = 1;
+		if (!n_cfg.timeoffset)
+			n_cfg.timeoffset = 1;
 		else
-			max77620_rtc_set_epoch_offset((int)n_cfg.timeoff);
+		{
+			// Adjust for DST between 28 march and 28 october.
+			// Good enough to cover all years as week info is not valid.
+			u16 md = (time.month << 8) | time.day;
+			if (n_cfg.timedst && md >= 0x31C && md < 0xA1C)
+				n_cfg.timeoffset -= 3600; // Store time in non DST.
+			max77620_rtc_set_epoch_offset((int)n_cfg.timeoffset);
+		}
 
 		nyx_changes_made = true;
 	}
@@ -734,18 +738,46 @@ static lv_res_t _action_clock_edit_save(lv_obj_t *btns, const char * txt)
 	return LV_RES_INV;
 }
 
+static lv_res_t _action_auto_dst_toggle(lv_obj_t *btn)
+{
+	n_cfg.timedst = !n_cfg.timedst;
+	max77620_rtc_set_auto_dst(n_cfg.timedst);
+
+	if (!n_cfg.timedst)
+		lv_btn_set_state(btn, LV_BTN_STATE_REL);
+	else
+		lv_btn_set_state(btn, LV_BTN_STATE_TGL_REL);
+
+	nyx_generic_onoff_toggle(btn);
+
+	return LV_RES_OK;
+}
+
 static lv_res_t _create_mbox_clock_edit(lv_obj_t *btn)
 {
+	static lv_style_t mbox_style;
+	lv_theme_t *th = lv_theme_get_current();
+	lv_style_copy(&mbox_style, th->mbox.bg);
+	mbox_style.body.padding.inner = LV_DPI / 10;
+
 	lv_obj_t *dark_bg = lv_obj_create(lv_scr_act(), NULL);
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
 	static const char *mbox_btn_map[] = { "\251", "\222完成", "\222取消", "\251", "" };
 	lv_obj_t *mbox = lv_mbox_create(dark_bg, NULL);
+	lv_mbox_set_style(mbox, LV_MBOX_STYLE_BG, &mbox_style);
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
 
-	lv_mbox_set_text(mbox, "輸入Nyx的#C7EA46 日期#和#C7EA46 時間# \n這不會更改實際的硬體時鐘!");
+	lv_mbox_set_text(mbox, "輸入Nyx的 #C7EA46 日期# and #C7EA46 時間\n"
+						   "用於所有檔案操作和選單.\n"
+						   "這不會更改實際的硬體時鐘!");
+
+	lv_obj_t *padding = lv_cont_create(mbox, NULL);
+	lv_cont_set_fit(padding, true, false);
+	lv_cont_set_style(padding, &lv_style_transp);
+	lv_obj_set_height(padding, LV_DPI / 10);
 
 	// Get current time.
 	rtc_time_t time;
@@ -824,6 +856,13 @@ static lv_res_t _create_mbox_clock_edit(lv_obj_t *btn)
 	lv_obj_align(roller_minute, roller_hour, LV_ALIGN_OUT_RIGHT_MID, 0, 0);
 	clock_ctxt.min = roller_minute;
 
+	// Add DST option.
+	lv_obj_t *btn_dst = lv_btn_create(mbox, NULL);
+	nyx_create_onoff_button(th, h1, btn_dst, SYMBOL_BRIGHTNESS" 自動夏令時間", _action_auto_dst_toggle, true);
+	if (n_cfg.timedst)
+		lv_btn_set_state(btn_dst, LV_BTN_STATE_TGL_REL);
+	nyx_generic_onoff_toggle(btn_dst);
+
 	// If btn is empty, save options also because it was launched from boot.
 	lv_mbox_add_btns(mbox, mbox_btn_map, btn ? _action_clock_edit : _action_clock_edit_save);
 
@@ -899,24 +938,18 @@ save_data:
 			error = sd_save_to_file((u8 *)data, sizeof(jc_bt_conn_t) * 2, "switchroot/joycon_mac.bin") ? 4 : 0;
 
 			// Save readable dump.
-			jc_bt_conn_t *bt = &jc_pad->bt_conn_l;
-			s_printf(data,
-				"[joycon_00]\ntype=%d\nmac=%02X:%02X:%02X:%02X:%02X:%02X\n"
-				"host=%02X:%02X:%02X:%02X:%02X:%02X\n"
-				"ltk=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n\n",
-				bt->type, bt->mac[0], bt->mac[1], bt->mac[2], bt->mac[3], bt->mac[4], bt->mac[5],
-				bt->host_mac[0], bt->host_mac[1], bt->host_mac[2], bt->host_mac[3], bt->host_mac[4], bt->host_mac[5],
-				bt->ltk[0], bt->ltk[1], bt->ltk[2], bt->ltk[3], bt->ltk[4], bt->ltk[5], bt->ltk[6], bt->ltk[7],
-				bt->ltk[8], bt->ltk[9], bt->ltk[10], bt->ltk[11], bt->ltk[12], bt->ltk[13], bt->ltk[14], bt->ltk[15]);
-			bt = &jc_pad->bt_conn_r;
-			s_printf(data + strlen(data),
-				"[joycon_01]\ntype=%d\nmac=%02X:%02X:%02X:%02X:%02X:%02X\n"
-				"host=%02X:%02X:%02X:%02X:%02X:%02X\n"
-				"ltk=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
-				bt->type, bt->mac[0], bt->mac[1], bt->mac[2], bt->mac[3], bt->mac[4], bt->mac[5],
-				bt->host_mac[0], bt->host_mac[1], bt->host_mac[2], bt->host_mac[3], bt->host_mac[4], bt->host_mac[5],
-				bt->ltk[0], bt->ltk[1], bt->ltk[2], bt->ltk[3], bt->ltk[4], bt->ltk[5], bt->ltk[6], bt->ltk[7],
-				bt->ltk[8], bt->ltk[9], bt->ltk[10], bt->ltk[11], bt->ltk[12], bt->ltk[13], bt->ltk[14], bt->ltk[15]);
+			for (u32 i = 0; i < 2; i++)
+			{
+				jc_bt_conn_t *bt = !i ? &jc_pad->bt_conn_l : &jc_pad->bt_conn_r;
+				s_printf(data,
+					"[joycon_0%d]\ntype=%d\nmac=%02X:%02X:%02X:%02X:%02X:%02X\n"
+					"host=%02X:%02X:%02X:%02X:%02X:%02X\n"
+					"ltk=%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n\n",
+					i, bt->type, bt->mac[0], bt->mac[1], bt->mac[2], bt->mac[3], bt->mac[4], bt->mac[5],
+					bt->host_mac[0], bt->host_mac[1], bt->host_mac[2], bt->host_mac[3], bt->host_mac[4], bt->host_mac[5],
+					bt->ltk[0], bt->ltk[1], bt->ltk[2], bt->ltk[3], bt->ltk[4], bt->ltk[5], bt->ltk[6], bt->ltk[7],
+					bt->ltk[8], bt->ltk[9], bt->ltk[10], bt->ltk[11], bt->ltk[12], bt->ltk[13], bt->ltk[14], bt->ltk[15]);
+			}
 
 			if (!error)
 				error = f_open(&fp, "switchroot/joycon_mac.ini", FA_WRITE | FA_CREATE_ALWAYS) ? 4 : 0;
@@ -925,8 +958,6 @@ save_data:
 				f_puts(data, &fp);
 				f_close(&fp);
 			}
-
-			f_mkdir("switchroot");
 
 			// Save IMU Calibration data.
 			if (!error && !cal_error)
@@ -970,6 +1001,7 @@ save_data:
 
 			// Save Lite Gamepad and IMU Calibration data.
 			// Actual max/min are right/left and up/down offsets.
+			// Sticks: 0x23: H1 (Hosiden), 0x25: H5 (Hosiden), 0x41: F1 (FIT), ?add missing?
 			s_printf(data,
 				"lite_cal_l_type=0x%X\n"
 				"lite_cal_lx_lof=0x%X\n"

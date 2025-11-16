@@ -180,14 +180,15 @@ hekate has a boot storage in the binary that helps it configure it outside of BP
 | themebg=2d2d2d     | Sets Nyx background color in HEX. EXPERIMENTAL.            |
 | themecolor=167     | Sets Nyx color of text highlights.                         |
 | entries5col=0      | 1: Sets Launch entry columns from 4 to 5 per line. For a total of 10 entries. |
-| timeoff=100        | Sets time offset in HEX. Must be in HOS epoch format       |
+| timeoffset=100     | Sets time offset in HEX. Must be in epoch format           |
+| timedst=0          | Enables automatic daylight saving hour adjustment          |
 | homescreen=0       | Sets home screen. 0: Home menu, 1: All configs (merges Launch and More configs), 2: Launch, 3: More Configs. |
 | verification=1     | 0: Disable Backup/Restore verification, 1: Sparse (block based, fast and mostly reliable), 2: Full (sha256 based, slow and 100% reliable). |
 | ------------------ | ------- The following options can only be edited in nyx.ini ------- |
 | umsemmcrw=0        | 1: eMMC/emuMMC UMS will be mounted as writable by default. |
 | jcdisable=0        | 1: Disables Joycon driver completely.                      |
 | jcforceright=0     | 1: Forces right joycon to be used as main mouse control.   |
-| bpmpclock=1        | 0: Auto, 1: Fastest, 2: Faster, 3: Fast. Use 2 or 3 if Nyx hangs or some functions like UMS/Backup Verification fail. |
+| bpmpclock=1        | 0: Auto, 1: 589 MHz, 2: 576 MHz, 3: 563 MHz, 4: 544 MHz, 5: 408 MHz. Use 2 to 5 if Nyx hangs or some functions like UMS/Backup Verification fail. |
 
 
 ```

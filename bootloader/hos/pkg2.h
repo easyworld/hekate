@@ -20,6 +20,8 @@
 
 #include <bdk.h>
 
+#define PKG2_LOAD_ADDR  0xA9800000
+
 #define PKG2_MAGIC      0x31324B50
 #define PKG2_SEC_BASE   0x80000000
 #define PKG2_SEC_KERNEL 0
@@ -90,6 +92,18 @@ typedef struct _pkg2_ini1_t
 	u32 pad;
 } pkg2_ini1_t;
 
+enum kip_offset_section
+{
+	KIP_TEXT    = 0,
+	KIP_RODATA  = 1,
+	KIP_DATA    = 2,
+	KIP_BSS     = 3,
+	KIP_UNKSEC1 = 4,
+	KIP_UNKSEC2 = 5
+};
+
+#define KIP1_NUM_SECTIONS 6
+
 typedef struct _pkg2_kip1_sec_t
 {
 	u32 offset;
@@ -98,12 +112,10 @@ typedef struct _pkg2_kip1_sec_t
 	u32 attrib;
 } pkg2_kip1_sec_t;
 
-#define KIP1_NUM_SECTIONS 6
-
 typedef struct _pkg2_kip1_t
 {
 /* 0x000 */	u32 magic;
-/* 0x004 */	u8 name[12];
+/* 0x004 */	char name[12];
 /* 0x010 */	u64 tid;
 /* 0x018 */	u32 proc_cat;
 /* 0x01C */	u8 main_thrd_prio;
@@ -151,6 +163,51 @@ typedef struct _kip1_id_t
 	const kip1_patchset_t *patchset;
 } kip1_id_t;
 
+/*
+ * NX NC - Package2 BOOT Configuration
+ *
+ * This is taken from the first 1KB of a Package2 partition.
+ * On retail, it's not zeroes, but on devkits it has actual data.
+ * The signed part is reserved for special in-house devkits.
+ */
+#define NX_BC1_ADDR 0x4003D000
+#define NX_BC6_ADDR 0x4003F800
+
+#define NX_BC_DBG_FLAG00_DEV_MODE  BIT(1)
+#define NX_BC_DBG_FLAG00_SERROR    BIT(2)
+#define NX_BC_DBG_FLAG00_ALL_FLAGS 0xFF
+
+#define NX_BC_HW_FLAG01_ALL_FLAGS  0xFF
+#define NX_BC_HW_FLAG03_MEM_MODE   0xFF
+#define NX_BC_HW_FLAG04_CNTCV_SET  BIT(0)
+
+#define NX_BC_PKG2_FLAG_DECRYPTED  BIT(0)
+#define NX_BC_PKG2_FLAG_UNSIGNED   BIT(1)
+
+#define NX_BC_NCA_FLAG_UNSIGNED    BIT(0)
+
+typedef struct _nx_bc_t {
+	/* Unsigned section */
+	u32 version;
+	u32 rsvd0[3];
+	u8  dbg_flags[0x10]; // Normally all are set to 0xFF if devkit.
+	u8  hw_flags[0x10];
+	u64 cntcv_value;
+	u8  padding0[0x1C8];
+
+	u8 rsa_pss_signature[0x100];
+
+	/* Signed section */
+	u32 version_signed;
+	u32 rsvd1;
+	u8  pkg2_flags;
+	u8  padding1[7];
+	u32 ecid[4];
+	u8  nca_flags[0x10];
+	u8  unk_flags[0x10];
+	u8  padding2[0xC0];
+} nx_bc_t;
+
 bool pkg2_parse_kips(link_t *info, pkg2_hdr_t *pkg2, bool *new_pkg2);
 int  pkg2_has_kip(link_t *info, u64 tid);
 void pkg2_replace_kip(link_t *info, u64 tid, pkg2_kip1_t *kip1);
@@ -160,7 +217,7 @@ void pkg2_get_ids(kip1_id_t **ids, u32 *entries);
 const char *pkg2_patch_kips(link_t *info, char *patch_names);
 
 const pkg2_kernel_id_t *pkg2_identify(const u8 *hash);
-pkg2_hdr_t *pkg2_decrypt(void *data, u8 kb, bool is_exo);
+pkg2_hdr_t *pkg2_decrypt(void *data, u8 mkey, bool is_exo);
 void pkg2_build_encrypt(void *dst, void *hos_ctxt, link_t *kips_info, bool is_exo);
 
 #endif

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018 naehrwert
  *
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -272,7 +272,7 @@ static void _launch_payloads()
 	dir = (char *)malloc(256);
 	memcpy(dir, "bootloader/payloads", 20);
 
-	filelist = dirlist(dir, NULL, false, false);
+	filelist = dirlist(dir, NULL, 0);
 
 	u32 i = 0;
 
@@ -681,6 +681,12 @@ static void _nyx_load_run()
 	(*nyx_ptr)();
 }
 
+void launch_nyx()
+{
+	sd_mount();
+	_nyx_load_run();
+}
+
 static ini_sec_t *_get_ini_sec_from_id(ini_sec_t *ini_sec, char **bootlogoCustomEntry, char **emummc_path)
 {
 	ini_sec_t *cfg_sec = NULL;
@@ -760,8 +766,6 @@ static void _auto_launch()
 	char *emummc_path         = NULL;
 	char *bootlogoCustomEntry = NULL;
 	bool  config_entry_found  = false;
-
-	_check_for_updated_bootloader();
 
 	bool boot_from_id = (b_cfg.boot_cfg & BOOT_CFG_FROM_ID) && (b_cfg.boot_cfg & BOOT_CFG_AUTOBOOT_EN);
 	if (boot_from_id)
@@ -1182,7 +1186,7 @@ static void _show_errors()
 
 static void _check_low_battery()
 {
-	if (fuse_read_hw_state() == FUSE_NX_HW_STATE_DEV)
+	if (h_cfg.devmode)
 		goto out;
 
 	int enough_battery;
@@ -1442,6 +1446,7 @@ ment_t ment_top[] = {
 	MDEF_MENU("Console info", &menu_cinfo),
 	MDEF_CAPTION("---------------", TXT_CLR_GREY_DM),
 	MDEF_HANDLER("Reload", _ipl_reload),
+	MDEF_HANDLER("Load Nyx", launch_nyx),
 	MDEF_HANDLER_EX("Reboot (OFW)", &STATE_REBOOT_BYPASS_FUSES, power_set_state_ex),
 	MDEF_HANDLER_EX("Reboot (RCM)", &STATE_REBOOT_RCM,          power_set_state_ex),
 	MDEF_HANDLER_EX("Power off",    &STATE_POWER_OFF,           power_set_state_ex),
@@ -1450,7 +1455,7 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.3.1", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.4.0", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 
@@ -1470,11 +1475,11 @@ void ipl_main()
 	uart_wait_xfer(DEBUG_UART_PORT, UART_TX_IDLE);
 #endif
 
-	// Check if battery is enough.
-	_check_low_battery();
-
 	// Set bootloader's default configuration.
 	set_default_configuration();
+
+	// Check if battery is enough.
+	_check_low_battery();
 
 	// Prep RTC regs for read. Needed for T210B01 R2C.
 	max77620_rtc_prep_read();
@@ -1526,7 +1531,10 @@ skip_lp0_minerva_config:
 
 	// Load saved configuration and auto boot if enabled.
 	if (!(h_cfg.errors & ERR_SD_BOOT_EN))
+	{
+		_check_for_updated_bootloader();
 		_auto_launch();
+	}
 
 	// Failed to launch Nyx, unmount SD Card.
 	sd_end();

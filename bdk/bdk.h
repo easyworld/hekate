@@ -24,7 +24,7 @@
 #include <input/als.h>
 #include <input/joycon.h>
 #include <input/touch.h>
-#include <mem/emc.h>
+#include <mem/emc_t210.h>
 #include <mem/heap.h>
 #include <mem/mc.h>
 #include <mem/minerva.h>
@@ -58,7 +58,7 @@
 #include <soc/uart.h>
 #include <storage/emmc.h>
 #include <storage/mbr_gpt.h>
-#include <storage/mmc.h>
+#include <storage/mmc_def.h>
 #include <storage/nx_emmc_bis.h>
 #include <storage/ramdisk.h>
 #include <storage/sd.h>
@@ -72,6 +72,8 @@
 #include <utils/ini.h>
 #include <utils/list.h>
 #include <utils/sprintf.h>
+#include <utils/tegra_bct.h>
+#include <utils/tegra_bit.h>
 #include <utils/types.h>
 #include <utils/util.h>
 

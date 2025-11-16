@@ -25,8 +25,6 @@
 #include "../hos/pkg1.h"
 #include <libs/fatfs/ff.h>
 
-extern hekate_config h_cfg;
-
 #pragma GCC push_options
 #pragma GCC optimize ("Os")
 
@@ -39,7 +37,7 @@ void print_fuseinfo()
 	gfx_con_setpos(0, 0);
 
 	gfx_printf("\nSKU:         %X - ", FUSE(FUSE_SKU_INFO));
-	switch (fuse_read_hw_state())
+	switch (h_cfg.devmode)
 	{
 	case FUSE_NX_HW_STATE_PROD:
 		gfx_printf("Retail\n");
@@ -240,7 +238,7 @@ void print_sdcard_info()
 			gfx_printf("%kFound %s volume:%k\n Free:    %d MiB\n Cluster: %d KiB\n",
 					TXT_CLR_CYAN_L, sd_fs.fs_type == FS_EXFAT ? "exFAT" : "FAT32", TXT_CLR_DEFAULT,
 					sd_fs.free_clst * sd_fs.csize >> SECTORS_TO_MIB_COEFF, (sd_fs.csize > 1) ? (sd_fs.csize >> 1) : 512);
-			f_mount(NULL, "", 1);
+			f_unmount("");
 		}
 		else
 		{

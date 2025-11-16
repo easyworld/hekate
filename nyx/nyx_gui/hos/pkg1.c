@@ -25,8 +25,6 @@
 #include "pkg1.h"
 #include "../config.h"
 
-extern hekate_config h_cfg;
-
 /*
  * package1.1 header: <wb, ldr, sm>
  * package1.1 layout:
@@ -39,7 +37,7 @@ static const u8 sec_map_100[3] = { PK11_SECTION_SM, PK11_SECTION_LD, PK11_SECTIO
 static const u8 sec_map_2xx[3] = { PK11_SECTION_WB, PK11_SECTION_LD, PK11_SECTION_SM };
 static const u8 sec_map_4xx[3] = { PK11_SECTION_LD, PK11_SECTION_SM, PK11_SECTION_WB };
 
-	// Timestamp  KB   TSEC    PK11     SECMON     Warmboot
+	// Timestamp  MK   TSEC    PK11     SECMON     Warmboot
 static const pkg1_id_t _pkg1_ids[] = {
 	{ "20161121",  0, 0x1900, 0x3FE0, 0x40014020, 0x8000D000 }, //  1.0.0.
 	{ "20170210",  0, 0x1900, 0x3FE0, 0x4002D000, 0x8000D000 }, //  2.0.0 - 2.3.0.
@@ -68,7 +66,8 @@ static const pkg1_id_t _pkg1_ids[] = {
 	{ "20230906", 16, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000 }, // 17.0.0 - 17.0.1.
 	{ "20240207", 17, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000 }, // 18.0.0 - 18.1.0.
 	{ "20240808", 18, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000 }, // 19.0.0 - 19.0.1.
-	{ "20250206", 19, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000 }, // 20.0.0+
+	{ "20250206", 19, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000 }, // 20.0.0 - 20.5.0.
+	{ "20251009", 20, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000 }, // 21.0.0+
 };
 
 const pkg1_id_t *pkg1_identify(u8 *pkg1, char *build_date)
@@ -123,9 +122,9 @@ const u8 *pkg1_unpack(void *wm_dst, void *sm_dst, void *ldr_dst, const pkg1_id_t
 	u32 sec_size[3] = { hdr->wb_size, hdr->ldr_size, hdr->sm_size };
 
 	// Get correct header mapping.
-	if (id->kb == HOS_KB_VERSION_100 && !memcmp(id->id, "20161121", 8))
+	if (id->mkey == HOS_MKEY_VER_100 && !memcmp(id->id, "20161121", 8))
 		sec_map = sec_map_100;
-	else if (id->kb <= HOS_KB_VERSION_301)
+	else if (id->mkey <= HOS_MKEY_VER_301)
 		sec_map = sec_map_2xx;
 	else
 		sec_map = sec_map_4xx;

@@ -28,7 +28,6 @@
 
 #define SECTORS_TO_MIB_COEFF 11
 
-extern hekate_config h_cfg;
 extern volatile boot_cfg_t *b_cfg;
 extern volatile nyx_storage_t *nyx_str;
 
@@ -264,7 +263,7 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 	nx_emmc_cal0_t *cal0 = (nx_emmc_cal0_t *)cal0_buf;
 
 	u32 hash[8];
-	se_calc_sha256_oneshot(hash, (u8 *)cal0 + 0x40, cal0->body_size);
+	se_calc_sha256_oneshot(hash, (u8 *)&cal0->cfg_id1, cal0->body_size);
 
 	s_printf(txt_buf,
 		"#FF8000 CAL0版本:#          %d\n"
@@ -427,7 +426,7 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 
 	// Decode fuses.
 	char *sku;
-	char dram_man[64];
+	char dram_model[64];
 	char fuses_hos_version[64];
 	u8 dram_id = fuse_read_dramid(true);
 
@@ -457,22 +456,22 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 		{
 		// LPDDR4 3200Mbps.
 		case LPDDR4_ICOSA_4GB_SAMSUNG_K4F6E304HB_MGCH:
-			strcpy(dram_man, "三星 K4F6E304HB-MGCH 4GB");
+			strcpy(dram_model, "三星 K4F6E304HB-MGCH 4GB");
 			break;
 		case LPDDR4_ICOSA_4GB_HYNIX_H9HCNNNBPUMLHR_NLE:
-			strcpy(dram_man, "海力士 H9HCNNNBPUMLHR-NLE 4GB");
+			strcpy(dram_model, "海力士 H9HCNNNBPUMLHR-NLE 4GB");
 			break;
 		case LPDDR4_ICOSA_4GB_MICRON_MT53B512M32D2NP_062_WTC:
-			strcpy(dram_man, "美光 MT53B512M32D2NP-062 WT:C");
+			strcpy(dram_model, "美光 MT53B512M32D2NP-062 WT:C");
 			break;
 		case LPDDR4_ICOSA_6GB_SAMSUNG_K4FHE3D4HM_MGCH:
-			strcpy(dram_man, "三星 K4FHE3D4HM-MGCH 6GB");
+			strcpy(dram_model, "三星 K4FHE3D4HM-MGCH 6GB");
 			break;
 		case LPDDR4_ICOSA_8GB_SAMSUNG_K4FBE3D4HM_MGXX:
-			strcpy(dram_man, "三星 K4FBE3D4HM-MGXX 8GB");
+			strcpy(dram_model, "三星 K4FBE3D4HM-MGXX 8GB");
 			break;
 		default:
-			strcpy(dram_man, "#FF8000 未知#");
+			strcpy(dram_model, "#FF8000 Unknown#");
 			break;
 		}
 	}
@@ -483,60 +482,60 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 		// LPDDR4X 3733Mbps.
 		case LPDDR4X_IOWA_4GB_SAMSUNG_K4U6E3S4AM_MGCJ:
 		case LPDDR4X_HOAG_4GB_SAMSUNG_K4U6E3S4AM_MGCJ:
-			strcpy(dram_man, "三星 K4U6E3S4AM-MGCJ 4GB");
+			strcpy(dram_model, "三星 K4U6E3S4AM-MGCJ 4GB");
 			break;
 		case LPDDR4X_IOWA_8GB_SAMSUNG_K4UBE3D4AM_MGCJ:
 		case LPDDR4X_HOAG_8GB_SAMSUNG_K4UBE3D4AM_MGCJ:
-			strcpy(dram_man, "三星 K4UBE3D4AM-MGCJ 8GB");
+			strcpy(dram_model, "三星 K4UBE3D4AM-MGCJ 8GB");
 			break;
 		case LPDDR4X_IOWA_4GB_HYNIX_H9HCNNNBKMMLHR_NME:
 		case LPDDR4X_HOAG_4GB_HYNIX_H9HCNNNBKMMLHR_NME:
-			strcpy(dram_man, "海力士 H9HCNNNBKMMLHR-NME 4GB");
+			strcpy(dram_model, "海力士 H9HCNNNBKMMLHR-NME 4GB");
 			break;
 		case LPDDR4X_IOWA_4GB_MICRON_MT53E512M32D2NP_046_WTE: // 4266Mbps.
 		case LPDDR4X_HOAG_4GB_MICRON_MT53E512M32D2NP_046_WTE: // 4266Mbps.
-			strcpy(dram_man, "美光 MT53E512M32D2NP-046 WT:E");
+			strcpy(dram_model, "美光 MT53E512M32D2NP-046 WT:E");
 			break;
 
 		// LPDDR4X 4266Mbps
 		case LPDDR4X_IOWA_4GB_SAMSUNG_K4U6E3S4AA_MGCL:
 		case LPDDR4X_HOAG_4GB_SAMSUNG_K4U6E3S4AA_MGCL:
 		case LPDDR4X_AULA_4GB_SAMSUNG_K4U6E3S4AA_MGCL:
-			strcpy(dram_man, "三星 K4U6E3S4AA-MGCL 4GB");
+			strcpy(dram_model, "三星 K4U6E3S4AA-MGCL 4GB");
 			break;
 		case LPDDR4X_IOWA_8GB_SAMSUNG_K4UBE3D4AA_MGCL:
 		case LPDDR4X_HOAG_8GB_SAMSUNG_K4UBE3D4AA_MGCL:
 		case LPDDR4X_AULA_8GB_SAMSUNG_K4UBE3D4AA_MGCL:
-			strcpy(dram_man, "三星 K4UBE3D4AA-MGCL 8GB");
+			strcpy(dram_model, "三星 K4UBE3D4AA-MGCL 8GB");
 			break;
 		case LPDDR4X_IOWA_4GB_SAMSUNG_K4U6E3S4AB_MGCL:
 		case LPDDR4X_HOAG_4GB_SAMSUNG_K4U6E3S4AB_MGCL:
 		case LPDDR4X_AULA_4GB_SAMSUNG_K4U6E3S4AB_MGCL:
-			strcpy(dram_man, "三星 K4U6E3S4AB-MGCL 4GB");
+			strcpy(dram_model, "三星 K4U6E3S4AB-MGCL 4GB");
 			break;
 		case LPDDR4X_IOWA_4GB_MICRON_MT53E512M32D2NP_046_WTF:
 		case LPDDR4X_HOAG_4GB_MICRON_MT53E512M32D2NP_046_WTF:
 		case LPDDR4X_AULA_4GB_MICRON_MT53E512M32D2NP_046_WTF:
-			strcpy(dram_man, "美光 MT53E512M32D2NP-046 WT:F");
+			strcpy(dram_model, "美光 MT53E512M32D2NP-046 WT:F");
 			break;
 		case LPDDR4X_HOAG_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
 		case LPDDR4X_AULA_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
 		case LPDDR4X_IOWA_4GB_HYNIX_H9HCNNNBKMMLXR_NEE: // Replaced from Copper.
-			strcpy(dram_man, "海力士 H9HCNNNBKMMLXR-NEE 4GB");
+			strcpy(dram_model, "海力士 H9HCNNNBKMMLXR-NEE 4GB");
 			break;
 		case LPDDR4X_IOWA_4GB_HYNIX_H54G46CYRBX267:
 		case LPDDR4X_HOAG_4GB_HYNIX_H54G46CYRBX267:
 		case LPDDR4X_AULA_4GB_HYNIX_H54G46CYRBX267:
-			strcpy(dram_man, "海力士 H54G46CYRBX267 4GB");
+			strcpy(dram_model, "海力士 H54G46CYRBX267 4GB");
 			break;
 		case LPDDR4X_IOWA_4GB_MICRON_MT53E512M32D1NP_046_WTB:
 		case LPDDR4X_HOAG_4GB_MICRON_MT53E512M32D1NP_046_WTB:
 		case LPDDR4X_AULA_4GB_MICRON_MT53E512M32D1NP_046_WTB:
-			strcpy(dram_man, "美光 MT53E512M32D1NP-046 WT:B");
+			strcpy(dram_model, "美光 MT53E512M32D1NP-046 WT:B");
 			break;
 
 		default:
-			strcpy(dram_man, "#FF8000 請聯絡作者!#");
+			strcpy(dram_model, "#FF8000 請聯絡作者!#");
 			break;
 		}
 	}
@@ -636,22 +635,55 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 		lot_code0 <<= 6;
 	}
 
+	char sbk_key[64];
+	char dev_key[32];
+	if (FUSE(FUSE_PRIVATE_KEY0) == 0xFFFFFFFF &&
+		FUSE(FUSE_PRIVATE_KEY1) == 0xFFFFFFFF &&
+		FUSE(FUSE_PRIVATE_KEY2) == 0xFFFFFFFF &&
+		FUSE(FUSE_PRIVATE_KEY3) == 0xFFFFFFFF &&
+		FUSE(FUSE_PRIVATE_KEY4) == 0xFFFFFFFF)
+	{
+		strcpy(sbk_key, "無法讀取 (已禁用)");
+		strcpy(dev_key, "無法讀取 (已禁用)");
+	}
+	else
+	{
+		s_printf(sbk_key, "%08X%08X%08X%08X",
+			byte_swap_32(FUSE(FUSE_PRIVATE_KEY0)), byte_swap_32(FUSE(FUSE_PRIVATE_KEY1)),
+			byte_swap_32(FUSE(FUSE_PRIVATE_KEY2)), byte_swap_32(FUSE(FUSE_PRIVATE_KEY3)));
+		s_printf(dev_key, "%08X",  byte_swap_32(FUSE(FUSE_PRIVATE_KEY4)));
+	}
+
 	u32 chip_id = APB_MISC(APB_MISC_GP_HIDREV);
+	char *chip_name = hw_get_chip_id() == GP_HIDREV_MAJOR_T210 ? "T210 (Erista)" : "T210B01 (Mariko)";
+
 	// Parse fuses and display them.
 	s_printf(txt_buf,
 		"%02X - %s - M%d A%02d\n"
-		"%X - %s - %s\n%02d - %s\n%d | %d - 官方系統: %s\n%08X %08X %08X\n%08X%08X%08X%08X\n%08X\n%08X%08X%08X%08X\n%08X%08X%08X%08X\n%d\n"
-		"%s\n%d.%02d (0x%X)\n%d.%02d (0x%X)\n%d\n%d\n%d\n%d\n0x%X\n%d\n%d (%d)\n%d (%d)\n%d (%d)\n"
-		"%d\n%d\n%d (0x%X)\n%d\n%d\n%d",
-		(chip_id >> 8) & 0xFF,
-		hw_get_chip_id() == GP_HIDREV_MAJOR_T210 ? "T210 (Erista)" : "T210B01 (Mariko)",
-		(chip_id >> 4) & 0xF, (chip_id >> 16) & 0xF,
+		"%X - %s - %s\n"
+		"%02d - %s\n"
+		"%d | %d - 官方系統: %s\n"
+		"%08X %08X %08X\n"
+		"%s\n%s\n"
+		"%08X%08X%08X%08X\n"
+		"%08X%08X%08X%08X\n"
+		"%d\n"
+		"%s\n"
+		"%d.%02d (0x%X)\n"
+		"%d.%02d (0x%X)\n"
+		"%d\n%d\n%d\n"
+		"%d\n0x%X\n%d\n"
+		"%d (%d)\n"
+		"%d (%d)\n"
+		"%d (%d)\n"
+		"%d\n%d\n%d (0x%X)\n"
+		"%d\n%d\n%d",
+		(chip_id >> 8) & 0xFF, chip_name, (chip_id >> 4) & 0xF, (chip_id >> 16) & 0xF,
 		FUSE(FUSE_SKU_INFO), sku, fuse_read_hw_state() ? "開發版" : "零售版",
-		dram_id, dram_man, burnt_fuses_7, burnt_fuses_6, fuses_hos_version,
+		dram_id, dram_model,
+		burnt_fuses_7, burnt_fuses_6, fuses_hos_version,
 		fuse_read_odm(4), fuse_read_odm(6), fuse_read_odm(7),
-		byte_swap_32(FUSE(FUSE_PRIVATE_KEY0)), byte_swap_32(FUSE(FUSE_PRIVATE_KEY1)),
-		byte_swap_32(FUSE(FUSE_PRIVATE_KEY2)), byte_swap_32(FUSE(FUSE_PRIVATE_KEY3)),
-		byte_swap_32(FUSE(FUSE_PRIVATE_KEY4)),
+		sbk_key, dev_key,
 		byte_swap_32(FUSE(FUSE_PUBLIC_KEY0)), byte_swap_32(FUSE(FUSE_PUBLIC_KEY1)),
 		byte_swap_32(FUSE(FUSE_PUBLIC_KEY2)), byte_swap_32(FUSE(FUSE_PUBLIC_KEY3)),
 		byte_swap_32(FUSE(FUSE_PUBLIC_KEY4)), byte_swap_32(FUSE(FUSE_PUBLIC_KEY5)),
@@ -662,9 +694,9 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 		(FUSE(FUSE_OPT_CP_REV)  >> 5) & 0x3F, FUSE(FUSE_OPT_CP_REV) & 0x1F, FUSE(FUSE_OPT_CP_REV),
 		FUSE(FUSE_CPU_SPEEDO_0_CALIB), FUSE(FUSE_CPU_SPEEDO_1_CALIB), FUSE(FUSE_CPU_SPEEDO_2_CALIB),
 		FUSE(FUSE_SOC_SPEEDO_0_CALIB), FUSE(FUSE_SOC_SPEEDO_1_CALIB), FUSE(FUSE_SOC_SPEEDO_2_CALIB),
-		FUSE(FUSE_CPU_IDDQ_CALIB), FUSE(FUSE_CPU_IDDQ_CALIB) * 4,
-		FUSE(FUSE_SOC_IDDQ_CALIB), FUSE(FUSE_SOC_IDDQ_CALIB) * 4,
-		FUSE(FUSE_GPU_IDDQ_CALIB), FUSE(FUSE_GPU_IDDQ_CALIB) * 5,
+		FUSE(FUSE_CPU_IDDQ_CALIB) * 4, FUSE(FUSE_CPU_IDDQ_CALIB),
+		FUSE(FUSE_SOC_IDDQ_CALIB) * 4, FUSE(FUSE_SOC_IDDQ_CALIB),
+		FUSE(FUSE_GPU_IDDQ_CALIB) * 5, FUSE(FUSE_GPU_IDDQ_CALIB),
 		FUSE(FUSE_OPT_VENDOR_CODE), FUSE(FUSE_OPT_FAB_CODE), lot_bin, FUSE(FUSE_OPT_LOT_CODE_0),
 		FUSE(FUSE_OPT_WAFER_ID), FUSE(FUSE_OPT_X_COORDINATE), FUSE(FUSE_OPT_Y_COORDINATE));
 
@@ -1337,6 +1369,8 @@ out:
 	return LV_RES_OK;
 }
 
+static lv_obj_t *bench_sd_err_label = NULL;
+
 static lv_res_t _create_mbox_benchmark(bool sd_bench)
 {
 	sdmmc_storage_t *storage;
@@ -1661,6 +1695,18 @@ error:
 out:
 	s_printf(txt_buf, "#FF8000 %s 效能測試#\n[Raw讀取]", sd_bench ? "SD卡" : "eMMC");
 	lv_mbox_set_text(mbox, txt_buf);
+
+	// Update SDMMC error info in case it changed.
+	if (sd_bench && bench_sd_err_label)
+	{
+		u16 *sd_errors = sd_get_error_count();
+		s_printf(txt_buf, "\n%d (%d)\n%d (%d)\n%d (%d)",
+			sd_errors[SD_ERROR_INIT_FAIL], nyx_str->info.sd_errors[SD_ERROR_INIT_FAIL],
+			sd_errors[SD_ERROR_RW_FAIL],   nyx_str->info.sd_errors[SD_ERROR_RW_FAIL],
+			sd_errors[SD_ERROR_RW_RETRY],  nyx_str->info.sd_errors[SD_ERROR_RW_RETRY]);
+		lv_label_set_text(bench_sd_err_label, txt_buf);
+	}
+
 	free(txt_buf);
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, mbox_action); // Important. After set_text.
@@ -1874,7 +1920,7 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 		int lines = strlen(part->name) > 25 ? 2 : 1;
 		if ((lines_left - lines) <= 0)
 		{
-			strcat(txt_buf, "#FFDD00 分割槽表無法完全顯示在螢幕上!#");
+			strcat(txt_buf, "#FFDD00 分割槽表無法完全顯示在螢幕上...#");
 			break;
 		}
 
@@ -1998,7 +2044,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	switch (sd_storage.cid.manfid)
 	{
 	case 0x00:
-		strcat(txt_buf, "仿冒 ");
+		strcat(txt_buf, "#FFDD00 仿冒# ");
 		break;
 	case 0x01:
 		strcat(txt_buf, "松下 ");
@@ -2179,7 +2225,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	sd_storage_get_fmodes(&sd_storage, NULL, &fmodes);
 
 	char *bus_speed;
-	if      (fmodes.cmd_system & SD_MODE_UHS_DDR200)
+	if      (fmodes.cmd_system  & SD_MODE_UHS_DDR200)
 		bus_speed = "DDR200";
 	else if (fmodes.access_mode & SD_MODE_UHS_SDR104)
 		bus_speed = "SDR104";
@@ -2304,7 +2350,8 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	lv_obj_t *val4 = lv_cont_create(win, NULL);
 	lv_obj_set_size(val4, LV_HOR_RES / 4, LV_VER_RES - (LV_DPI * 11 / 8) * 4);
 
-	lv_obj_t * lb_val4 = lv_label_create(val4, lb_desc);
+	lv_obj_t *lb_val4 = lv_label_create(val4, lb_desc);
+	bench_sd_err_label = lb_val4;
 
 	u16 *sd_errors = sd_get_error_count();
 	s_printf(txt_buf, "\n%d (%d)\n%d (%d)\n%d (%d)",
@@ -2388,46 +2435,51 @@ static lv_res_t _create_window_battery_status(lv_obj_t *btn)
 
 	char *txt_buf = (char *)malloc(SZ_16K);
 	int value = 0;
-	int cap_pct = 0;
 
 	// Fuel gauge IC info.
-	max17050_get_property(MAX17050_RepSOC, &cap_pct);
-	max17050_get_property(MAX17050_RepCap, &value);
-	s_printf(txt_buf, "\n%d mAh [%d %%]\n", value, cap_pct >> 8);
+	if (!max17050_get_version(NULL))
+	{
+		int cap_pct = 0;
+		max17050_get_property(MAX17050_RepSOC, &cap_pct);
+		max17050_get_property(MAX17050_RepCap, &value);
+		s_printf(txt_buf, "\n%d mAh [%d %%]\n", value, cap_pct >> 8);
 
-	max17050_get_property(MAX17050_FullCAP, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mAh\n", value);
+		max17050_get_property(MAX17050_FullCAP, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mAh\n", value);
 
-	max17050_get_property(MAX17050_DesignCap, &value);
-	bool design_cap_init = value == 1000;
-	s_printf(txt_buf + strlen(txt_buf), "%s%d mAh%s\n",
-		design_cap_init ? "#FF8000 " : "", value,  design_cap_init ? " - 初始化 "SYMBOL_WARNING"#" : "");
+		max17050_get_property(MAX17050_DesignCap, &value);
+		bool design_cap_init = value == 1000;
+		s_printf(txt_buf + strlen(txt_buf), "%s%d mAh%s\n",
+			design_cap_init ? "#FF8000 " : "", value,  design_cap_init ? " - 初始化 "SYMBOL_WARNING"#" : "");
 
-	max17050_get_property(MAX17050_Current, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mA\n", value / 1000);
+		max17050_get_property(MAX17050_Current, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mA\n", value / 1000);
 
-	max17050_get_property(MAX17050_AvgCurrent, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mA\n", value / 1000);
+		max17050_get_property(MAX17050_AvgCurrent, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mA\n", value / 1000);
 
-	max17050_get_property(MAX17050_VCELL, &value);
-	bool voltage_empty = value < 3200;
-	s_printf(txt_buf + strlen(txt_buf), "%s%d mV%s\n",
-		voltage_empty ? "#FF8000 " : "", value,  voltage_empty ? " - 低 "SYMBOL_WARNING"#" : "");
+		max17050_get_property(MAX17050_VCELL, &value);
+		bool voltage_empty = value < 3200;
+		s_printf(txt_buf + strlen(txt_buf), "%s%d mV%s\n",
+			voltage_empty ? "#FF8000 " : "", value,  voltage_empty ? " - 低 "SYMBOL_WARNING"#" : "");
 
-	max17050_get_property(MAX17050_OCVInternal, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
+		max17050_get_property(MAX17050_OCVInternal, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
 
-	max17050_get_property(MAX17050_MinVolt, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
+		max17050_get_property(MAX17050_MinVolt, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
 
-	max17050_get_property(MAX17050_MaxVolt, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
+		max17050_get_property(MAX17050_MaxVolt, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
 
-	max17050_get_property(MAX17050_V_empty, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
+		max17050_get_property(MAX17050_V_empty, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
 
-	max17050_get_property(MAX17050_TEMP, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d.%d oC\n\n\n", value / 10, (value >= 0 ? value : (~value + 1)) % 10);
+		max17050_get_property(MAX17050_TEMP, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d.%d oC\n\n\n", value / 10, (value >= 0 ? value : (~value + 1)) % 10);
+	}
+	else
+		strcpy(txt_buf, "\n#FF8000 "SYMBOL_WARNING" Error!#\n\n\n\n\n\n\n\n\n\n\n\n\n");
 
 	// Main Pmic IC info.
 	value = i2c_recv_byte(I2C_5, MAX77620_I2C_ADDR, MAX77620_REG_CID4);
@@ -2488,93 +2540,104 @@ static lv_res_t _create_window_battery_status(lv_obj_t *btn)
 	lv_obj_set_size(val2, LV_HOR_RES / 2 / 3, LV_VER_RES - (LV_DPI * 11 / 7) - 5);
 
 	lv_obj_t * lb_val2 = lv_label_create(val2, lb_desc);
+	int iinlim = 0;
 
 	// Charger IC info.
-	int iinlim = 0;
-	bq24193_get_property(BQ24193_InputCurrentLimit, &iinlim);
-	s_printf(txt_buf, "\n%d mA\n", iinlim);
-
-	bq24193_get_property(BQ24193_SystemMinimumVoltage, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
-
-	bq24193_get_property(BQ24193_FastChargeCurrentLimit, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mA\n", value);
-
-	bq24193_get_property(BQ24193_ChargeVoltageLimit, &value);
-	s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
-
-	bq24193_get_property(BQ24193_ChargeStatus, &value);
-	switch (value)
+	if (!bq24193_get_version(NULL))
 	{
-	case 0:
-		strcat(txt_buf, "未充電\n");
-		break;
-	case 1:
-		strcat(txt_buf, "預充電\n");
-		break;
-	case 2:
-		strcat(txt_buf, "快速充電\n");
-		break;
-	case 3:
-		strcat(txt_buf, "充電完成\n");
-		break;
-	default:
-		s_printf(txt_buf + strlen(txt_buf), "未知 (%d)\n", value);
-		break;
-	}
+		bq24193_get_property(BQ24193_InputCurrentLimit, &iinlim);
+		s_printf(txt_buf, "\n%d mA\n", iinlim);
 
-	bq24193_get_property(BQ24193_TempStatus, &value);
-	switch (value)
-	{
-	case 0:
-		strcat(txt_buf, "正常");
-		break;
-	case 2:
-		strcat(txt_buf, "溫暖");
-		break;
-	case 3:
-		strcat(txt_buf, "涼爽");
-		break;
-	case 5:
-		strcat(txt_buf, "#FF8000 冰冷#");
-		break;
-	case 6:
-		strcat(txt_buf, "#FF8000 炎熱#");
-		break;
-	default:
-		s_printf(txt_buf + strlen(txt_buf), "未知 (%d)", value);
-		break;
+		bq24193_get_property(BQ24193_SystemMinimumVoltage, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
+
+		bq24193_get_property(BQ24193_FastChargeCurrentLimit, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mA\n", value);
+
+		bq24193_get_property(BQ24193_ChargeVoltageLimit, &value);
+		s_printf(txt_buf + strlen(txt_buf), "%d mV\n", value);
+
+		bq24193_get_property(BQ24193_ChargeStatus, &value);
+		switch (value)
+		{
+		case 0:
+			strcat(txt_buf, "未充電\n");
+			break;
+		case 1:
+			strcat(txt_buf, "預充電\n");
+			break;
+		case 2:
+			strcat(txt_buf, "快速充電\n");
+			break;
+		case 3:
+			strcat(txt_buf, "充電完成\n");
+			break;
+		default:
+			s_printf(txt_buf + strlen(txt_buf), "未知 (%d)\n", value);
+			break;
+		}
+
+		bq24193_get_property(BQ24193_TempStatus, &value);
+		switch (value)
+		{
+		case 0:
+			strcat(txt_buf, "正常");
+			break;
+		case 2:
+			strcat(txt_buf, "溫暖");
+			break;
+		case 3:
+			strcat(txt_buf, "涼爽");
+			break;
+		case 5:
+			strcat(txt_buf, "#FF8000 冰冷#");
+			break;
+		case 6:
+			strcat(txt_buf, "#FF8000 炎熱#");
+			break;
+		default:
+			s_printf(txt_buf + strlen(txt_buf), "未知 (%d)", value);
+			break;
+		}
 	}
+	else
+		strcpy(txt_buf, "\n#FF8000 "SYMBOL_WARNING" Error!#\n\n\n\n\n");
+
+	strcat(txt_buf, "\n\n\n");
 
 	// USB-PD IC info.
-	bool inserted;
-	u32 wattage = 0;
-	usb_pd_objects_t usb_pd;
-	bm92t36_get_sink_info(&inserted, &usb_pd);
-	strcat(txt_buf, "\n\n\n");
-	strcat(txt_buf, inserted ? "已連線" : "已斷開");
-
-	// Select 5V is no PD contract.
-	wattage = iinlim * (usb_pd.pdo_no ? usb_pd.selected_pdo.voltage : 5);
-
-	s_printf(txt_buf + strlen(txt_buf), "\n%d.%d W", wattage / 1000, (wattage % 1000) / 100);
-
-	if (!usb_pd.pdo_no)
-		strcat(txt_buf, "\n非PD");
-
-	// Limit to 6 profiles so it can fit.
-	usb_pd.pdo_no = MIN(usb_pd.pdo_no, 6);
-
-	for (u32 i = 0; i < usb_pd.pdo_no; i++)
+	if (!bm92t36_get_version(NULL))
 	{
-		bool selected =
-			usb_pd.pdos[i].amperage == usb_pd.selected_pdo.amperage &&
-			usb_pd.pdos[i].voltage == usb_pd.selected_pdo.voltage;
-		s_printf(txt_buf + strlen(txt_buf), "\n%s%d mA, %2d V%s",
-			selected ? "#D4FF00 " : "",
-			usb_pd.pdos[i].amperage, usb_pd.pdos[i].voltage,
-			selected ? "#" : "");
+		bool inserted;
+		u32 wattage = 0;
+		usb_pd_objects_t usb_pd;
+		bm92t36_get_sink_info(&inserted, &usb_pd);
+		strcat(txt_buf, inserted ? "已連線" : "已斷開");
+
+		// Select 5V is no PD contract.
+		wattage = iinlim * (usb_pd.pdo_no ? usb_pd.selected_pdo.voltage : 5);
+
+		s_printf(txt_buf + strlen(txt_buf), "\n%d.%d W", wattage / 1000, (wattage % 1000) / 100);
+
+		if (!usb_pd.pdo_no)
+			strcat(txt_buf, "\n非PD");
+
+		// Limit to 6 profiles so it can fit.
+		usb_pd.pdo_no = MIN(usb_pd.pdo_no, 6);
+
+		for (u32 i = 0; i < usb_pd.pdo_no; i++)
+		{
+			bool selected =
+				usb_pd.pdos[i].amperage == usb_pd.selected_pdo.amperage &&
+				usb_pd.pdos[i].voltage == usb_pd.selected_pdo.voltage;
+			s_printf(txt_buf + strlen(txt_buf), "\n%s%d mA, %2d V%s",
+				selected ? "#D4FF00 " : "",
+				usb_pd.pdos[i].amperage, usb_pd.pdos[i].voltage,
+				selected ? "#" : "");
+		}
 	}
+	else
+		strcat(txt_buf, "#FF8000 "SYMBOL_WARNING" 錯誤!#");
 
 	lv_label_set_text(lb_val2, txt_buf);
 

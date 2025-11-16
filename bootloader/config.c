@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -20,14 +20,12 @@
 #include <bdk.h>
 
 #include "config.h"
-#include "gfx/tui.h"
 #include <libs/fatfs/ff.h>
-
-extern hekate_config h_cfg;
 
 void set_default_configuration()
 {
 	h_cfg.t210b01 = hw_get_chip_id() == GP_HIDREV_MAJOR_T210B01;
+	h_cfg.devmode = fuse_read_hw_state();
 
 	h_cfg.autoboot      = 0;
 	h_cfg.autoboot_list = 0;

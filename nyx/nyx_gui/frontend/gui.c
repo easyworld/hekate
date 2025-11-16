@@ -30,8 +30,6 @@
 #include "../config.h"
 #include <libs/fatfs/ff.h>
 
-extern hekate_config h_cfg;
-extern nyx_config n_cfg;
 extern volatile boot_cfg_t *b_cfg;
 extern volatile nyx_storage_t *nyx_str;
 
@@ -112,6 +110,7 @@ static void _nyx_disp_init()
 
 	// Enable logging on window D.
 	display_init_window_d_console();
+
 	// Switch back the backlight.
 	display_backlight_brightness(h_cfg.backlight - 20, 1000);
 }
@@ -782,7 +781,7 @@ lv_res_t mbox_action(lv_obj_t *btns, const char *txt)
 
 bool nyx_emmc_check_battery_enough()
 {
-	if (fuse_read_hw_state() == FUSE_NX_HW_STATE_DEV)
+	if (h_cfg.devmode)
 		return true;
 
 	int batt_volt = 0;
@@ -1416,7 +1415,7 @@ static lv_res_t _create_mbox_payloads(lv_obj_t *btn)
 		goto out_end;
 	}
 
-	dirlist_t *filelist = dirlist("bootloader/payloads", NULL, false, false);
+	dirlist_t *filelist = dirlist("bootloader/payloads", NULL, 0);
 	sd_unmount();
 
 	u32 i = 0;
@@ -2413,7 +2412,7 @@ static void _nyx_main_menu(lv_theme_t * th)
 	else if (n_cfg.home_screen)
 		_create_window_home_launch(NULL);
 
-	if (!n_cfg.timeoff)
+	if (!n_cfg.timeoffset)
 	{
 		lv_task_t *task_run_clock = lv_task_create(first_time_clock_edit, LV_TASK_ONESHOT, LV_TASK_PRIO_MID, NULL);
 		lv_task_once(task_run_clock);

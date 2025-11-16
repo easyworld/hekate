@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018 naehrwert
  * Copyright (c) 2018 Rajko Stojadinovic
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -28,6 +28,10 @@
 #include "fe_emummc_tools.h"
 #include "../config.h"
 #include <libs/fatfs/ff.h>
+
+#define VERIF_STATUS_OK    0
+#define VERIF_STATUS_ERROR 1
+#define VERIF_STATUS_ABORT 2
 
 #define NUM_SECTORS_PER_ITER 8192 // 4MB Cache.
 #define OUT_FILENAME_SZ 128
@@ -137,7 +141,7 @@ static void _update_filename(char *outFilename, u32 sdPathLen, u32 currPartIdx)
 		itoa(currPartIdx, &outFilename[sdPathLen], 10);
 }
 
-static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32 lba_curr, const char *outFilename, const emmc_part_t *part)
+static int _emmc_sd_copy_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32 lba_curr, const char *outFilename, const emmc_part_t *part)
 {
 	FIL fp;
 	FIL hashFp;
@@ -170,7 +174,7 @@ static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
-				return 1;
+				return VERIF_STATUS_ERROR;
 			}
 
 			char chunkSizeAscii[10];
@@ -221,7 +225,7 @@ static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32
 					if (n_cfg.verification == 3)
 						f_close(&hashFp);
 
-					return 1;
+					return VERIF_STATUS_ERROR;
 				}
 				manual_system_maintenance(false);
 				se_calc_sha256(hashEm, NULL, bufEm, num << 9, 0, SHA_INIT_HASH, false);
@@ -241,7 +245,7 @@ static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32
 					if (n_cfg.verification == 3)
 						f_close(&hashFp);
 
-					return 1;
+					return VERIF_STATUS_ERROR;
 				}
 				manual_system_maintenance(false);
 				se_calc_sha256_finalize(hashEm, NULL);
@@ -262,7 +266,7 @@ static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32
 					if (n_cfg.verification == 3)
 						f_close(&hashFp);
 
-					return 1;
+					return VERIF_STATUS_ERROR;
 				}
 
 				if (n_cfg.verification == 3)
@@ -302,7 +306,7 @@ static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32
 			// Check for cancellation combo.
 			if (btn_read_vol() == (BTN_VOL_UP | BTN_VOL_DOWN))
 			{
-				s_printf(gui->txt_buf, "#FFDD00 校驗被取消!#\n");
+				strcpy(gui->txt_buf, "#FFDD00 校驗被取消!#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -312,7 +316,7 @@ static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32
 				f_close(&fp);
 				f_close(&hashFp);
 
-				return 0;
+				return VERIF_STATUS_ABORT;
 			}
 		}
 		free(clmt);
@@ -324,15 +328,15 @@ static int _dump_emmc_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, u32
 		lv_label_set_text(gui->label_pct, gui->txt_buf);
 		manual_system_maintenance(true);
 
-		return 0;
+		return VERIF_STATUS_OK;
 	}
 	else
 	{
-		s_printf(gui->txt_buf, "\n#FFDD00 檔案未找到或無法載入!#\n#FFDD00 校驗失敗..#\n");
+		strcpy(gui->txt_buf, "\n#FFDD00 檔案未找到或無法載入!#\n#FFDD00 校驗失敗..#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
-		return 1;
+		return VERIF_STATUS_ERROR;
 	}
 }
 
@@ -345,6 +349,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 
 	partial_sd_full_unmount = false;
 
+	u32 verification = n_cfg.verification;
 	u32 multipartSplitSize = (1u << 31);
 	u32 lba_end = part->lba_end;
 	u32 totalSectors = part->lba_end - part->lba_start + 1;
@@ -370,7 +375,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 		_get_valid_partition(&sector_start, &sector_size, &part_idx, true);
 		if (!part_idx || !sector_size)
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 找不到分割槽...#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 找不到分割槽...#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -393,7 +398,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 
 	lv_bar_set_value(gui->bar, 0);
 	lv_label_set_text(gui->label_pct, " "SYMBOL_DOT" 0%");
-	lv_bar_set_style(gui->bar, LV_BAR_STYLE_BG, lv_theme_get_current()->bar.bg);
+	lv_bar_set_style(gui->bar, LV_BAR_STYLE_BG, gui->bar_white_bg);
 	lv_bar_set_style(gui->bar, LV_BAR_STYLE_INDIC, gui->bar_white_ind);
 	manual_system_maintenance(true);
 
@@ -408,13 +413,13 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 	{
 		isSmallSdCard = true;
 
-		s_printf(gui->txt_buf, "\n#FFBA00 可用空間小於備份大小.#\n");
+		strcpy(gui->txt_buf, "\n#FFBA00 可用空間小於備份大小.#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
 		if (!maxSplitParts)
 		{
-			s_printf(gui->txt_buf, "#FFDD00 部分備份的剩餘空間不足!#\n");
+			strcpy(gui->txt_buf, "#FFDD00 部分備份的剩餘空間不足!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -424,7 +429,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 	// Check if we are continuing a previous raw eMMC or USER partition backup in progress.
 	if (f_open(&partialIdxFp, partialIdxFilename, FA_READ) == FR_OK && totalSectors > (FAT32_FILESIZE_LIMIT / EMMC_BLOCKSIZE))
 	{
-		s_printf(gui->txt_buf, "\n#AEFD14 正在進行部分備份. 進行中...#\n");
+		strcpy(gui->txt_buf, "\n#AEFD14 正在進行部分備份. 進行中...#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -437,7 +442,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 
 		if (!maxSplitParts)
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 部分備份的剩餘空間不足!#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 部分備份的剩餘空間不足!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -535,18 +540,25 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 			memset(&fp, 0, sizeof(fp));
 			currPartIdx++;
 
-			if (n_cfg.verification && !gui->raw_emummc)
+			if (verification && !gui->raw_emummc)
 			{
 				// Verify part.
-				if (_dump_emmc_verify(gui, storage, lbaStartPart, outFilename, part))
+				res = _emmc_sd_copy_verify(gui, storage, lbaStartPart, outFilename, part);
+				switch (res)
 				{
-					s_printf(gui->txt_buf, "#FFDD00 請重試...#\n");
+				case VERIF_STATUS_OK:
+					break;
+				case VERIF_STATUS_ERROR:
+					strcpy(gui->txt_buf, "\n#FFDD00 請重試...#\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
-
 					return 0;
+				case VERIF_STATUS_ABORT:
+					verification = 0;
+					break;
 				}
-				lv_bar_set_style(gui->bar, LV_BAR_STYLE_BG, lv_theme_get_current()->bar.bg);
+
+				lv_bar_set_style(gui->bar, LV_BAR_STYLE_BG, gui->bar_white_bg);
 				lv_bar_set_style(gui->bar, LV_BAR_STYLE_INDIC, gui->bar_white_ind);
 			}
 
@@ -563,7 +575,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 				}
 				else
 				{
-					s_printf(gui->txt_buf, "\n#FF0000 建立partial.idx檔案時出現錯誤!#\n");
+					strcpy(gui->txt_buf, "\n#FF0000 建立partial.idx檔案時出現錯誤!#\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -642,7 +654,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 			msleep(150);
 			if (retryCount >= 3)
 			{
-				s_printf(gui->txt_buf, "#FF0000 操作已中止...#\n請重試...\n");
+				strcpy(gui->txt_buf, "#FF0000 操作已中止...#\n請重試...\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -654,7 +666,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 			}
 			else
 			{
-				s_printf(gui->txt_buf, "#FFDD00 重試中...#\n");
+				strcpy(gui->txt_buf, "#FFDD00 重試中...#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 			}
@@ -685,7 +697,6 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 			s_printf(gui->txt_buf, " "SYMBOL_DOT" %d%%", pct);
 			lv_label_set_text(gui->label_pct, gui->txt_buf);
 			manual_system_maintenance(true);
-
 			prevPct = pct;
 		}
 
@@ -703,7 +714,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 		// Check for cancellation combo.
 		if (btn_read_vol() == (BTN_VOL_UP | BTN_VOL_DOWN))
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 備份已取消!#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 備份已取消!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -724,12 +735,12 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 	f_close(&fp);
 	free(clmt);
 
-	if (n_cfg.verification && !gui->raw_emummc)
+	if (verification && !gui->raw_emummc)
 	{
 		// Verify last part or single file backup.
-		if (_dump_emmc_verify(gui, storage, lbaStartPart, outFilename, part))
+		if (_emmc_sd_copy_verify(gui, storage, lbaStartPart, outFilename, part) == VERIF_STATUS_ERROR)
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 請重試...#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 請重試...#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -833,9 +844,9 @@ void dump_emmc_selected(emmcPartType_t dumpType, emmc_tool_gui_t *gui)
 			res = _dump_emmc_part(gui, sdPath, i, &emmc_storage, &bootPart);
 
 			if (!res)
-				s_printf(txt_buf, "#FFDD00 失敗!#\n");
+				strcpy(txt_buf, "#FFDD00 失敗!#\n");
 			else
-				s_printf(txt_buf, "完成!\n");
+				strcpy(txt_buf, "完成!\n");
 
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
 			manual_system_maintenance(true);
@@ -874,12 +885,12 @@ void dump_emmc_selected(emmcPartType_t dumpType, emmc_tool_gui_t *gui)
 				// If a part failed, don't continue.
 				if (!res)
 				{
-					s_printf(txt_buf, "#FFDD00 失敗!#\n");
+					strcpy(txt_buf, "#FFDD00 失敗!#\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
 					break;
 				}
 				else
-					s_printf(txt_buf, "完成!\n");
+					strcpy(txt_buf, "完成!\n");
 
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
 				manual_system_maintenance(true);
@@ -916,9 +927,9 @@ void dump_emmc_selected(emmcPartType_t dumpType, emmc_tool_gui_t *gui)
 				res = _dump_emmc_part(gui, sdPath, 2, &emmc_storage, &rawPart);
 
 				if (!res)
-					s_printf(txt_buf, "#FFDD00 失敗!#\n");
+					strcpy(txt_buf, "#FFDD00 失敗!#\n");
 				else
-					s_printf(txt_buf, "完成!\n");
+					strcpy(txt_buf, "完成!\n");
 
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
 				manual_system_maintenance(true);
@@ -954,6 +965,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 {
 	static const u32 SECTORS_TO_MIB_COEFF = 11;
 
+	u32 verification = n_cfg.verification;
 	u32 lba_end = part->lba_end;
 	u32 totalSectors = part->lba_end - part->lba_start + 1;
 	u32 currPartIdx = 0;
@@ -970,8 +982,8 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 	lv_bar_set_value(gui->bar, 0);
 	lv_label_set_text(gui->label_pct, " "SYMBOL_DOT" 0%");
-	lv_bar_set_style(gui->bar, LV_BAR_STYLE_BG, lv_theme_get_current()->bar.bg);
-	lv_bar_set_style(gui->bar, LV_BAR_STYLE_INDIC, gui->bar_white_ind);
+	lv_bar_set_style(gui->bar, LV_BAR_STYLE_BG, gui->bar_orange_bg);
+	lv_bar_set_style(gui->bar, LV_BAR_STYLE_INDIC, gui->bar_orange_ind);
 	manual_system_maintenance(true);
 
 	bool use_multipart = false;
@@ -984,7 +996,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 	if (f_stat(outFilename, &fno))
 	{
 		// If not, check if there are partial files and the total size matches.
-		s_printf(gui->txt_buf, "\n沒有單個檔案, 正在檢查部分檔案...\n");
+		strcpy(gui->txt_buf, "\n沒有單個檔案, 正在檢查部分檔案...\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -1010,7 +1022,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 			if ((u32)((u64)totalCheckFileSize >> (u64)9) > totalSectors)
 			{
-				s_printf(gui->txt_buf, "\n#FF8000 SD卡分割備份的大小超過了所選的#\n#FF8000 eMMC分割槽大小!#\n#FFDD00 操作已中止...#");
+				strcpy(gui->txt_buf, "\n#FF8000 SD卡分割備份的大小超過了所選的#\n#FF8000 eMMC分割槽大小!#\n#FFDD00 操作已中止...#");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1032,13 +1044,14 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 				{
 					// Set new total sectors and lba end sector for percentage calculations.
 					totalSectors = (u32)((u64)totalCheckFileSize >> (u64)9);
-					lba_end = totalSectors + part->lba_start - 1;
+					part->lba_end = totalSectors + part->lba_start - 1;
+					lba_end = part->lba_end;
 				}
 
 				// Restore folder is empty.
 				if (!numSplitParts)
 				{
-					s_printf(gui->txt_buf, "\n#FFDD00 恢復資料夾為空.#\n\n");
+					strcpy(gui->txt_buf, "\n#FFDD00 恢復資料夾為空.#\n\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -1051,7 +1064,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 				if (check_4MB_aligned && (((u64)fno.fsize) % SZ_4M))
 				{
-					s_printf(gui->txt_buf, "\n#FFDD00 分割檔案大小必須是#\n#FFDD00 4 MiB的整數倍.#\n#FFDD00 中斷中...#");
+					strcpy(gui->txt_buf, "\n#FFDD00 分割檔案大小必須是#\n#FFDD00 4 MiB的整數倍.#\n#FFDD00 中斷中...#");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -1079,7 +1092,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 			if (!(btn_wait() & BTN_POWER))
 			{
 				lv_obj_del(warn_mbox_bg);
-				s_printf(gui->txt_buf, "\n#FF0000 SD卡分割檔案大小與#\n#FF0000 所選的eMMC部分的大小不匹配!#\n");
+				strcpy(gui->txt_buf, "\n#FF0000 SD卡分割檔案大小與#\n#FF0000 所選的eMMC部分的大小不匹配!#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1089,7 +1102,8 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 			// Set new total sectors and lba end sector for percentage calculations.
 			totalSectors = (u32)((u64)totalCheckFileSize >> (u64)9);
-			lba_end = totalSectors + part->lba_start - 1;
+			part->lba_end = totalSectors + part->lba_start - 1;
+			lba_end = part->lba_end;
 		}
 		use_multipart = true;
 		_update_filename(outFilename, sdPathLen, 0);
@@ -1134,7 +1148,7 @@ multipart_not_allowed:
 	{
 		if (((u32)((u64)f_size(&fp) >> (u64)9)) > totalSectors)
 		{
-			s_printf(gui->txt_buf, "\n#FF8000 SD卡備份的大小超過了#\n#FF8000 所選的eMMC部分大小!#\n#FFDD00 中斷中...#");
+			strcpy(gui->txt_buf, "\n#FF8000 SD卡備份的大小超過了#\n#FF8000 所選的eMMC部分大小!#\n#FFDD00 中斷中...#");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -1153,7 +1167,7 @@ multipart_not_allowed:
 			if (!(btn_wait() & BTN_POWER))
 			{
 				lv_obj_del(warn_mbox_bg);
-				s_printf(gui->txt_buf, "\n#FF0000 SD卡備份檔案大小與#\n#FF0000 所選的eMMC部分大小不匹配.#\n");
+				strcpy(gui->txt_buf, "\n#FF0000 SD卡備份檔案大小與#\n#FF0000 所選的eMMC部分大小不匹配.#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1197,7 +1211,7 @@ multipart_not_allowed:
 		_get_valid_partition(&sector_start, &sector_size, &part_idx, false);
 		if (!part_idx || !sector_size)
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 找不到分割槽...#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 找不到分割槽...#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -1219,17 +1233,25 @@ multipart_not_allowed:
 			memset(&fp, 0, sizeof(fp));
 			currPartIdx++;
 
-			if (n_cfg.verification && !gui->raw_emummc)
+			if (verification && !gui->raw_emummc)
 			{
 				// Verify part.
-				if (_dump_emmc_verify(gui, storage, lbaStartPart, outFilename, part))
+				res = _emmc_sd_copy_verify(gui, storage, lbaStartPart, outFilename, part);
+				switch (res)
 				{
-					s_printf(gui->txt_buf, "\n#FFDD00 請重試...#\n");
+				case VERIF_STATUS_OK:
+					break;
+				case VERIF_STATUS_ERROR:
+					strcpy(gui->txt_buf, "\n#FFDD00 請重試...#\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
-
 					return 0;
+				case VERIF_STATUS_ABORT:
+					verification = 0;
+					break;
 				}
+				lv_bar_set_style(gui->bar, LV_BAR_STYLE_BG, gui->bar_orange_bg);
+				lv_bar_set_style(gui->bar, LV_BAR_STYLE_INDIC, gui->bar_orange_ind);
 			}
 
 			_update_filename(outFilename, sdPathLen, currPartIdx);
@@ -1297,7 +1319,7 @@ multipart_not_allowed:
 			msleep(150);
 			if (retryCount >= 3)
 			{
-				s_printf(gui->txt_buf, "#FF0000 中斷中...#\n"
+				strcpy(gui->txt_buf, "#FF0000 中斷中...#\n"
 					"#FF0000 這個裝置可能處於無法操作的狀態!#\n"
 					"#FFDD00 請立刻重試!#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
@@ -1309,7 +1331,7 @@ multipart_not_allowed:
 			}
 			else
 			{
-				s_printf(gui->txt_buf, "#FFDD00 重試中...#\n");
+				strcpy(gui->txt_buf, "#FFDD00 重試中...#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 			}
@@ -1341,12 +1363,12 @@ multipart_not_allowed:
 	f_close(&fp);
 	free(clmt);
 
-	if (n_cfg.verification && !gui->raw_emummc)
+	if (verification && !gui->raw_emummc)
 	{
 		// Verify restored data.
-		if (_dump_emmc_verify(gui, storage, lbaStartPart, outFilename, part))
+		if (_emmc_sd_copy_verify(gui, storage, lbaStartPart, outFilename, part) == VERIF_STATUS_ERROR)
 		{
-			s_printf(gui->txt_buf, "#FFDD00 請重試...#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 請重試...#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -1390,12 +1412,18 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 
 	manual_system_maintenance(true);
 
-	s_printf(txt_buf,
-		"#FFDD00 這可能會使裝置無法工作!#\n\n"
-		"#FFDD00 你確定要繼續嗎?#");
+	if (!gui->raw_emummc)
+		strcpy(txt_buf, "#FFDD00 這可能會使裝置無法工作!#");
+	else
+		strcpy(txt_buf, "#FFDD00 這可能會使emuMMC無法工作!#");
+	strcat(txt_buf, "\n\n#FFDD00 你確定要繼續嗎?#");
+
+	if (gui->raw_emummc)
+		strcat(txt_buf, "\n\n只有找到的第一個 emuMMC 可以被恢復!");
+
 	if ((restoreType & PART_BOOT) || (restoreType & PART_GP_ALL))
 	{
-		s_printf(txt_buf + strlen(txt_buf),
+		strcat(txt_buf,
 			"\n\n您選擇的模式\n僅會恢復它能夠找到的分割槽.\n"
 			"如果沒有找到, \n則會跳過該分割槽並繼續下一個分割槽.");
 	}
@@ -1484,9 +1512,9 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 			res = _restore_emmc_part(gui, sdPath, i, &emmc_storage, &bootPart, false);
 
 			if (!res)
-				s_printf(txt_buf, "#FFDD00 失敗!#\n");
+				strcpy(txt_buf, "#FFDD00 失敗!#\n");
 			else if (res > 0)
-				s_printf(txt_buf, "完成!\n");
+				strcpy(txt_buf, "完成!\n");
 
 			if (res >= 0)
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
@@ -1520,9 +1548,9 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 			res = _restore_emmc_part(gui, sdPath, 0, &emmc_storage, part, false);
 
 			if (!res)
-				s_printf(txt_buf, "#FFDD00 失敗!#\n");
+				strcpy(txt_buf, "#FFDD00 失敗!#\n");
 			else if (res > 0)
-				s_printf(txt_buf, "完成!\n");
+				strcpy(txt_buf, "完成!\n");
 
 			if (res >= 0)
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);
@@ -1559,9 +1587,9 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 			res = _restore_emmc_part(gui, sdPath, 2, &emmc_storage, &rawPart, true);
 
 			if (!res)
-				s_printf(txt_buf, "#FFDD00 失敗!#\n");
+				strcpy(txt_buf, "#FFDD00 失敗!#\n");
 			else if (res > 0)
-				s_printf(txt_buf, "完成!\n");
+				strcpy(txt_buf, "完成!\n");
 
 			if (res >= 0)
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, txt_buf);

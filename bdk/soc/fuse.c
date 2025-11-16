@@ -2,7 +2,7 @@
  * Copyright (c) 2018 naehrwert
  * Copyright (c) 2018 shuffle2
  * Copyright (c) 2018 balika011
- * Copyright (c) 2019-2023 CTCaer
+ * Copyright (c) 2019-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -22,6 +22,7 @@
 #include <mem/heap.h>
 #include <sec/se.h>
 #include <sec/se_t210.h>
+#include <soc/clock.h>
 #include <soc/fuse.h>
 #include <soc/hw_init.h>
 #include <soc/pmc.h>
@@ -173,10 +174,30 @@ void fuse_wait_idle()
 		;
 }
 
+void fuse_sense()
+{
+	clock_enable_fuse(false);
+
+	FUSE(FUSE_CTRL) = (FUSE(FUSE_CTRL) & (~FUSE_CMD_MASK)) | FUSE_SENSE;
+	usleep(1);
+
+	fuse_wait_idle();
+
+	FUSE(FUSE_PRIV2INTFC) = FUSE_PRIV2INTFC_SKIP_RECORDS | FUSE_PRIV2INTFC_START_DATA;
+	usleep(1);
+
+	while (!(FUSE(FUSE_CTRL) & BIT(30)) || ((FUSE(FUSE_CTRL) >> 16) & 0x1F) != FUSE_STATUS_IDLE)
+		;
+
+
+  	clock_enable_fuse(true);
+}
+
 u32 fuse_read(u32 addr)
 {
 	FUSE(FUSE_ADDR) = addr;
-	FUSE(FUSE_CTRL) = (FUSE(FUSE_ADDR) & ~FUSE_CMD_MASK) | FUSE_READ;
+	FUSE(FUSE_CTRL) = (FUSE(FUSE_CTRL) & ~FUSE_CMD_MASK) | FUSE_READ;
+
 	fuse_wait_idle();
 
 	return FUSE(FUSE_RDATA);

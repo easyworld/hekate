@@ -1,7 +1,7 @@
 /*
  * eXtensible USB Device driver (XDCI) for Tegra X1
  *
- * Copyright (c) 2020-2024 CTCaer
+ * Copyright (c) 2020-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -381,6 +381,10 @@ typedef struct _xusbd_controller_t
 
 	u8 max_lun;
 	bool max_lun_set;
+	void *hid_rpt_buffer;
+	u32  hid_rpt_size;
+	u32  intr_idle_rate;
+	bool intr_idle_req;
 	bool bulk_reset_req;
 } xusbd_controller_t;
 
@@ -1469,20 +1473,39 @@ static int _xusb_handle_get_class_request(const usb_ctrl_setup_t *ctrl_setup)
 	u16 _wLength = ctrl_setup->wLength;
 
 	bool valid_interface = _wIndex == usbd_xotg->interface_num;
-	bool valid_len = (_bRequest == USB_REQUEST_BULK_GET_MAX_LUN) ? 1 : 0;
+	bool valid_val = (_bRequest >= USB_REQUEST_BULK_GET_MAX_LUN) ? (!_wValue) : true;
 
-	if (!valid_interface || _wValue != 0 || _wLength != valid_len)
+	if (!valid_interface || !valid_val)
 		goto stall;
 
 	switch (_bRequest)
 	{
+	case USB_REQUEST_INTR_GET_REPORT:
+		if (usbd_xotg->hid_rpt_size != _wLength)
+			goto stall;
+
+		// _wValue unused as there's only one report type and id.
+		return _xusb_issue_data_trb(usbd_xotg->hid_rpt_buffer, usbd_xotg->hid_rpt_size, USB_DIR_IN);
+
+	case USB_REQUEST_INTR_SET_IDLE:
+		if (_wLength)
+			goto stall;
+
+		usbd_xotg->intr_idle_rate = (_wValue & 0xFF) * 4 * 1000; // Only one interface so upper byte ignored.
+		usbd_xotg->intr_idle_req  = true;
+		return _xusb_issue_status_trb(USB_DIR_IN); // DELAYED_STATUS;
+
 	case USB_REQUEST_BULK_RESET:
+		if (_wLength)
+			goto stall;
+
 		usbd_xotg->bulk_reset_req = true;
 		return _xusb_issue_status_trb(USB_DIR_IN); // DELAYED_STATUS;
 
 	case USB_REQUEST_BULK_GET_MAX_LUN:
-		if (!usbd_xotg->max_lun_set)
+		if (_wLength != 1 || !usbd_xotg->max_lun_set)
 			goto stall;
+
 		usbd_xotg->device_state = XUSB_LUN_CONFIGURED_STS_WAIT;
 		return _xusb_issue_data_trb(&usbd_xotg->max_lun, 1, USB_DIR_IN);
 	}
@@ -1495,7 +1518,7 @@ stall:
 static int _xusb_handle_get_descriptor(const usb_ctrl_setup_t *ctrl_setup)
 {
 	u32 size;
-	void *descriptor;
+	void *desc;
 
 	u32 wLength = ctrl_setup->wLength;
 
@@ -1513,7 +1536,7 @@ static int _xusb_handle_get_descriptor(const usb_ctrl_setup_t *ctrl_setup)
 		usb_device_descriptor.bcdDevice  = (soc_rev >> 16) & 0xF; // MINORREV.
 		usb_device_descriptor.bcdDevice |= ((soc_rev >> 4) & 0xF) << 8; // MAJORREV.
 */
-		descriptor = usbd_xotg->desc->dev;
+		desc = usbd_xotg->desc->dev;
 		size = usbd_xotg->desc->dev->bLength;
 		break;
 	case USB_DESCRIPTOR_CONFIGURATION:
@@ -1522,13 +1545,13 @@ static int _xusb_handle_get_descriptor(const usb_ctrl_setup_t *ctrl_setup)
 		{
 			if (usbd_xotg->port_speed == XUSB_HIGH_SPEED) // High speed. 512 bytes.
 			{
-				usbd_xotg->desc->cfg->endpoint[0].wMaxPacketSize = 0x200; // No burst.
-				usbd_xotg->desc->cfg->endpoint[1].wMaxPacketSize = 0x200; // No burst.
+				for (u32 i = 0; i < usbd_xotg->desc->cfg->interface.bNumEndpoints; i++)
+					usbd_xotg->desc->cfg->endpoint[i].wMaxPacketSize = 0x200; // No burst.
 			}
 			else // Full speed. 64 bytes.
 			{
-				usbd_xotg->desc->cfg->endpoint[0].wMaxPacketSize = 0x40;
-				usbd_xotg->desc->cfg->endpoint[1].wMaxPacketSize = 0x40;
+				for (u32 i = 0; i < usbd_xotg->desc->cfg->interface.bNumEndpoints; i++)
+					usbd_xotg->desc->cfg->endpoint[i].wMaxPacketSize = 0x40;
 			}
 		}
 		else
@@ -1536,43 +1559,45 @@ static int _xusb_handle_get_descriptor(const usb_ctrl_setup_t *ctrl_setup)
 			usb_cfg_hid_descr_t *tmp = (usb_cfg_hid_descr_t *)usbd_xotg->desc->cfg;
 			if (usbd_xotg->port_speed == XUSB_HIGH_SPEED) // High speed. 512 bytes.
 			{
-				tmp->endpoint[0].wMaxPacketSize = 0x200;
-				tmp->endpoint[1].wMaxPacketSize = 0x200;
-				tmp->endpoint[0].bInterval = usbd_xotg->gadget == USB_GADGET_HID_GAMEPAD ? 4 : 3; // 8ms : 4ms.
-				tmp->endpoint[1].bInterval = usbd_xotg->gadget == USB_GADGET_HID_GAMEPAD ? 4 : 3; // 8ms : 4ms.
+				for (u32 i = 0; i < tmp->interface.bNumEndpoints; i++)
+				{
+					tmp->endpoint[i].wMaxPacketSize = 0x200;
+					tmp->endpoint[i].bInterval = usbd_xotg->gadget == USB_GADGET_HID_GAMEPAD ? 4 : 3; // 8ms : 4ms.
+				}
 			}
 			else // Full speed. 64 bytes.
 			{
-				tmp->endpoint[0].wMaxPacketSize = 0x40;
-				tmp->endpoint[1].wMaxPacketSize = 0x40;
-				tmp->endpoint[0].bInterval = usbd_xotg->gadget == USB_GADGET_HID_GAMEPAD ? 8 : 4; // 8ms : 4ms.
-				tmp->endpoint[1].bInterval = usbd_xotg->gadget == USB_GADGET_HID_GAMEPAD ? 8 : 4; // 8ms : 4ms.
+				for (u32 i = 0; i < tmp->interface.bNumEndpoints; i++)
+				{
+					tmp->endpoint[i].wMaxPacketSize = 0x40;
+					tmp->endpoint[i].bInterval = usbd_xotg->gadget == USB_GADGET_HID_GAMEPAD ? 8 : 4; // 8ms : 4ms.
+				}
 			}
 		}
-		descriptor = usbd_xotg->desc->cfg;
+		desc = usbd_xotg->desc->cfg;
 		size = usbd_xotg->desc->cfg->config.wTotalLength;
 		break;
 	case USB_DESCRIPTOR_STRING:
 		switch (descriptor_subtype)
 		{
 		case 1:
-			descriptor = usbd_xotg->desc->vendor;
+			desc = usbd_xotg->desc->vendor;
 			size = usbd_xotg->desc->vendor[0];
 			break;
 		case 2:
-			descriptor = usbd_xotg->desc->product;
+			desc = usbd_xotg->desc->product;
 			size = usbd_xotg->desc->product[0];
 			break;
 		case 3:
-			descriptor = usbd_xotg->desc->serial;
+			desc = usbd_xotg->desc->serial;
 			size = usbd_xotg->desc->serial[0];
 			break;
 		case 0xEE:
-			descriptor = usbd_xotg->desc->ms_os;
+			desc = usbd_xotg->desc->ms_os;
 			size = usbd_xotg->desc->ms_os->bLength;
 			break;
 		default:
-			descriptor = usbd_xotg->desc->lang_id;
+			desc = usbd_xotg->desc->lang_id;
 			size = 4;
 			break;
 		}
@@ -1584,7 +1609,7 @@ static int _xusb_handle_get_descriptor(const usb_ctrl_setup_t *ctrl_setup)
 			return USB_RES_OK;
 		}
 		usbd_xotg->desc->dev_qual->bNumOtherConfigs = 0;
-		descriptor = usbd_xotg->desc->dev_qual;
+		desc = usbd_xotg->desc->dev_qual;
 		size = usbd_xotg->desc->dev_qual->bLength;
 		break;
 	case USB_DESCRIPTOR_OTHER_SPEED_CONFIGURATION:
@@ -1595,19 +1620,19 @@ static int _xusb_handle_get_descriptor(const usb_ctrl_setup_t *ctrl_setup)
 		}
 		if (usbd_xotg->port_speed == XUSB_HIGH_SPEED)
 		{
-			usbd_xotg->desc->cfg_other->endpoint[0].wMaxPacketSize = 0x40;
-			usbd_xotg->desc->cfg_other->endpoint[1].wMaxPacketSize = 0x40;
+			for (u32 i = 0; i < usbd_xotg->desc->cfg_other->interface.bNumEndpoints; i++)
+				usbd_xotg->desc->cfg_other->endpoint[i].wMaxPacketSize = 0x40;
 		}
 		else
 		{
-			usbd_xotg->desc->cfg_other->endpoint[0].wMaxPacketSize = 0x200;
-			usbd_xotg->desc->cfg_other->endpoint[1].wMaxPacketSize = 0x200;
+			for (u32 i = 0; i < usbd_xotg->desc->cfg_other->interface.bNumEndpoints; i++)
+				usbd_xotg->desc->cfg_other->endpoint[i].wMaxPacketSize = 0x200;
 		}
-		descriptor = usbd_xotg->desc->cfg_other;
+		desc = usbd_xotg->desc->cfg_other;
 		size = usbd_xotg->desc->cfg_other->config.wTotalLength;
 		break;
 	case USB_DESCRIPTOR_DEVICE_BINARY_OBJECT:
-		descriptor = usbd_xotg->desc->dev_bot;
+		desc = usbd_xotg->desc->dev_bot;
 		size = usbd_xotg->desc->dev_bot->wTotalLength;
 		break;
 	default:
@@ -1618,7 +1643,7 @@ static int _xusb_handle_get_descriptor(const usb_ctrl_setup_t *ctrl_setup)
 	if (wLength < size)
 		size = wLength;
 
-	return _xusb_issue_data_trb(descriptor, size, USB_DIR_IN);
+	return _xusb_issue_data_trb(desc, size, USB_DIR_IN);
 }
 
 static void _xusb_handle_set_request_dev_address(const usb_ctrl_setup_t *ctrl_setup)
@@ -1688,18 +1713,18 @@ static int _xusbd_handle_ep0_control_transfer(usb_ctrl_setup_t *ctrl_setup)
 
 	switch (_bmRequestType)
 	{
-	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_DEVICE):
+	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_DEVICE):    // 0x00.
 		if (_bRequest == USB_REQUEST_SET_ADDRESS)
 			_xusb_handle_set_request_dev_address(ctrl_setup);
 		else if (_bRequest == USB_REQUEST_SET_CONFIGURATION)
 			_xusb_handle_set_request_configuration(ctrl_setup);
 		return USB_RES_OK; // What about others.
 
-	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_INTERFACE):
+	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_INTERFACE): // 0x01.
 		usbd_xotg->interface_num = _wValue;
 		return _xusb_issue_status_trb(USB_DIR_IN);
 
-	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_ENDPOINT):
+	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_ENDPOINT):  // 0x02.
 		if ((_wValue & 0xFF) == USB_FEATURE_ENDPOINT_HALT)
 		{
 			if (_bRequest == USB_REQUEST_CLEAR_FEATURE || _bRequest == USB_REQUEST_SET_FEATURE)
@@ -1735,10 +1760,10 @@ static int _xusbd_handle_ep0_control_transfer(usb_ctrl_setup_t *ctrl_setup)
 		ep_stall = true;
 		break;
 
-	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_CLASS    | USB_SETUP_RECIPIENT_INTERFACE):
+	case (USB_SETUP_HOST_TO_DEVICE | USB_SETUP_TYPE_CLASS    | USB_SETUP_RECIPIENT_INTERFACE): // 0x21.
 		return _xusb_handle_get_class_request(ctrl_setup);
 
-	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_DEVICE):
+	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_DEVICE):    // 0x80.
 		switch (_bRequest)
 		{
 		case USB_REQUEST_GET_STATUS:
@@ -1760,7 +1785,7 @@ static int _xusbd_handle_ep0_control_transfer(usb_ctrl_setup_t *ctrl_setup)
 		}
 		break;
 
-	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_INTERFACE):
+	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_INTERFACE): // 0x81.
 		if (_bRequest == USB_REQUEST_GET_INTERFACE)
 		{
 			desc = xusb_interface_descriptor;
@@ -1774,7 +1799,7 @@ static int _xusbd_handle_ep0_control_transfer(usb_ctrl_setup_t *ctrl_setup)
 			size = sizeof(xusb_status_descriptor);
 			transmit_data = true;
 		}
-		else if (_bRequest == USB_REQUEST_GET_DESCRIPTOR && (_wValue >> 8) == USB_DESCRIPTOR_HID_REPORT && usbd_xotg->gadget > USB_GADGET_UMS)
+		else if (_bRequest == USB_REQUEST_GET_DESCRIPTOR && (_wValue >> 8) == USB_DESCRIPTOR_HID_REPORT && usbd_xotg->gadget >= USB_GADGET_HID_GAMEPAD)
 		{
 			if (usbd_xotg->gadget == USB_GADGET_HID_GAMEPAD)
 			{
@@ -1793,7 +1818,7 @@ static int _xusbd_handle_ep0_control_transfer(usb_ctrl_setup_t *ctrl_setup)
 			ep_stall = true;
 		break;
 
-	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_ENDPOINT):
+	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_STANDARD | USB_SETUP_RECIPIENT_ENDPOINT):  // 0x82.
 		if (_bRequest == USB_REQUEST_GET_STATUS)
 		{
 			u32 ep = 0;
@@ -1821,11 +1846,11 @@ static int _xusbd_handle_ep0_control_transfer(usb_ctrl_setup_t *ctrl_setup)
 		ep_stall = true;
 		break;
 
-	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_CLASS    | USB_SETUP_RECIPIENT_INTERFACE):
+	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_CLASS    | USB_SETUP_RECIPIENT_INTERFACE): // 0xA1.
 		return _xusb_handle_get_class_request(ctrl_setup);
 
-	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_VENDOR   | USB_SETUP_RECIPIENT_INTERFACE):
-	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_VENDOR   | USB_SETUP_RECIPIENT_DEVICE):
+	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_VENDOR   | USB_SETUP_RECIPIENT_DEVICE):    // 0xC0.
+	case (USB_SETUP_DEVICE_TO_HOST | USB_SETUP_TYPE_VENDOR   | USB_SETUP_RECIPIENT_INTERFACE): // 0xC1.
 		if (_bRequest == USB_REQUEST_GET_MS_DESCRIPTOR)
 		{
 			switch (_wIndex)
@@ -2017,12 +2042,24 @@ void xusb_end(bool reset_ep, bool only_controller)
 	_xusb_device_power_down();
 }
 
-int xusb_handle_ep0_ctrl_setup()
+int xusb_handle_ep0_ctrl_setup(u32 *data)
 {
 	/*
 	 * EP0 Control handling is done by normal ep operation in XUSB.
-	 * Here we handle the bulk reset only.
+	 * Here we handle the interface only, except if HID.
 	 */
+	if (usbd_xotg->gadget >= USB_GADGET_HID_GAMEPAD)
+		_xusb_ep_operation(1);
+
+	if (usbd_xotg->intr_idle_req)
+	{
+		if (data)
+			*data = usbd_xotg->intr_idle_rate;
+
+		usbd_xotg->intr_idle_req = false;
+		return USB_RES_OK;
+	}
+
 	if (usbd_xotg->bulk_reset_req)
 	{
 		usbd_xotg->bulk_reset_req = false;
@@ -2176,8 +2213,12 @@ bool xusb_device_class_send_max_lun(u8 max_lun)
 	return false;
 }
 
-bool xusb_device_class_send_hid_report()
+bool xusb_device_class_send_hid_report(void *rpt_buffer, u32 rpt_size)
 {
+	// Set buffers.
+	usbd_xotg->hid_rpt_buffer = rpt_buffer;
+	usbd_xotg->hid_rpt_size   = rpt_size;
+
 	// Timeout if get GET_HID_REPORT request doesn't happen in 10s.
 	u32 timer = get_tmr_ms() + 10000;
 
