@@ -32,8 +32,8 @@ jobs:
         # Get the latest release tag name and asset name
         RELEASE_DATA=$(curl --silent "https://api.github.com/repos/CTCaer/hekate/releases/latest")
         TAG_NAME=$(echo "$RELEASE_DATA" | jq -r .tag_name)
-        ASSET_NAME_WITH_EXTENSION=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | startswith("hekate_ctcaer_")) | .name')
-        ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | startswith("hekate_ctcaer_")) | .browser_download_url')
+        ASSET_NAME_WITH_EXTENSION=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | startswith("hekate_ctcaer_") and endswith(".zip")) | .name')
+        ASSET_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name | startswith("hekate_ctcaer_") and endswith(".zip")) | .browser_download_url')
     
         # Download the zip file
         curl -L $ASSET_URL -o $ASSET_NAME_WITH_EXTENSION
