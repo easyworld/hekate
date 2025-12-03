@@ -23,10 +23,29 @@
 #include <soc/t210.h>
 #include <storage/sdmmc.h>
 
+#define RST_DEV_L_SET CLK_RST_CONTROLLER_RST_DEV_L_SET
+#define RST_DEV_H_SET CLK_RST_CONTROLLER_RST_DEV_H_SET
+#define RST_DEV_U_SET CLK_RST_CONTROLLER_RST_DEV_U_SET
+#define RST_DEV_V_SET CLK_RST_CONTROLLER_RST_DEV_V_SET
+#define RST_DEV_W_SET CLK_RST_CONTROLLER_RST_DEV_W_SET
+#define RST_DEV_X_SET CLK_RST_CONTROLLER_RST_DEV_X_SET
+#define RST_DEV_Y_SET CLK_RST_CONTROLLER_RST_DEV_Y_SET
+
+#define CLK_ENB_L_SET CLK_RST_CONTROLLER_CLK_ENB_L_SET
+#define CLK_ENB_H_SET CLK_RST_CONTROLLER_CLK_ENB_H_SET
+#define CLK_ENB_U_SET CLK_RST_CONTROLLER_CLK_ENB_U_SET
+#define CLK_ENB_V_SET CLK_RST_CONTROLLER_CLK_ENB_V_SET
+#define CLK_ENB_W_SET CLK_RST_CONTROLLER_CLK_ENB_W_SET
+#define CLK_ENB_X_SET CLK_RST_CONTROLLER_CLK_ENB_X_SET
+#define CLK_ENB_Y_SET CLK_RST_CONTROLLER_CLK_ENB_Y_SET
+
+#define RST_DEV_H_CLR CLK_RST_CONTROLLER_RST_DEV_H_CLR
+#define CLK_ENB_H_CLR CLK_RST_CONTROLLER_CLK_ENB_H_CLR
+
 typedef struct _clk_rst_mgd_t
 {
-	u16 reset;
-	u16 enable;
+	u16 reset;  // Reset  SET.
+	u16 enable; // Enable SET.
 	u16 source;
 	u8  index;
 } clk_rst_mgd_t;
@@ -39,8 +58,8 @@ typedef struct _clock_osc_t
 } clock_osc_t;
 
 static const clock_osc_t _clock_osc_cnt[] = {
-	{ 12000, 706,  757 },
-	{ 13000, 766,  820 },
+	{ 12000, 706,  757  },
+	{ 13000, 766,  820  },
 	{ 16800, 991,  1059 },
 	{ 19200, 1133, 1210 },
 	{ 26000, 1535, 1638 },
@@ -48,119 +67,133 @@ static const clock_osc_t _clock_osc_cnt[] = {
 	{ 48000, 2836, 3023 }
 };
 
-/* clk_rst_mgd_t: reset, enable, source, index */
-
+/*
+ * T210 rare HW Errata
+ * A fraction of T210 silicon has an undocumented HW Errata on SDMMC clock state machine.
+ * Specifically on enable when using the combo registers. Using SET/CLR variants is mandatory.
+ */
 static const clk_rst_mgd_t _clock_sdmmc[] = {
-	{ CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC1, CLK_L_SDMMC1 },
-	{ CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC2, CLK_L_SDMMC2 },
-	{ CLK_RST_CONTROLLER_RST_DEVICES_U, CLK_RST_CONTROLLER_CLK_OUT_ENB_U, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC3, CLK_U_SDMMC3 },
-	{ CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC4, CLK_L_SDMMC4 },
+	{ RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC1, CLK_L_SDMMC1 },
+	{ RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC2, CLK_L_SDMMC2 },
+	{ RST_DEV_U_SET, CLK_ENB_U_SET, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC3, CLK_U_SDMMC3 },
+	{ RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC4, CLK_L_SDMMC4 },
 };
 
 /* clk_rst_t: reset, enable, source, index, clk_src, clk_div */
 
 static const clk_rst_t _clock_uart[] = {
-	{ CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_UARTA,   CLK_L_UARTA,   0, CLK_SRC_DIV(2) },
-	{ CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_UARTB,   CLK_L_UARTB,   0, CLK_SRC_DIV(2) },
-	{ CLK_RST_CONTROLLER_RST_DEVICES_H, CLK_RST_CONTROLLER_CLK_OUT_ENB_H, CLK_RST_CONTROLLER_CLK_SOURCE_UARTC,   CLK_H_UARTC,   0, CLK_SRC_DIV(2) },
-	{ CLK_RST_CONTROLLER_RST_DEVICES_U, CLK_RST_CONTROLLER_CLK_OUT_ENB_U, CLK_RST_CONTROLLER_CLK_SOURCE_UARTD,   CLK_U_UARTD,   0, CLK_SRC_DIV(2) },
-	{ CLK_RST_CONTROLLER_RST_DEVICES_Y, CLK_RST_CONTROLLER_CLK_OUT_ENB_Y, CLK_RST_CONTROLLER_CLK_SOURCE_UARTAPE, CLK_Y_UARTAPE, 0, CLK_SRC_DIV(2) }
+	{ RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_UARTA,   CLK_L_UARTA,   0, CLK_SRC_DIV(2) },
+	{ RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_UARTB,   CLK_L_UARTB,   0, CLK_SRC_DIV(2) },
+	{ RST_DEV_H_SET, CLK_ENB_H_SET, CLK_RST_CONTROLLER_CLK_SOURCE_UARTC,   CLK_H_UARTC,   0, CLK_SRC_DIV(2) },
+	{ RST_DEV_U_SET, CLK_ENB_U_SET, CLK_RST_CONTROLLER_CLK_SOURCE_UARTD,   CLK_U_UARTD,   0, CLK_SRC_DIV(2) },
+	{ RST_DEV_Y_SET, CLK_ENB_Y_SET, CLK_RST_CONTROLLER_CLK_SOURCE_UARTAPE, CLK_Y_UARTAPE, 0, CLK_SRC_DIV(2) }
 };
 
 //I2C default parameters - TLOW: 4, THIGH: 2, DEBOUNCE: 0, FM_DIV: 26.
 static const clk_rst_t _clock_i2c[] = {
-	{ CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_I2C1, CLK_L_I2C1, 0, CLK_SRC_DIV(10.5) }, // 20.4 MHz -> 100 KHz
-	{ CLK_RST_CONTROLLER_RST_DEVICES_H, CLK_RST_CONTROLLER_CLK_OUT_ENB_H, CLK_RST_CONTROLLER_CLK_SOURCE_I2C2, CLK_H_I2C2, 0, CLK_SRC_DIV(3)    }, // 81.6 MHz -> 400 KHz
-	{ CLK_RST_CONTROLLER_RST_DEVICES_U, CLK_RST_CONTROLLER_CLK_OUT_ENB_U, CLK_RST_CONTROLLER_CLK_SOURCE_I2C3, CLK_U_I2C3, 0, CLK_SRC_DIV(3)    }, // 81.6 MHz -> 400 KHz
-	{ CLK_RST_CONTROLLER_RST_DEVICES_V, CLK_RST_CONTROLLER_CLK_OUT_ENB_V, CLK_RST_CONTROLLER_CLK_SOURCE_I2C4, CLK_V_I2C4, 0, CLK_SRC_DIV(10.5) }, // 20.4 MHz -> 100 KHz
-	{ CLK_RST_CONTROLLER_RST_DEVICES_H, CLK_RST_CONTROLLER_CLK_OUT_ENB_H, CLK_RST_CONTROLLER_CLK_SOURCE_I2C5, CLK_H_I2C5, 0, CLK_SRC_DIV(3)    }, // 81.6 MHz -> 400 KHz
-	{ CLK_RST_CONTROLLER_RST_DEVICES_X, CLK_RST_CONTROLLER_CLK_OUT_ENB_X, CLK_RST_CONTROLLER_CLK_SOURCE_I2C6, CLK_X_I2C6, 0, CLK_SRC_DIV(10.5) }  // 20.4 MHz -> 100 KHz
+	{ RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_I2C1, CLK_L_I2C1, 0, CLK_SRC_DIV(10.5) }, // 20.4 MHz -> 100 KHz
+	{ RST_DEV_H_SET, CLK_ENB_H_SET, CLK_RST_CONTROLLER_CLK_SOURCE_I2C2, CLK_H_I2C2, 0, CLK_SRC_DIV(3)    }, // 81.6 MHz -> 400 KHz
+	{ RST_DEV_U_SET, CLK_ENB_U_SET, CLK_RST_CONTROLLER_CLK_SOURCE_I2C3, CLK_U_I2C3, 0, CLK_SRC_DIV(3)    }, // 81.6 MHz -> 400 KHz
+	{ RST_DEV_V_SET, CLK_ENB_V_SET, CLK_RST_CONTROLLER_CLK_SOURCE_I2C4, CLK_V_I2C4, 0, CLK_SRC_DIV(10.5) }, // 20.4 MHz -> 100 KHz
+	{ RST_DEV_H_SET, CLK_ENB_H_SET, CLK_RST_CONTROLLER_CLK_SOURCE_I2C5, CLK_H_I2C5, 0, CLK_SRC_DIV(3)    }, // 81.6 MHz -> 400 KHz
+	{ RST_DEV_X_SET, CLK_ENB_X_SET, CLK_RST_CONTROLLER_CLK_SOURCE_I2C6, CLK_X_I2C6, 0, CLK_SRC_DIV(10.5) }  // 20.4 MHz -> 100 KHz
 };
 
 static clk_rst_t _clock_se = {
-	CLK_RST_CONTROLLER_RST_DEVICES_V, CLK_RST_CONTROLLER_CLK_OUT_ENB_V, CLK_RST_CONTROLLER_CLK_SOURCE_SE,          CLK_V_SE,          0, CLK_SRC_DIV(1)   // 408 MHz. Max: 627.2 MHz.
+	RST_DEV_V_SET, CLK_ENB_V_SET, CLK_RST_CONTROLLER_CLK_SOURCE_SE,          CLK_V_SE,          0, CLK_SRC_DIV(1)   // 408 MHz. Max: 627.2 MHz.
 };
 static clk_rst_t _clock_tzram = {
-	CLK_RST_CONTROLLER_RST_DEVICES_V, CLK_RST_CONTROLLER_CLK_OUT_ENB_V, CLK_NO_SOURCE,                             CLK_V_TZRAM,       0, CLK_SRC_DIV(1)
+	RST_DEV_V_SET, CLK_ENB_V_SET, CLK_NO_SOURCE,                             CLK_V_TZRAM,       0, 0
 };
 static clk_rst_t _clock_host1x = { // Has idle divisor.
-	CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_HOST1X,      CLK_L_HOST1X,      4, CLK_SRC_DIV(2.5) // 163.2MHz. Max: 408 MHz.
+	RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_HOST1X,      CLK_L_HOST1X,      4, CLK_SRC_DIV(2.5) // 163.2MHz. Max: 408 MHz.
 };
 static clk_rst_t _clock_tsec = {
-	CLK_RST_CONTROLLER_RST_DEVICES_U, CLK_RST_CONTROLLER_CLK_OUT_ENB_U, CLK_RST_CONTROLLER_CLK_SOURCE_TSEC,        CLK_U_TSEC,        0, CLK_SRC_DIV(2)   // 204 MHz. Max: 408 MHz.
+	RST_DEV_U_SET, CLK_ENB_U_SET, CLK_RST_CONTROLLER_CLK_SOURCE_TSEC,        CLK_U_TSEC,        0, CLK_SRC_DIV(2)   // 204 MHz. Max: 408 MHz.
 };
 static clk_rst_t _clock_nvdec = {
-	CLK_RST_CONTROLLER_RST_DEVICES_Y, CLK_RST_CONTROLLER_CLK_OUT_ENB_Y, CLK_RST_CONTROLLER_CLK_SOURCE_NVDEC,       CLK_Y_NVDEC,       4, CLK_SRC_DIV(1)   // 408 MHz. Max: 716.8/979.2 MHz.
+	RST_DEV_Y_SET, CLK_ENB_Y_SET, CLK_RST_CONTROLLER_CLK_SOURCE_NVDEC,       CLK_Y_NVDEC,       4, CLK_SRC_DIV(1)   // 408 MHz. Max: 716.8/979.2 MHz.
 };
 static clk_rst_t _clock_nvjpg = {
-	CLK_RST_CONTROLLER_RST_DEVICES_Y, CLK_RST_CONTROLLER_CLK_OUT_ENB_Y, CLK_RST_CONTROLLER_CLK_SOURCE_NVJPG,       CLK_Y_NVJPG,       4, CLK_SRC_DIV(1)   // 408 MHz. Max: 627.2/652.8 MHz.
+	RST_DEV_Y_SET, CLK_ENB_Y_SET, CLK_RST_CONTROLLER_CLK_SOURCE_NVJPG,       CLK_Y_NVJPG,       4, CLK_SRC_DIV(1)   // 408 MHz. Max: 627.2/652.8 MHz.
 };
 static clk_rst_t _clock_vic = { // Has idle divisor.
-	CLK_RST_CONTROLLER_RST_DEVICES_X, CLK_RST_CONTROLLER_CLK_OUT_ENB_X, CLK_RST_CONTROLLER_CLK_SOURCE_VIC,         CLK_X_VIC,         2, CLK_SRC_DIV(1)   // 408 MHz. Max: 627.2/652.8 MHz.
+	RST_DEV_X_SET, CLK_ENB_X_SET, CLK_RST_CONTROLLER_CLK_SOURCE_VIC,         CLK_X_VIC,         2, CLK_SRC_DIV(1)   // 408 MHz. Max: 627.2/652.8 MHz.
 };
 static clk_rst_t _clock_sor_safe = {
-	CLK_RST_CONTROLLER_RST_DEVICES_Y, CLK_RST_CONTROLLER_CLK_OUT_ENB_Y, CLK_NO_SOURCE,                             CLK_Y_SOR_SAFE,    0, CLK_SRC_DIV(1)   // 24 MHz.
+	RST_DEV_Y_SET, CLK_ENB_Y_SET, CLK_NO_SOURCE,                             CLK_Y_SOR_SAFE,    0, 0                // 24 MHz.
 };
 static clk_rst_t _clock_sor0 = {
-	CLK_RST_CONTROLLER_RST_DEVICES_X, CLK_RST_CONTROLLER_CLK_OUT_ENB_X, CLK_NOT_USED,                              CLK_X_SOR0,        0, CLK_SRC_DIV(1)
+	RST_DEV_X_SET, CLK_ENB_X_SET, CLK_NOT_USED,                              CLK_X_SOR0,        0, 0                // 24 MHz (safe).
 };
 static clk_rst_t _clock_sor1 = {
-	CLK_RST_CONTROLLER_RST_DEVICES_X, CLK_RST_CONTROLLER_CLK_OUT_ENB_X, CLK_RST_CONTROLLER_CLK_SOURCE_SOR1,        CLK_X_SOR1,        0, CLK_SRC_DIV(2)   // 204 MHz.
+	RST_DEV_X_SET, CLK_ENB_X_SET, CLK_RST_CONTROLLER_CLK_SOURCE_SOR1,        CLK_X_SOR1,        0, CLK_SRC_DIV(2)   // 204 MHz.
 };
 static clk_rst_t _clock_kfuse = {
-	CLK_RST_CONTROLLER_RST_DEVICES_H, CLK_RST_CONTROLLER_CLK_OUT_ENB_H, CLK_NO_SOURCE,                             CLK_H_KFUSE,       0, CLK_SRC_DIV(1)
+	RST_DEV_H_SET, CLK_ENB_H_SET, CLK_NO_SOURCE,                             CLK_H_KFUSE,       0, 0
 };
 static clk_rst_t _clock_cl_dvfs =	{
-	CLK_RST_CONTROLLER_RST_DEVICES_W, CLK_RST_CONTROLLER_CLK_OUT_ENB_W, CLK_NO_SOURCE,                             CLK_W_DVFS,        0, CLK_SRC_DIV(1)
+	RST_DEV_W_SET, CLK_ENB_W_SET, CLK_NO_SOURCE,                             CLK_W_DVFS,        0, 0
 };
 static clk_rst_t _clock_coresight = {
-	CLK_RST_CONTROLLER_RST_DEVICES_U, CLK_RST_CONTROLLER_CLK_OUT_ENB_U, CLK_RST_CONTROLLER_CLK_SOURCE_CSITE,       CLK_U_CSITE,       0, CLK_SRC_DIV(3)   // 136 MHz.
+	RST_DEV_U_SET, CLK_ENB_U_SET, CLK_RST_CONTROLLER_CLK_SOURCE_CSITE,       CLK_U_CSITE,       0, CLK_SRC_DIV(3)   // 136 MHz.
 };
 static clk_rst_t _clock_pwm = {
-	CLK_RST_CONTROLLER_RST_DEVICES_L, CLK_RST_CONTROLLER_CLK_OUT_ENB_L, CLK_RST_CONTROLLER_CLK_SOURCE_PWM,         CLK_L_PWM,         6, CLK_SRC_DIV(3)   // Fref: 6.4MHz. HOS: PLLP / 54 = 7.55MHz.
+	RST_DEV_L_SET, CLK_ENB_L_SET, CLK_RST_CONTROLLER_CLK_SOURCE_PWM,         CLK_L_PWM,         6, CLK_SRC_DIV(3)   // Fref: 6.4MHz. HOS: PLLP / 54 = 7.55MHz.
 };
 static clk_rst_t _clock_sdmmc_legacy_tm = {
-	CLK_RST_CONTROLLER_RST_DEVICES_Y, CLK_RST_CONTROLLER_CLK_OUT_ENB_Y, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC_LEGACY_TM, CLK_Y_SDMMC_LEGACY_TM, 4, CLK_SRC_DIV(34) // 12MHz.
+	RST_DEV_Y_SET, CLK_ENB_Y_SET, CLK_RST_CONTROLLER_CLK_SOURCE_SDMMC_LEGACY_TM, CLK_Y_SDMMC_LEGACY_TM, 4, CLK_SRC_DIV(34) // 12MHz.
 };
 static clk_rst_t _clock_apbdma = {
-	CLK_RST_CONTROLLER_RST_DEVICES_H, CLK_RST_CONTROLLER_CLK_OUT_ENB_H, CLK_NO_SOURCE,                             CLK_H_APBDMA,      0, CLK_SRC_DIV(1)   // Max: 204 MHz.
+	RST_DEV_H_SET, CLK_ENB_H_SET, CLK_NO_SOURCE,                             CLK_H_APBDMA,      0, 0                // Max: 204 MHz.
 };
 static clk_rst_t _clock_ahbdma = {
-	CLK_RST_CONTROLLER_RST_DEVICES_H, CLK_RST_CONTROLLER_CLK_OUT_ENB_H, CLK_NO_SOURCE,                             CLK_H_AHBDMA,      0, CLK_SRC_DIV(1)
+	RST_DEV_H_SET, CLK_ENB_H_SET, CLK_NO_SOURCE,                             CLK_H_AHBDMA,      0, 0                // Max: 408 MHz.
 };
 static clk_rst_t _clock_actmon = {
-	CLK_RST_CONTROLLER_RST_DEVICES_V, CLK_RST_CONTROLLER_CLK_OUT_ENB_V, CLK_RST_CONTROLLER_CLK_SOURCE_ACTMON,      CLK_V_ACTMON,      6, CLK_SRC_DIV(1)   // 19.2 MHz.
+	RST_DEV_V_SET, CLK_ENB_V_SET, CLK_RST_CONTROLLER_CLK_SOURCE_ACTMON,      CLK_V_ACTMON,      6, CLK_SRC_DIV(1)   // 19.2 MHz.
 };
 static clk_rst_t _clock_extperiph1 = {
-	CLK_RST_CONTROLLER_RST_DEVICES_V, CLK_RST_CONTROLLER_CLK_OUT_ENB_V, CLK_RST_CONTROLLER_CLK_SOURCE_EXTPERIPH1,  CLK_V_EXTPERIPH1,  0, CLK_SRC_DIV(1)
+	RST_DEV_V_SET, CLK_ENB_V_SET, CLK_RST_CONTROLLER_CLK_SOURCE_EXTPERIPH1,  CLK_V_EXTPERIPH1,  0, CLK_SRC_DIV(1)
 };
 static clk_rst_t _clock_extperiph2 = {
-	CLK_RST_CONTROLLER_RST_DEVICES_V, CLK_RST_CONTROLLER_CLK_OUT_ENB_V, CLK_RST_CONTROLLER_CLK_SOURCE_EXTPERIPH2,  CLK_V_EXTPERIPH2,  2, CLK_SRC_DIV(102) // 4.0 MHz
+	RST_DEV_V_SET, CLK_ENB_V_SET, CLK_RST_CONTROLLER_CLK_SOURCE_EXTPERIPH2,  CLK_V_EXTPERIPH2,  2, CLK_SRC_DIV(102) // 4.0 MHz
 };
 
 void clock_enable(const clk_rst_t *clk)
 {
+	const u32 module = BIT(clk->index);
+
 	// Put clock into reset.
-	CLOCK(clk->reset) |= BIT(clk->index);
+	CLOCK(clk->reset) = module;
+
 	// Disable.
-	CLOCK(clk->enable) &= ~BIT(clk->index);
+	CLOCK(clk->enable + CLK_CLR_OFFSET) = module;
+
 	// Configure clock source if required.
 	if (clk->source)
 		CLOCK(clk->source) = (clk->clk_src << 29u) | clk->clk_div;
+
 	// Enable.
-	CLOCK(clk->enable) |= BIT(clk->index);
+	CLOCK(clk->enable) = module;
 	usleep(2);
 
 	// Take clock off reset.
-	CLOCK(clk->reset) &= ~BIT(clk->index);
+	CLOCK(clk->reset + CLK_CLR_OFFSET) = module;
+
+	// Commit changes.
+	(void)CLOCK(clk->reset);
 }
 
 void clock_disable(const clk_rst_t *clk)
 {
+	const u32 module = BIT(clk->index);
+
 	// Put clock into reset.
-	CLOCK(clk->reset) |= BIT(clk->index);
+	CLOCK(clk->reset) = module;
+
 	// Disable.
-	CLOCK(clk->enable) &= ~BIT(clk->index);
+	CLOCK(clk->enable + CLK_CLR_OFFSET) = module;
 }
 
 void clock_enable_fuse(bool enable)
@@ -176,7 +209,7 @@ void clock_enable_uart(u32 idx)
 
 	clock_enable(&_clock_uart[idx]);
 
-	// Restore OC.
+	// Restore sys clock.
 	bpmp_clk_rate_relaxed(false);
 }
 
@@ -189,15 +222,15 @@ void clock_disable_uart(u32 idx)
 
 int clock_uart_use_src_div(u32 idx, u32 baud)
 {
-	u32 clk_src_div = CLOCK(_clock_uart[idx].source) & 0xE0000000;
+	u32 clk_src = CLOCK(_clock_uart[idx].source) & 0xE0000000;
 
 	if (baud == 3000000)
-		CLOCK(_clock_uart[idx].source) = clk_src_div | UART_SRC_CLK_DIV_EN | CLK_SRC_DIV(8.5);
+		CLOCK(_clock_uart[idx].source) = clk_src | UART_SRC_CLK_DIV_EN | CLK_SRC_DIV(8.5);
 	else if (baud == 1000000)
-		CLOCK(_clock_uart[idx].source) = clk_src_div | UART_SRC_CLK_DIV_EN | CLK_SRC_DIV(25.5);
+		CLOCK(_clock_uart[idx].source) = clk_src | UART_SRC_CLK_DIV_EN | CLK_SRC_DIV(25.5);
 	else
 	{
-		CLOCK(_clock_uart[idx].source) = clk_src_div | CLK_SRC_DIV(2);
+		CLOCK(_clock_uart[idx].source) = clk_src | CLK_SRC_DIV(2);
 
 		return 1;
 	}
@@ -207,7 +240,13 @@ int clock_uart_use_src_div(u32 idx, u32 baud)
 
 void clock_enable_i2c(u32 idx)
 {
+	// Ease the stress to APB.
+	bpmp_clk_rate_relaxed(true);
+
 	clock_enable(&_clock_i2c[idx]);
+
+	// Restore sys clock.
+	bpmp_clk_rate_relaxed(false);
 }
 
 void clock_disable_i2c(u32 idx)
@@ -221,7 +260,7 @@ void clock_enable_se()
 
 	// Lock clock to always enabled if T210B01.
 	if (hw_get_chip_id() == GP_HIDREV_MAJOR_T210B01)
-		CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_SE) |= 0x100;
+		CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_SE) |= BIT(8);
 }
 
 void clock_enable_tzram()
@@ -323,13 +362,13 @@ void clock_disable_sor1()
 
 void clock_enable_kfuse()
 {
-	CLOCK(CLK_RST_CONTROLLER_RST_DEV_H_SET) = BIT(CLK_H_KFUSE);
-	CLOCK(CLK_RST_CONTROLLER_CLK_ENB_H_CLR) = BIT(CLK_H_KFUSE);
-	CLOCK(CLK_RST_CONTROLLER_CLK_ENB_H_SET) = BIT(CLK_H_KFUSE);
-	usleep(10); // Wait 10s to prevent glitching.
+	CLOCK(RST_DEV_H_SET) = BIT(CLK_H_KFUSE);
+	CLOCK(CLK_ENB_H_CLR) = BIT(CLK_H_KFUSE);
+	CLOCK(CLK_ENB_H_SET) = BIT(CLK_H_KFUSE);
+	usleep(10); // Wait 10us to prevent glitching.
 
-	CLOCK(CLK_RST_CONTROLLER_RST_DEV_H_CLR) = BIT(CLK_H_KFUSE);
-	usleep(20); // Wait 20s fo kfuse hw to init.
+	CLOCK(RST_DEV_H_CLR) = BIT(CLK_H_KFUSE);
+	usleep(20); // Wait 20us for KFUSE HW to init.
 }
 
 void clock_disable_kfuse()
@@ -364,7 +403,7 @@ void clock_enable_pwm()
 
 	clock_enable(&_clock_pwm);
 
-	// Restore OC.
+	// Restore sys clock.
 	bpmp_clk_rate_relaxed(false);
 }
 
@@ -431,14 +470,26 @@ void clock_disable_extperiph2()
 	clock_disable(&_clock_extperiph2);
 }
 
+static void _clock_pll_wait_lock(u32 base, u32 max_delay)
+{
+	for (u32 i = 0; i < max_delay; i++)
+	{
+		if (CLOCK(base) & PLL_BASE_LOCK)
+			break;
+		usleep(1);
+	}
+
+	usleep(2);
+}
+
 void clock_enable_plld(u32 divp, u32 divn, bool lowpower, bool tegra_t210)
 {
 	u32 plld_div = (divp << 20) | (divn << 11) | 1;
 
 	// N divider is fractional, so N = DIVN + 1/2 + PLLD_SDM_DIN/8192.
-	u32 misc = 0x2D0000 | 0xFC00; // Clock enable and PLLD_SDM_DIN: -1024 -> DIVN + 0.375.
+	u32 misc = BIT(21) | BIT(19) | BIT(18) | BIT(16) | 0xFC00; // Clock enable and PLLD_SDM_DIN: -1024 -> DIVN + 0.375.
 	if (lowpower && tegra_t210)
-		misc = 0x2D0000 | 0x0AAA; // Clock enable and PLLD_SDM_DIN:  2730 -> DIVN + 0.833.
+		misc = BIT(21) | BIT(19) | BIT(18) | BIT(16) | 0x0AAA; // Clock enable and PLLD_SDM_DIN:  2730 -> DIVN + 0.833.
 
 	// Set DISP1 clock source.
 	CLOCK(CLK_RST_CONTROLLER_CLK_SOURCE_DISP1) = 2 << 29u; // PLLD_OUT0.
@@ -451,10 +502,7 @@ void clock_enable_plld(u32 divp, u32 divn, bool lowpower, bool tegra_t210)
 	CLOCK(CLK_RST_CONTROLLER_PLLD_MISC) = misc;
 
 	// Wait for PLL to stabilize.
-	while (!(CLOCK(CLK_RST_CONTROLLER_PLLD_BASE) & PLL_BASE_LOCK))
-		;
-
-	usleep(10);
+	_clock_pll_wait_lock(CLK_RST_CONTROLLER_PLLD_BASE, 1000);
 }
 
 void clock_enable_pllx()
@@ -479,24 +527,25 @@ void clock_enable_pllx()
 	}
 
 	// Wait for PLL to stabilize.
-	while (!(CLOCK(CLK_RST_CONTROLLER_PLLX_BASE) & PLL_BASE_LOCK))
-		;
-
-	usleep(10);
+	_clock_pll_wait_lock(CLK_RST_CONTROLLER_PLLX_BASE, 300);
 }
 
 void clock_enable_pllc(u32 divn)
 {
+	u32 enabled = CLOCK(CLK_RST_CONTROLLER_PLLC_BASE) & PLL_BASE_ENABLE;
 	u8 pll_divn_curr = (CLOCK(CLK_RST_CONTROLLER_PLLC_BASE) >> 10) & 0xFF;
 
 	// Check if already enabled and configured.
-	if ((CLOCK(CLK_RST_CONTROLLER_PLLC_BASE) & PLL_BASE_ENABLE) && (pll_divn_curr == divn))
+	if (enabled && (pll_divn_curr == divn))
 		return;
 
-	// Take PLLC out of reset and set basic misc parameters.
-	CLOCK(CLK_RST_CONTROLLER_PLLC_MISC) =
-		((CLOCK(CLK_RST_CONTROLLER_PLLC_MISC) & 0xFFF0000F) & ~PLLC_MISC_RESET) | (0x8000 << 4); // PLLC_EXT_FRU.
-	CLOCK(CLK_RST_CONTROLLER_PLLC_MISC_2) |= 0xF0 << 8; // PLLC_FLL_LD_MEM.
+	// WAR: Disable first to avoid HPLL overshoot.
+	if (enabled)
+		clock_disable_pllc();
+
+	// Take PLLC out of reset (misc) and set misc2 parameters.
+	CLOCK(CLK_RST_CONTROLLER_PLLC_MISC)    = (0x8000 << 4); // PLLC_EXT_FRU.
+	CLOCK(CLK_RST_CONTROLLER_PLLC_MISC_2) |= 0xF << 8;      // PLLC_FLL_LD_MEM.
 
 	// Disable PLL and IDDQ in case they are on.
 	CLOCK(CLK_RST_CONTROLLER_PLLC_BASE)   &= ~PLL_BASE_ENABLE;
@@ -504,15 +553,14 @@ void clock_enable_pllc(u32 divn)
 	usleep(10);
 
 	// Set PLLC dividers.
-	CLOCK(CLK_RST_CONTROLLER_PLLC_BASE) = (divn << 10) | 4; // DIVM: 4, DIVP: 1.
+	CLOCK(CLK_RST_CONTROLLER_PLLC_BASE) = (divn << 10) | 6; // DIVM: 6, DIVP: 1.
 
 	// Enable PLLC and wait for Phase and Frequency lock.
 	CLOCK(CLK_RST_CONTROLLER_PLLC_BASE) |= PLL_BASE_ENABLE;
-	while (!(CLOCK(CLK_RST_CONTROLLER_PLLC_BASE) & PLL_BASE_LOCK))
-		;
+	_clock_pll_wait_lock(CLK_RST_CONTROLLER_PLLC_BASE, 300);
 
-	// Disable PLLC_OUT1, enable reset and set div to 1.5.
-	CLOCK(CLK_RST_CONTROLLER_PLLC_OUT) = 1 << 8;
+	// Disable PLLC_OUT1, enable reset and set div to 1.
+	CLOCK(CLK_RST_CONTROLLER_PLLC_OUT) = 0;
 
 	// Enable PLLC_OUT1 and bring it out of reset.
 	CLOCK(CLK_RST_CONTROLLER_PLLC_OUT) |= PLLC_OUT1_CLKEN | PLLC_OUT1_RSTN_CLR;
@@ -543,7 +591,7 @@ static void _clock_enable_pllc4(u32 mask)
 		return;
 
 	// Enable Phase and Frequency lock detection.
-	//CLOCK(CLK_RST_CONTROLLER_PLLC4_MISC) = PLLC4_MISC_EN_LCKDET;
+	CLOCK(CLK_RST_CONTROLLER_PLLC4_MISC) = PLLC4_MISC_EN_LCKDET;
 
 	// Disable PLL and IDDQ in case they are on.
 	CLOCK(CLK_RST_CONTROLLER_PLLC4_BASE) &= ~PLL_BASE_ENABLE;
@@ -555,10 +603,7 @@ static void _clock_enable_pllc4(u32 mask)
 
 	// Enable PLLC4 and wait for Phase and Frequency lock.
 	CLOCK(CLK_RST_CONTROLLER_PLLC4_BASE) |= PLL_BASE_ENABLE;
-	while (!(CLOCK(CLK_RST_CONTROLLER_PLLC4_BASE) & PLL_BASE_LOCK))
-		;
-
-	msleep(1); // Wait a bit for PLL to stabilize.
+	_clock_pll_wait_lock(CLK_RST_CONTROLLER_PLLC4_BASE, 300 + 700);
 
 	pllc4_enabled |= PLLC4_ENABLED;
 }
@@ -572,7 +617,7 @@ static void _clock_disable_pllc4(u32 mask)
 		return;
 
 	// Disable PLLC4.
-	msleep(1); // Wait at least 1ms to prevent glitching.
+	usleep(100); // Wait at least 100us to prevent glitching.
 	CLOCK(CLK_RST_CONTROLLER_PLLC4_BASE) &= ~PLL_BASE_ENABLE;
 	CLOCK(CLK_RST_CONTROLLER_PLLC4_BASE) |= PLLC4_BASE_IDDQ;
 	usleep(10);
@@ -589,11 +634,8 @@ void clock_enable_pllu()
 	CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) = pllu_cfg | PLL_BASE_ENABLE; // Enable.
 
 	// Wait for PLL to stabilize.
-	u32 timeout = get_tmr_us() + 1300;
-	while (!(CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) & PLL_BASE_LOCK)) // PLL_LOCK.
-		if (get_tmr_us() > timeout)
-			break;
-	usleep(10);
+	_clock_pll_wait_lock(CLK_RST_CONTROLLER_PLLU_BASE, 1000);
+	usleep(8);
 
 	// Enable PLLU USB/HSIC/ICUSB/48M.
 	CLOCK(CLK_RST_CONTROLLER_PLLU_BASE) |= 0x2E00000;
@@ -622,7 +664,7 @@ void clock_enable_utmipll()
 	}
 }
 
-static int _clock_sdmmc_is_reset(u32 id)
+static int _clock_sdmmc_in_reset(u32 id)
 {
 	const clk_rst_mgd_t *clk = &_clock_sdmmc[id];
 
@@ -633,14 +675,14 @@ static void _clock_sdmmc_set_reset(u32 id)
 {
 	const clk_rst_mgd_t *clk = &_clock_sdmmc[id];
 
-	CLOCK(clk->reset) |= BIT(clk->index);
+	CLOCK(clk->reset) = BIT(clk->index);
 }
 
-static void _clock_sdmmc_clear_reset(u32 id)
+static void _clock_sdmmc_clr_reset(u32 id)
 {
 	const clk_rst_mgd_t *clk = &_clock_sdmmc[id];
 
-	CLOCK(clk->reset) &= ~BIT(clk->index);
+	CLOCK(clk->reset + CLK_CLR_OFFSET) = BIT(clk->index);
 }
 
 static int _clock_sdmmc_is_enabled(u32 id)
@@ -654,14 +696,14 @@ static void _clock_sdmmc_set_enable(u32 id)
 {
 	const clk_rst_mgd_t *clk = &_clock_sdmmc[id];
 
-	CLOCK(clk->enable) |= BIT(clk->index);
+	CLOCK(clk->enable) = BIT(clk->index);
 }
 
-static void _clock_sdmmc_clear_enable(u32 id)
+static void _clock_sdmmc_clr_enable(u32 id)
 {
 	const clk_rst_mgd_t *clk = &_clock_sdmmc[id];
 
-	CLOCK(clk->enable) &= ~BIT(clk->index);
+	CLOCK(clk->enable + CLK_CLR_OFFSET) = BIT(clk->index);
 }
 
 static void _clock_sdmmc_config_legacy_tm()
@@ -782,9 +824,13 @@ void clock_sdmmc_config_clock_source(u32 *pclock, u32 id, u32 clock)
 	}
 	else
 	{
+		// Ease the stress to APB.
+		if (id == SDMMC_1)
+			bpmp_clk_rate_relaxed(true);
+
 		int is_enabled = _clock_sdmmc_is_enabled(id);
 		if (is_enabled)
-			_clock_sdmmc_clear_enable(id);
+			_clock_sdmmc_clr_enable(id);
 
 		_clock_sdmmc_config_clock_host(pclock, id, clock);
 
@@ -792,7 +838,11 @@ void clock_sdmmc_config_clock_source(u32 *pclock, u32 id, u32 clock)
 			_clock_sdmmc_set_enable(id);
 
 		// Commit changes.
-		_clock_sdmmc_is_reset(id);
+		_clock_sdmmc_in_reset(id);
+
+		// Restore sys clock.
+		if (id == SDMMC_1)
+			bpmp_clk_rate_relaxed(false);
 	}
 }
 
@@ -801,7 +851,7 @@ void clock_sdmmc_get_card_clock_div(u32 *pclock, u16 *pdivisor, u32 type)
 	// Get Card clock divisor.
 	switch (type)
 	{
-	case SDHCI_TIMING_MMC_ID: // Actual card clock: 386.36 KHz.
+	case SDHCI_TIMING_MMC_ID:     // Actual card clock: 386.36 KHz.
 		*pclock = 26000;
 		*pdivisor = 66;
 		break;
@@ -850,12 +900,12 @@ void clock_sdmmc_get_card_clock_div(u32 *pclock, u16 *pdivisor, u32 type)
 		*pdivisor = 1;
 		break;
 
-	case SDHCI_TIMING_UHS_DDR50: // Actual card clock: 40.80 MHz.
+	case SDHCI_TIMING_UHS_DDR50:  // Actual card clock: 40.80 MHz.
 		*pclock = 82000;
 		*pdivisor = 2;
 		break;
 
-	case SDHCI_TIMING_MMC_HS100: // Actual card clock: 99.84 MHz.
+	case SDHCI_TIMING_MMC_HS100:  // Actual card clock: 99.84 MHz.
 		*pclock = 200000;
 		*pdivisor = 2;
 		break;
@@ -869,31 +919,41 @@ void clock_sdmmc_get_card_clock_div(u32 *pclock, u16 *pdivisor, u32 type)
 	}
 }
 
-int clock_sdmmc_is_not_reset_and_enabled(u32 id)
+int clock_sdmmc_is_active(u32 id)
 {
-	return !_clock_sdmmc_is_reset(id) && _clock_sdmmc_is_enabled(id);
+	return !_clock_sdmmc_in_reset(id) && _clock_sdmmc_is_enabled(id);
 }
 
 void clock_sdmmc_enable(u32 id, u32 clock)
 {
-	_clock_sdmmc_clear_enable(id);
+	u32 pclock = 0;
+
+	// Ease the stress to APB.
+	if (id == SDMMC_1)
+		bpmp_clk_rate_relaxed(true);
+
+	_clock_sdmmc_clr_enable(id);
 	_clock_sdmmc_set_reset(id);
-	_clock_sdmmc_config_clock_host(&clock, id, clock);
+	_clock_sdmmc_config_clock_host(&pclock, id, clock);
 	_clock_sdmmc_set_enable(id);
 
-	// // Commit changes and wait 100 cycles for reset and for clocks to stabilize.
-	_clock_sdmmc_is_reset(id);
-	usleep((100 * 1000 + clock - 1) / clock);
+	// Commit changes and wait 100 cycles for reset and for clocks to stabilize.
+	_clock_sdmmc_in_reset(id);
+	usleep((100 * 1000 + pclock - 1) / pclock);
 
-	_clock_sdmmc_clear_reset(id);
-	_clock_sdmmc_is_reset(id);
+	_clock_sdmmc_clr_reset(id);
+	_clock_sdmmc_in_reset(id);
+
+	// Restore sys clock.
+	if (id == SDMMC_1)
+		bpmp_clk_rate_relaxed(false);
 }
 
 void clock_sdmmc_disable(u32 id)
 {
 	_clock_sdmmc_set_reset(id);
-	_clock_sdmmc_clear_enable(id);
-	_clock_sdmmc_is_reset(id);
+	_clock_sdmmc_clr_enable(id);
+	_clock_sdmmc_in_reset(id);
 	_clock_disable_pllc4(BIT(id));
 }
 

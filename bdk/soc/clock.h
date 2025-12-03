@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 naehrwert
- * Copyright (c) 2018-2024 CTCaer
+ * Copyright (c) 2018-2025 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -170,6 +170,8 @@
 
 #define CLK_NO_SOURCE 0x0
 #define CLK_NOT_USED  0x0
+
+#define CLK_CLR_OFFSET 0x4
 
 /*! PLL control and status bits */
 #define PLL_BASE_LOCK        BIT(27)
@@ -674,11 +676,11 @@ enum CLK_Y_DEV
 /*! Generic clock descriptor. */
 typedef struct _clk_rst_t
 {
-	u16 reset;
-	u16 enable;
+	u16 reset;  // Reset  SET.
+	u16 enable; // Enable SET.
 	u16 source;
-	u8 index;
-	u8 clk_src;
+	u8 index:5;
+	u8 clk_src:3;
 	u8 clk_div;
 } clk_rst_t;
 
@@ -740,7 +742,7 @@ void clock_enable_utmipll();
 
 void clock_sdmmc_config_clock_source(u32 *pclock, u32 id, u32 clock);
 void clock_sdmmc_get_card_clock_div(u32 *pclock, u16 *pdivisor, u32 type);
-int  clock_sdmmc_is_not_reset_and_enabled(u32 id);
+int  clock_sdmmc_is_active(u32 id);
 void clock_sdmmc_enable(u32 id, u32 clock);
 void clock_sdmmc_disable(u32 id);
 

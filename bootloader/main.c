@@ -38,10 +38,11 @@
 hekate_config h_cfg;
 boot_cfg_t __attribute__((section ("._boot_cfg"))) b_cfg;
 const volatile ipl_ver_meta_t __attribute__((section ("._ipl_version"))) ipl_ver = {
-	.magic = BL_MAGIC,
-	.version = (BL_VER_MJ + '0') | ((BL_VER_MN + '0') << 8) | ((BL_VER_HF + '0') << 16) | ((BL_VER_RL) << 24),
-	.rsvd0 = 0,
-	.rsvd1 = 0
+	.magic             = BL_MAGIC,
+	.version           = (BL_VER_MJ + '0') | ((BL_VER_MN + '0') << 8) | ((BL_VER_HF + '0') << 16) | ((BL_VER_RL) << 24),
+	.rcfg.rsvd_flags   = 0,
+	.rcfg.bclk_t210    = BPMP_CLK_LOWER_BOOST,
+	.rcfg.bclk_t210b01 = BPMP_CLK_DEFAULT_BOOST
 };
 
 volatile nyx_storage_t *nyx_str = (nyx_storage_t *)NYX_STORAGE_ADDR;
@@ -91,6 +92,7 @@ static void _check_power_off_from_hos()
 // This is a safe and unused DRAM region for our payloads.
 #define RELOC_META_OFF      0x7C
 #define PATCHED_RELOC_SZ    0x94
+#define VERSION_RCFG_OFF    0x120
 #define PATCHED_RELOC_STACK 0x40007000
 #define PATCHED_RELOC_ENTRY 0x40010000
 #define EXT_PAYLOAD_ADDR    0xC0000000
@@ -120,7 +122,7 @@ static void _reloc_patcher(u32 payload_dst, u32 payload_src, u32 payload_size)
 	}
 }
 
-bool is_ipl_updated(void *buf, const char *path, bool force)
+bool is_ipl_updated(void *buf, u32 size, const char *path, bool force)
 {
 	ipl_ver_meta_t *update_ft = (ipl_ver_meta_t *)(buf + PATCHED_RELOC_SZ + sizeof(boot_cfg_t));
 
@@ -130,28 +132,32 @@ bool is_ipl_updated(void *buf, const char *path, bool force)
 
 	// Check if newer version.
 	if (!force && magic_valid)
+	{
+		// Copy reserved config.
+		if (size && !is_valid_old && memcmp((u8 *)(IPL_LOAD_ADDR + VERSION_RCFG_OFF), (u8 *)(buf + VERSION_RCFG_OFF), sizeof(rsvd_cfg_t)))
+		{
+			memcpy((u8 *)(buf + VERSION_RCFG_OFF), (u8 *)(IPL_LOAD_ADDR + VERSION_RCFG_OFF), sizeof(rsvd_cfg_t));
+			sd_save_to_file(buf, size, path);
+		}
+
 		if (byte_swap_32(update_ft->version) > byte_swap_32(ipl_ver.version))
 			return false;
+	}
 
 	// Update if old or broken.
 	if (force_update || is_valid_old)
 	{
-		FIL fp;
+		boot_cfg_t tmp_cfg;
 		reloc_meta_t *reloc = (reloc_meta_t *)(IPL_LOAD_ADDR + RELOC_META_OFF);
-		boot_cfg_t *tmp_cfg = zalloc(sizeof(boot_cfg_t));
-
-		f_open(&fp, path, FA_WRITE | FA_CREATE_ALWAYS);
-		f_write(&fp, (u8 *)reloc->start, reloc->end - reloc->start, NULL);
-
-		// Write needed tag in case injected ipl uses old versioning.
-		f_write(&fp, "ICTC49", 6, NULL);
 
 		// Reset boot storage configuration.
-		f_lseek(&fp, PATCHED_RELOC_SZ);
-		f_write(&fp, tmp_cfg, sizeof(boot_cfg_t), NULL);
+		memcpy(&tmp_cfg, (u8 *)(reloc->start + PATCHED_RELOC_SZ), sizeof(boot_cfg_t));
+		memset((u8 *)(reloc->start + PATCHED_RELOC_SZ), 0, sizeof(boot_cfg_t));
 
-		f_close(&fp);
-		free(tmp_cfg);
+		sd_save_to_file((u8 *)reloc->start, reloc->end - reloc->start, path);
+
+		// Restore boot storage configuration.
+		memcpy((u8 *)(reloc->start + PATCHED_RELOC_SZ), &tmp_cfg, sizeof(boot_cfg_t));
 	}
 
 	return true;
@@ -163,8 +169,10 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 		gfx_clear_grey(0x1B);
 	gfx_con_setpos(0, 0);
 
-	FIL fp;
-	if (f_open(&fp, path, FA_READ))
+	// Read payload.
+	u32 size = 0;
+	void *buf = sd_file_read(path, &size);
+	if (!buf)
 	{
 		gfx_con.mute = false;
 		EPRINTFARGS("Payload file is missing!\n(%s)", path);
@@ -172,20 +180,20 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 		goto out;
 	}
 
-	// Read and copy the payload to our chosen address
-	void *buf;
-	u32 size = f_size(&fp);
+	if (update && is_ipl_updated(buf, size, path, false))
+		goto out;
 
+
+	// Set payload address.
+	void *payload;
 	if (size < 0x30000)
-		buf = (void *)RCM_PAYLOAD_ADDR;
+		payload = (void *)RCM_PAYLOAD_ADDR;
 	else
 	{
 		coreboot_addr = (void *)(COREBOOT_END_ADDR - size);
-		buf = coreboot_addr;
+		payload = coreboot_addr;
 		if (h_cfg.t210b01)
 		{
-			f_close(&fp);
-
 			gfx_con.mute = false;
 			EPRINTF("Coreboot not allowed on Mariko!");
 
@@ -193,19 +201,10 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 		}
 	}
 
-	if (f_read(&fp, buf, size, NULL))
-	{
-		f_close(&fp);
-
-		goto out;
-	}
-
-	f_close(&fp);
-
-	if (update && is_ipl_updated(buf, path, false))
-		goto out;
-
 	sd_end();
+
+	// Copy the payload to our chosen address.
+	memcpy(payload, buf, size);
 
 	if (size < 0x30000)
 	{
@@ -214,7 +213,7 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 		else
 			_reloc_patcher(PATCHED_RELOC_ENTRY, EXT_PAYLOAD_ADDR, ALIGN(size, 0x10));
 
-		hw_deinit(false, byte_swap_32(*(u32 *)(buf + size - sizeof(u32))));
+		hw_deinit(false, byte_swap_32(*(u32 *)(payload + size - sizeof(u32))));
 	}
 	else
 	{
@@ -222,7 +221,7 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 
 		// Get coreboot seamless display magic.
 		u32 magic = 0;
-		char *magic_ptr = buf + COREBOOT_VER_OFF;
+		char *magic_ptr = payload + COREBOOT_VER_OFF;
 		memcpy(&magic, magic_ptr + strlen(magic_ptr) - 4, 4);
 		hw_deinit(true, magic);
 	}
@@ -246,6 +245,7 @@ static void _launch_payload(char *path, bool update, bool clear_screen)
 	}
 
 out:
+	free(buf);
 	if (!update)
 	{
 		gfx_con.mute = false;
@@ -656,14 +656,21 @@ static void _nyx_load_run()
 	// Set hekate version used to boot Nyx.
 	nyx_str->version = ipl_ver.version - 0x303030; // Convert ASCII to numbers.
 
-	// Set SD card initialization info.
-	nyx_str->info.magic   = NYX_NEW_INFO;
-	nyx_str->info.sd_init = sd_get_mode();
+	// Set [new] info validation magic.
+	nyx_str->info.magic    = NYX_NEW_INFO;
+	nyx_str->info_ex.magic = NYX_NEW_INFO;
 
-	// Set SD card error info.
+	// Set [new] reserved flags.
+	nyx_str->info_ex.rsvd_flags = ipl_ver.rcfg.rsvd_flags;
+
+	// Set [new] SD card initialization and error info.
+	nyx_str->info.sd_init = sd_get_mode();
 	u16 *sd_errors = sd_get_error_count();
 	for (u32 i = 0; i < 3; i++)
 		nyx_str->info.sd_errors[i] = sd_errors[i];
+
+	// Set Display ID info.
+	nyx_str->info.panel_id = display_get_verbose_panel_id();
 
 	reloc_meta_t *reloc = (reloc_meta_t *)(IPL_LOAD_ADDR + RELOC_META_OFF);
 	memcpy((u8 *)nyx_str->hekate, (u8 *)reloc->start, reloc->end - reloc->start);
@@ -742,7 +749,7 @@ static void _check_for_updated_bootloader()
 		else
 		{
 			u8 *buf = zalloc(0x200);
-			is_ipl_updated(buf, "bootloader/update.bin", true);
+			is_ipl_updated(buf, 0, "bootloader/update.bin", true);
 			free(buf);
 		}
 	}
@@ -1455,12 +1462,16 @@ ment_t ment_top[] = {
 	MDEF_END()
 };
 
-menu_t menu_top = { ment_top, "hekate v6.4.1", 0, 0 };
+menu_t menu_top = { ment_top, "hekate v6.4.2", 0, 0 };
 
 extern void pivot_stack(u32 stack_top);
 
 void ipl_main()
 {
+	// Override DRAM ID if needed.
+	if (ipl_ver.rcfg.rsvd_flags & RSVD_FLAG_DRAM_8GB)
+		fuse_force_8gb_dramid();
+
 	// Do initial HW configuration. This is compatible with consecutive reruns without a reset.
 	hw_init();
 
@@ -1488,7 +1499,7 @@ void ipl_main()
 	display_init();
 
 	// Overclock BPMP.
-	bpmp_clk_rate_set(h_cfg.t210b01 ? BPMP_CLK_DEFAULT_BOOST : BPMP_CLK_LOWER_BOOST);
+	bpmp_clk_rate_set(h_cfg.t210b01 ? ipl_ver.rcfg.bclk_t210b01 : ipl_ver.rcfg.bclk_t210);
 
 	// Mount SD Card.
 	h_cfg.errors |= !sd_mount() ? ERR_SD_BOOT_EN : 0;
@@ -1506,7 +1517,7 @@ void ipl_main()
 		h_cfg.errors |= ERR_LIBSYS_LP0;
 
 	// Train DRAM and switch to max frequency.
-	if (minerva_init()) //!TODO: Add Tegra210B01 support to minerva.
+	if (minerva_init((minerva_str_t *)&nyx_str->minerva)) //!TODO: Add Tegra210B01 support to minerva.
 		h_cfg.errors |= ERR_LIBSYS_MTC;
 
 	// Disable watchdog protection.
@@ -1522,12 +1533,12 @@ skip_lp0_minerva_config:
 	display_backlight_pwm_init();
 	//display_backlight_brightness(h_cfg.backlight, 1000);
 
+	// Show exceptions, HOS errors, library errors and L4T kernel panics.
+	_show_errors();
+
 	// Get R2C config from RTC.
 	if (h_cfg.t210b01)
 		_r2c_get_config_t210b01();
-
-	// Show exceptions, HOS errors, library errors and L4T kernel panics.
-	_show_errors();
 
 	// Load saved configuration and auto boot if enabled.
 	if (!(h_cfg.errors & ERR_SD_BOOT_EN))

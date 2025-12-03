@@ -36,8 +36,6 @@ hekate_config h_cfg;
 const volatile ipl_ver_meta_t __attribute__((section ("._ipl_version"))) ipl_ver = {
 	.magic = NYX_MAGIC,
 	.version = (NYX_VER_MJ + '0') | ((NYX_VER_MN + '0') << 8) | ((NYX_VER_HF + '0') << 16) | ((NYX_VER_RL) << 24),
-	.rsvd0 = 0,
-	.rsvd1 = 0
 };
 
 volatile nyx_storage_t *nyx_str = (nyx_storage_t *)NYX_STORAGE_ADDR;
@@ -427,7 +425,7 @@ void nyx_init_load_res()
 	bpmp_clk_rate_get();
 
 	// Set a modest clock for init. It will be restored later if possible.
-	bpmp_clk_rate_set(BPMP_CLK_LOWER_BOOST);
+	bpmp_clk_rate_set(BPMP_CLK_LOWEST_BOOST);
 
 	// Set bootloader's default configuration.
 	set_default_configuration();
@@ -441,11 +439,20 @@ void nyx_init_load_res()
 			nyx_str->info.sd_errors[i] = 0;
 	}
 
+	// Reset new extended info if magic not correct.
+	if (nyx_str->info_ex.magic != NYX_NEW_INFO)
+		nyx_str->info_ex.rsvd_flags = 0;
+
 	// Clear info magic.
-	nyx_str->info.magic = 0;
+	nyx_str->info.magic    = 0;
+	nyx_str->info_ex.magic = 0;
+
+	// Override DRAM ID if needed.
+	if (nyx_str->info_ex.rsvd_flags & RSVD_FLAG_DRAM_8GB)
+		fuse_force_8gb_dramid();
 
 	// Set display id from previous initialization.
-	display_set_decoded_panel_id(nyx_str->info.disp_id);
+	display_set_decoded_panel_id(nyx_str->info.panel_id);
 
 	// Initialize gfx console.
 	gfx_init_ctxt((u32 *)LOG_FB_ADDRESS, 1280, 656, 656);
@@ -466,7 +473,7 @@ void nyx_init_load_res()
 	}
 
 	// Train DRAM and switch to max frequency.
-	minerva_init();
+	minerva_init((minerva_str_t *)&nyx_str->minerva);
 
 	// Load hekate/Nyx configuration.
 	_load_saved_configuration();
