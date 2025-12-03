@@ -487,7 +487,7 @@ void _hw_info_wafer(int die_x, int die_y)
 
 	lv_obj_t *wafer_txt = lv_label_create(lv_scr_act(), NULL);
 	lv_label_set_style(wafer_txt, &monospace_text);
-	lv_label_set_static_text(wafer_txt, "Wafer");
+	lv_label_set_static_text(wafer_txt, "晶圓");
 	lv_obj_align(wafer_txt, wafer_img, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 	hw_info->wafer_txt = wafer_txt;
 }
@@ -554,7 +554,7 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 		"SoC速度計2:\n\n"
 		"供應商程式碼:\n"
 		"製造廠程式碼:\n"
-		"批次程式碼 0:\n"
+		"晶圓廠代碼/批號:\n"
 		"晶圓ID:\n"
 		"X 座標:\n"
 		"Y 座標:\n\n"
