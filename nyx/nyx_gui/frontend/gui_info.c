@@ -692,7 +692,7 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 		((!h_cfg.t210b01 && dram_id_adj == LPDDR4_ICOSA_8GB_SAMSUNG_K4FBE3D4HM_MGXX) ||
 		 ( h_cfg.t210b01 && dram_id_adj == LPDDR4X_AULA_8GB_SAMSUNG_K4UBE3D4AA_MGCL))
 	   )
-		strcpy(dram_model, "#FF8000 Forced DRAM Config 8GB#");
+		strcpy(dram_model, "#FF8000 強制DRAM配置8GB#");
 
 	// Count burnt fuses.
 	u8 burnt_fuses_7 = bit_count(fuse_read_odm(7));
