@@ -1058,40 +1058,40 @@ static lv_res_t _create_mbox_fix_touchscreen(lv_obj_t *btn)
 		switch (err[0])
 		{
 		case ITO_FORCE_OPEN:
-			strcat(txt_buf, "力應開路");
+			strcat(txt_buf, "驅動端斷線");
 			break;
 		case ITO_SENSE_OPEN:
-			strcat(txt_buf, "感應開路");
+			strcat(txt_buf, "感測端斷線");
 			break;
 		case ITO_FORCE_SHRT_GND:
-			strcat(txt_buf, "力應短路到地");
+			strcat(txt_buf, "驅動端接地短路");
 			break;
 		case ITO_SENSE_SHRT_GND:
-			strcat(txt_buf, "感應短路到地");
+			strcat(txt_buf, "感測端接地短路");
 			break;
 		case ITO_FORCE_SHRT_VCM:
-			strcat(txt_buf, "力應短路到VDD");
+			strcat(txt_buf, "驅動端電源短路");
 			break;
 		case ITO_SENSE_SHRT_VCM:
-			strcat(txt_buf, "感應短路到VDD");
+			strcat(txt_buf, "感測端電源短路");
 			break;
 		case ITO_FORCE_SHRT_FORCE:
-			strcat(txt_buf, "力應短路到力應");
+			strcat(txt_buf, "驅動端內部短路");
 			break;
 		case ITO_SENSE_SHRT_SENSE:
-			strcat(txt_buf, "感應短路到感應");
+			strcat(txt_buf, "感測端內部短路");
 			break;
 		case ITO_F2E_SENSE:
-			strcat(txt_buf, "力應短路到感應");
+			strcat(txt_buf, "驅動端與感測端短路");
 			break;
 		case ITO_FPC_FORCE_OPEN:
-			strcat(txt_buf, "FPC力應開路");
+			strcat(txt_buf, "FPC驅動端斷線");
 			break;
 		case ITO_FPC_SENSE_OPEN:
-			strcat(txt_buf, "FPC感應開路");
+			strcat(txt_buf, "FPC感測端斷線");
 			break;
 		default:
-			strcat(txt_buf, "未知");
+			strcat(txt_buf, "未知故障");
 			break;
 
 		}
