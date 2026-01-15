@@ -166,7 +166,7 @@ static void _hos_eks_get()
 
 		// Decrypt EKS blob.
 		hos_eks_mbr_t *eks = (hos_eks_mbr_t *)(mbr + 0x80);
-		se_aes_crypt_ecb(14, DECRYPT, eks, sizeof(hos_eks_mbr_t), eks, sizeof(hos_eks_mbr_t));
+		se_aes_crypt_ecb(14, DECRYPT, eks, eks, sizeof(hos_eks_mbr_t));
 
 		// Check if valid and for this unit.
 		if (eks->magic == HOS_EKS_MAGIC && eks->lot0 == FUSE(FUSE_OPT_LOT_CODE_0))
@@ -212,7 +212,7 @@ static void _hos_eks_save()
 
 		// Get keys.
 		u8 *keys = (u8 *)zalloc(SZ_8K);
-		se_get_aes_keys(keys + SZ_4K, keys, SE_KEY_128_SIZE);
+		se_aes_ctx_get_keys(keys + SZ_4K, keys, SE_KEY_128_SIZE);
 
 		// Set magic and personalized info.
 		h_cfg.eks->magic   = HOS_EKS_MAGIC;
@@ -227,7 +227,7 @@ static void _hos_eks_save()
 		// Encrypt EKS blob.
 		u8 *eks = malloc(sizeof(hos_eks_mbr_t));
 		memcpy(eks, h_cfg.eks, sizeof(hos_eks_mbr_t));
-		se_aes_crypt_ecb(14, ENCRYPT, eks, sizeof(hos_eks_mbr_t), eks, sizeof(hos_eks_mbr_t));
+		se_aes_crypt_ecb(14, ENCRYPT, eks, eks, sizeof(hos_eks_mbr_t));
 
 		// Write EKS blob to SD.
 		memcpy(mbr + 0x80, eks, sizeof(hos_eks_mbr_t));
@@ -262,7 +262,7 @@ static void _hos_eks_clear(u32 mkey)
 			// Encrypt EKS blob.
 			u8 *eks = malloc(sizeof(hos_eks_mbr_t));
 			memcpy(eks, h_cfg.eks, sizeof(hos_eks_mbr_t));
-			se_aes_crypt_ecb(14, ENCRYPT, eks, sizeof(hos_eks_mbr_t), eks, sizeof(hos_eks_mbr_t));
+			se_aes_crypt_ecb(14, ENCRYPT, eks, eks, sizeof(hos_eks_mbr_t));
 
 			// Write EKS blob to SD.
 			memcpy(mbr + 0x80, eks, sizeof(hos_eks_mbr_t));
@@ -406,7 +406,7 @@ static int _hos_keygen(pkg1_eks_t *eks, u32 mkey, tsec_ctxt_t *tsec_ctxt, bool s
 		else
 		{
 			// Decrypt eks and set keyslots.
-			se_aes_crypt_block_ecb(12, DECRYPT, tsec_keys.tmp, eks_keyseeds[0]);
+			se_aes_crypt_ecb(12, DECRYPT, tsec_keys.tmp, eks_keyseeds[0], SE_KEY_128_SIZE);
 			se_aes_unwrap_key(15, 14, tsec_keys.tmp);
 
 			// Derive device keys.
@@ -442,7 +442,7 @@ static int _hos_keygen(pkg1_eks_t *eks, u32 mkey, tsec_ctxt_t *tsec_ctxt, bool s
 		else
 		{
 			// Decrypt eks and set keyslots for Exosphere 2.
-			se_aes_crypt_block_ecb(12, DECRYPT, tsec_keys.tmp, eks_keyseeds[0]);
+			se_aes_crypt_ecb(12, DECRYPT, tsec_keys.tmp, eks_keyseeds[0], SE_KEY_128_SIZE);
 			se_aes_unwrap_key(15, 14, tsec_keys.tmp);
 
 			// Derive device keys.
@@ -469,9 +469,9 @@ static int _hos_keygen(pkg1_eks_t *eks, u32 mkey, tsec_ctxt_t *tsec_ctxt, bool s
 		se_aes_key_set(13, tsec_keys.tsec, SE_KEY_128_SIZE);
 
 		// Derive eks keys from TSEC+SBK.
-		se_aes_crypt_block_ecb(13, DECRYPT, tsec_keys.tsec, eks_keyseeds[0]);
+		se_aes_crypt_ecb(13, DECRYPT, tsec_keys.tsec, eks_keyseeds[0], SE_KEY_128_SIZE);
 		se_aes_unwrap_key(15, 14, tsec_keys.tsec);
-		se_aes_crypt_block_ecb(13, DECRYPT, tsec_keys.tsec, eks_keyseeds[mkey]);
+		se_aes_crypt_ecb(13, DECRYPT, tsec_keys.tsec, eks_keyseeds[mkey], SE_KEY_128_SIZE);
 		se_aes_unwrap_key(13, 14, tsec_keys.tsec);
 
 		// Clear SBK.
@@ -481,21 +481,21 @@ static int _hos_keygen(pkg1_eks_t *eks, u32 mkey, tsec_ctxt_t *tsec_ctxt, bool s
 		// Verify eks CMAC.
 		u8 cmac[SE_KEY_128_SIZE];
 		se_aes_unwrap_key(11, 13, cmac_keyseed);
-		se_aes_cmac(cmac, SE_KEY_128_SIZE, 11, (void *)eks->ctr, sizeof(eks->ctr) + sizeof(eks->keys));
+		se_aes_hash_cmac(cmac, SE_KEY_128_SIZE, 11, (void *)eks->ctr, sizeof(eks->ctr) + sizeof(eks->keys));
 		if (!memcmp(eks->cmac, cmac, SE_KEY_128_SIZE))
 			return 0;
 */
 
-		se_aes_crypt_block_ecb(13, DECRYPT, tsec_keys.tsec, cmac_keyseed);
+		se_aes_crypt_ecb(13, DECRYPT, tsec_keys.tsec, cmac_keyseed, SE_KEY_128_SIZE);
 		se_aes_unwrap_key(11, 13, cmac_keyseed);
 
 		// Decrypt eks and set keyslots.
-		se_aes_crypt_ctr(13, &eks->keys, sizeof(eks_keys_t), &eks->keys, sizeof(eks_keys_t), eks->ctr);
+		se_aes_crypt_ctr(13, &eks->keys, &eks->keys, sizeof(eks_keys_t), eks->ctr);
 		se_aes_key_set(11, eks->keys.package1_key,   SE_KEY_128_SIZE);
 		se_aes_key_set(12, eks->keys.master_kekseed, SE_KEY_128_SIZE);
 		se_aes_key_set(13, eks->keys.master_kekseed, SE_KEY_128_SIZE);
 
-		se_aes_crypt_block_ecb(12, DECRYPT, tsec_keys.tsec, master_keyseed_retail);
+		se_aes_crypt_ecb(12, DECRYPT, tsec_keys.tsec, master_keyseed_retail, SE_KEY_128_SIZE);
 
 		if (!is_exo)
 		{
@@ -666,7 +666,7 @@ static bool _get_fs_exfat_compatible(link_t *info, u32 *hos_revision)
 		if (strcmp((char *)ki->kip1->name, "FS"))
 			continue;
 
-		if (!se_calc_sha256_oneshot(sha_buf, ki->kip1, ki->size))
+		if (!se_sha_hash_256_oneshot(sha_buf, ki->kip1, ki->size))
 			break;
 
 		pkg2_get_ids(&kip_ids, &fs_ids_cnt);
@@ -707,7 +707,6 @@ void hos_launch(ini_sec_t *cfg)
 	tsec_ctxt_t tsec_ctxt = {0};
 
 	minerva_change_freq(FREQ_1600);
-	sdram_src_pllc(true);
 	list_init(&ctxt.kip1_list);
 
 	ctxt.cfg = cfg;
@@ -747,7 +746,6 @@ void hos_launch(ini_sec_t *cfg)
 		// Check if stock is enabled and device can boot in OFW.
 		if (ctxt.stock && (h_cfg.t210b01 || !tools_autorcm_enabled()))
 		{
-			sdram_src_pllc(false);
 			emmc_end();
 
 			WPRINTF("\nRebooting to OFW in 5s...");
@@ -841,7 +839,7 @@ void hos_launch(ini_sec_t *cfg)
 				if (h_cfg.t210b01)
 				{
 					u32 bek_vector[4] = {0};
-					se_aes_crypt_ecb(13, ENCRYPT, bek_vector, SE_KEY_128_SIZE, bek_vector, SE_KEY_128_SIZE);
+					se_aes_crypt_ecb(13, ENCRYPT, bek_vector, bek_vector, SE_KEY_128_SIZE);
 					if (bek_vector[0] == 0x59C14895) // Encrypted zeroes first 32bits.
 						EPRINTF("Pkg1 corrupt?");
 					else
@@ -949,9 +947,9 @@ void hos_launch(ini_sec_t *cfg)
 			// Hash only Kernel when it embeds INI1.
 			u8 kernel_hash[0x20];
 			if (!ctxt.new_pkg2)
-				se_calc_sha256_oneshot(kernel_hash, ctxt.kernel, ctxt.kernel_size);
+				se_sha_hash_256_oneshot(kernel_hash, ctxt.kernel, ctxt.kernel_size);
 			else
-				se_calc_sha256_oneshot(kernel_hash, ctxt.kernel + PKG2_NEWKERN_START,
+				se_sha_hash_256_oneshot(kernel_hash, ctxt.kernel + PKG2_NEWKERN_START,
 					pkg2_newkern_ini1_start - PKG2_NEWKERN_START);
 
 			ctxt.pkg2_kernel_id = pkg2_identify(kernel_hash);
@@ -991,7 +989,7 @@ void hos_launch(ini_sec_t *cfg)
 	LIST_FOREACH_ENTRY(merge_kip_t, mki, &ctxt.kip1_list, link)
 		pkg2_merge_kip(&kip1_info, (pkg2_kip1_t *)mki->kip1);
 
-	// Check if FS is compatible with exFAT and if 5.1.0.
+	// Check if FS is compatible with exFAT and if 5.1.0 or 10.2.0.
 	if (!ctxt.stock && (sd_fs.fs_type == FS_EXFAT || mkey == HOS_MKEY_VER_500 || ctxt.pkg1_id->fuses == 13))
 	{
 		bool exfat_compat = _get_fs_exfat_compatible(&kip1_info, &ctxt.exo_ctx.hos_revision);
@@ -1114,8 +1112,7 @@ void hos_launch(ini_sec_t *cfg)
 	hw_config_arbiter(true);
 
 	// Scale down RAM OC if enabled.
-	sdram_src_pllc(false);
-	minerva_prep_boot_freq();
+	minerva_prep_boot_hos();
 
 	// Flush cache and disable MMU.
 	bpmp_mmu_disable();
@@ -1130,7 +1127,6 @@ void hos_launch(ini_sec_t *cfg)
 
 error:
 	_free_launch_components(&ctxt);
-	sdram_src_pllc(false);
 	emmc_end();
 
 	EPRINTF("\nFailed to launch HOS!");

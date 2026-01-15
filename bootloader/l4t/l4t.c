@@ -1,7 +1,7 @@
 /*
  * L4T Loader for Tegra X1
  *
- * Copyright (c) 2020-2025 CTCaer
+ * Copyright (c) 2020-2026 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -271,7 +271,7 @@ typedef struct _l4t_ctxt_t
 	int   ram_oc_opt;
 
 	u32   serial_port;
-	u32   sld_type;
+	bool  sld_type;
 
 	u32   sc7entry_size;
 
@@ -304,7 +304,6 @@ static const l4t_fw_t l4t_fw[] = {
 	{ BL33_LOAD_BASE,            "bl33.bin"        },
 	{ SC7ENTRY_BASE,             "sc7entry.bin"    },
 	{ SC7EXIT_BASE,              "sc7exit.bin"     },
-	{ SC7EXIT_B01_BASE,          "sc7exit_b01.bin" }, //!TODO: Update on fuse burns.
 	{ BPMPFW_BASE,               "bpmpfw.bin"      },
 	{ BPMPFW_B01_BASE,           "bpmpfw_b01.bin"  },
 	{ BPMPFW_B01_MTC_TABLE_BASE, "mtc_tbl_b01.bin" },
@@ -315,10 +314,9 @@ enum {
 	BL33_FW            = 1,
 	SC7ENTRY_FW        = 2,
 	SC7EXIT_FW         = 3,
-	SC7EXIT_B01_FW     = 4,
-	BPMPFW_FW          = 5,
-	BPMPFW_B01_FW      = 6,
-	BPMPFW_B01_MTC_TBL = 7
+	BPMPFW_FW          = 4,
+	BPMPFW_B01_FW      = 5,
+	BPMPFW_B01_MTC_TBL = 6
 };
 
 static void _l4t_crit_error(const char *text, bool needs_update)
@@ -334,9 +332,6 @@ static int _l4t_sd_load(u32 idx)
 {
 	FIL fp;
 	void *load_address = (void *)l4t_fw[idx].addr;
-
-	if (idx == SC7EXIT_B01_FW)
-		load_address -= sizeof(u32);
 
 	strcpy(sd_path + sd_path_len, l4t_fw[idx].name);
 
@@ -711,7 +706,7 @@ static void _l4t_late_hw_config(bool t210b01)
 
 	// Set spare reg to 0xE0000 and clear everything else.
 	if (t210b01 && (SYSREG(AHB_AHB_SPARE_REG) & 0xE0000000) != 0xE0000000)
-		SYSREG(AHB_AHB_SPARE_REG) = 0xE0000 << 12;
+		SYSREG(AHB_AHB_SPARE_REG) = 0xE0000 << 12u;
 
 	// HDA loopback disable on prod.
 	PMC(APBDEV_PMC_STICKY_BITS) = PMC_STICKY_BITS_HDA_LPBK_DIS;
@@ -719,6 +714,9 @@ static void _l4t_late_hw_config(bool t210b01)
 	// Clear any MC error.
 	MC(MC_INTSTATUS) = MC(MC_INTSTATUS);
 
+	// Enable Wrap burst for BPMP, GPU and PCIE.
+	MSELECT(MSELECT_CONFIG) = (MSELECT(MSELECT_CONFIG) & (~(MSELECT_CFG_ERR_RESP_EN_GPU | MSELECT_CFG_ERR_RESP_EN_PCIE))) |
+							  (MSELECT_CFG_WRAP_TO_INCR_GPU | MSELECT_CFG_WRAP_TO_INCR_PCIE | MSELECT_CFG_WRAP_TO_INCR_BPMP);
 
 #if LOCK_PMC_REGISTERS
 	// Lock LP0 parameters and misc secure registers. Always happens on warmboot.
@@ -825,11 +823,9 @@ static int _l4t_sc7_exit_config(bool t210b01)
 	}
 	else
 	{
-		launch_ctxt_t hos_ctxt = {0};
-		u32 fw_fuses = *(u32 *)(SC7EXIT_B01_BASE - sizeof(u32)); // Fuses count in front of actual firmware.
-
 		// Get latest SC7-Exit if needed and setup PA id.
-		if (!pkg1_warmboot_config(&hos_ctxt, 0, fw_fuses, 0))
+		launch_ctxt_t hos_ctxt = {0};
+		if (!pkg1_warmboot_config(&hos_ctxt, 0, 0, 0))
 		{
 			gfx_con.mute = false;
 			gfx_wputs("\nFailed to match warmboot with fuses!\nIf you continue, sleep wont work!");
@@ -867,7 +863,7 @@ static void _l4t_set_config(l4t_ctxt_t *ctxt, const ini_sec_t *ini_sec, int entr
 	char val[4] = {0};
 
 	// Set default SLD type.
-	ctxt->sld_type = BL_MAGIC_L4TLDR_SLD;
+	ctxt->sld_type = true;
 
 	// Parse ini section and prepare BL33 env.
 	LIST_FOREACH_ENTRY(ini_kv_t, kv, &ini_sec->kvs, link)
@@ -903,7 +899,7 @@ static void _l4t_set_config(l4t_ctxt_t *ctxt, const ini_sec_t *ini_sec, int entr
 		else if (!strcmp("uart_port",   kv->key))
 			ctxt->serial_port = atoi(kv->val);
 		else if (!strcmp("sld_type",    kv->key))
-			ctxt->sld_type    = strtol(kv->val, NULL, 16);
+			ctxt->sld_type    = atoi(kv->val);
 
 		// Set key/val to BL33 env.
 		_l4t_bl33_cfg_set_key(bl33_env, kv->key, kv->val);
@@ -1000,6 +996,13 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 			_l4t_crit_error("loading BPMP-FW", true);
 			return;
 		}
+
+		// Load SC7-Exit firmware.
+		if (!_l4t_sd_load(SC7EXIT_FW))
+		{
+			_l4t_crit_error("loading SC7-Exit", true);
+			return;
+		}
 	}
 	else
 	{
@@ -1016,13 +1019,6 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 			_l4t_crit_error("loading BPMP-FW MTC", true);
 			return;
 		}
-	}
-
-	// Load SC7-Exit firmware.
-	if (!_l4t_sd_load(!t210b01 ? SC7EXIT_FW : SC7EXIT_B01_FW))
-	{
-		_l4t_crit_error("loading SC7-Exit", true);
-		return;
 	}
 
 	// Set SC7-Exit firmware address to PMC for bootrom and do further setup.
@@ -1170,7 +1166,7 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	_l4t_mc_config_carveout(t210b01);
 
 	// Deinit any unneeded HW.
-	hw_deinit(false, ctxt->sld_type);
+	hw_deinit(ctxt->sld_type);
 
 	// Do late hardware config.
 	_l4t_late_hw_config(t210b01);
@@ -1179,10 +1175,6 @@ void launch_l4t(const ini_sec_t *ini_sec, int entry_idx, int is_list, bool t210b
 	{
 		// Launch BL31.
 		ccplex_boot_cpu0(TZDRAM_COLD_ENTRY, true);
-
-		// Enable Wrap burst for BPMP, GPU and PCIE.
-		MSELECT(MSELECT_CONFIG) = (MSELECT(MSELECT_CONFIG) & (~(MSELECT_CFG_ERR_RESP_EN_GPU | MSELECT_CFG_ERR_RESP_EN_PCIE))) |
-								  (MSELECT_CFG_WRAP_TO_INCR_GPU | MSELECT_CFG_WRAP_TO_INCR_PCIE | MSELECT_CFG_WRAP_TO_INCR_BPMP);
 
 		// For T210B01, prep reset vector for SC7 save state and start BPMP-FW.
 		EXCP_VEC(EVP_COP_RESET_VECTOR) = BPMPFW_B01_ENTRYPOINT;

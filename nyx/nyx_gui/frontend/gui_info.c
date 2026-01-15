@@ -157,10 +157,29 @@ static lv_res_t _bootrom_dump_window_action(lv_obj_t * btn)
 	return LV_RES_OK;
 }
 
+static u8 _ccplex_set_fuse_rd_tz[] = {
+	0xC1, 0x00, 0x00, 0x18, // 0x00: LDR  W1, =APB_MISC_PP_FUSE_READ_TZ
+	0xE0, 0x03, 0x80, 0xD2, // 0x04: MOV  X0, #0x1F
+	0x20, 0x00, 0x00, 0xB9, // 0x08: STR  W0, [X1]
+	0x1F, 0x71, 0x08, 0xD5, // 0x0C: IC   IALLUIS
+	0x9F, 0x3B, 0x03, 0xD5, // 0x10: DSB  ISH
+	0xFE, 0xFF, 0xFF, 0x17, // 0x14: B    loop
+	0xA4, 0x00, 0x00, 0x70, // 0x18: APB_MISC_PP_FUSE_READ_TZ/////////////////////check default value for sure
+};
+
+static void _unlock_reserved_odm_fuses(bool lock)
+{
+	_ccplex_set_fuse_rd_tz[4] = lock ? 0xE0 : 0x00;
+	_ccplex_set_fuse_rd_tz[5] = lock ? 0x03 : 0x00;
+
+	// Launch payload on CCPLEX EL3 in order to unlock reserved ODM8-29 fuses.
+	ccplex_boot_cpu0((u32)_ccplex_set_fuse_rd_tz, false);
+	msleep(100);
+	ccplex_powergate_cpu0();
+}
+
 static lv_res_t _fuse_dump_window_action(lv_obj_t * btn)
 {
-	const u32 fuse_array_size = (h_cfg.t210b01 ? FUSE_ARRAY_WORDS_NUM_B01 : FUSE_ARRAY_WORDS_NUM) * sizeof(u32);
-
 	int error = !sd_mount();
 	if (!error)
 	{
@@ -169,25 +188,31 @@ static lv_res_t _fuse_dump_window_action(lv_obj_t * btn)
 		{
 			emmcsn_path_impl(path, "/dumps", "fuse_cached_t210.bin", NULL);
 			error = sd_save_to_file((u8 *)0x7000F900, 0x300, path);
+			emmcsn_path_impl(path, "/dumps", "fuse_array_raw_t210.bin", NULL);
 		}
 		else
 		{
+			// Unlock all reserved ODM fuses.
+			_unlock_reserved_odm_fuses(false);
+
 			emmcsn_path_impl(path, "/dumps", "fuse_cached_t210b01_x898.bin", NULL);
 			error = sd_save_to_file((u8 *)0x7000F898, 0x68, path);
 			emmcsn_path_impl(path, "/dumps", "fuse_cached_t210b01_x900.bin", NULL);
 			if (!error)
 				error = sd_save_to_file((u8 *)0x7000F900, 0x300, path);
+			emmcsn_path_impl(path, "/dumps", "fuse_array_raw_t210b01.bin", NULL);
 		}
 
-		u32 words[FUSE_ARRAY_WORDS_NUM_B01];
-		fuse_read_array(words);
-		if (!h_cfg.t210b01)
-			emmcsn_path_impl(path, "/dumps", "fuse_array_raw_t210.bin", NULL);
-		else
-			emmcsn_path_impl(path, "/dumps", "fuse_array_raw_t210b01.bin", NULL);
-		int res = sd_save_to_file((u8 *)words, fuse_array_size, path);
 		if (!error)
-			error = res;
+		{
+			u32 words[FUSE_ARRAY_WORDS_NUM_B01];
+			u32 array_size = fuse_read_array(words);
+			error = sd_save_to_file((u8 *)words, array_size * sizeof(u32), path);
+		}
+
+		// Relock.
+		if (h_cfg.t210b01)
+			_unlock_reserved_odm_fuses(true);
 
 		sd_unmount();
 	}
@@ -265,7 +290,7 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 	nx_emmc_cal0_t *cal0 = (nx_emmc_cal0_t *)cal0_buf;
 
 	u32 hash[8];
-	se_calc_sha256_oneshot(hash, (u8 *)&cal0->cfg_id1, cal0->body_size);
+	se_sha_hash_256_oneshot(hash, (u8 *)&cal0->cfg_id1, cal0->body_size);
 
 	s_printf(txt_buf,
 		"#FF8000 CAL0版本:#          %d\n"
@@ -387,51 +412,63 @@ typedef struct _hw_info_t
 
 hw_info_t *hw_info = NULL;
 
+//! TODO: Limits assumed based on known samples.
+#define WAFER_20NM_X_MIN  -9
+#define WAFER_20NM_X_MAX  15
+#define WAFER_20NM_Y_MIN   1
+#define WAFER_20NM_Y_MAX  24
+
+// Limits validated based on known samples.
+#define WAFER_16NM_X_MIN -11
+#define WAFER_16NM_X_MAX  17
+#define WAFER_16NM_Y_MIN   0
+#define WAFER_16NM_Y_MAX  27
+
 void _hw_info_wafer(int die_x, int die_y)
 {
 	static lv_img_dsc_t wafer_desc = { 0 };
-	int radius;
+	int diameter;
 
 	if (h_cfg.t210b01)
 	{
-		//! TODO: Limits based on known samples.
-		if (die_x < -11 || die_x > 17 || die_y > 27)
-			die_x = -12;
+		if (die_x < WAFER_16NM_X_MIN || die_x > WAFER_16NM_X_MAX ||
+			die_y < WAFER_16NM_Y_MIN || die_y > WAFER_16NM_Y_MAX)
+			die_x = WAFER_16NM_X_MIN - 1;
 
-		radius = 29;
-		die_x += 11;
+		die_x   += -WAFER_16NM_X_MIN;
+		diameter = 29;
 	}
 	else
 	{
-		//! TODO: Limits based on known samples.
-		if (die_x < -10 || die_x > 15 || die_y > 24)
-			die_x = -11;
+		if (die_x < WAFER_20NM_X_MIN || die_x > WAFER_20NM_X_MAX ||
+			die_y < 0                || die_y > WAFER_20NM_Y_MAX)
+			die_x = WAFER_20NM_X_MIN - 1;
 
-		radius = 26;
-		die_x += 10;
+		die_x   += -WAFER_20NM_X_MIN;
+		diameter = 26;
 	}
 
 	const u32 die_size = 2;
 	const u32 die_side = die_size + 1;
-	const u32 die_line = die_side * radius + 1;
-	const int align_off = (die_size - 2) * radius;
+	const u32 die_line = die_side * diameter + 1;
+	const int align_off = (die_size - 2) * diameter;
 	const u32 die_color = (die_x == -1) ? 0xFFFF0000 : 0x30FFFFFF; // Red for OOB.
 	const u32 str_color = 0x10FFFFFF;
 	const u32 hit_color = 0xFFFF8000;
 
-	u32 *wafer_map = calloc(1, die_line * die_line * sizeof(u32));
+	u32 *wafer_map = zalloc(die_line * die_line * sizeof(u32));
 
-	for (int y = 0; y < radius; y++)
+	for (int y = 0; y < diameter; y++)
 	{
 		u32 wafer_row_next = -1;
 		u32 wafer_row      = h_cfg.t210b01 ? wafer16nm[y] : wafer20nm[y];
 
-		if ((y + 1) < radius)
+		if ((y + 1) < diameter)
 			wafer_row_next = h_cfg.t210b01 ? wafer16nm[y + 1] : wafer20nm[y + 1];
 
 		// Paint the first row of dies.
 		int pos_y = y * die_line * die_side + die_line;
-		for (int x = 0; x < radius; x++)
+		for (int x = 0; x < diameter; x++)
 		{
 			bool die_found  = x == die_x && die_y == y;
 			bool in_wafer = wafer_row & (1u << x);
@@ -487,7 +524,7 @@ void _hw_info_wafer(int die_x, int die_y)
 
 	lv_obj_t *wafer_txt = lv_label_create(lv_scr_act(), NULL);
 	lv_label_set_style(wafer_txt, &monospace_text);
-	lv_label_set_static_text(wafer_txt, "晶圓");
+	lv_label_set_static_text(wafer_txt, (die_x == -1) ? "錯誤" : "晶圓");
 	lv_obj_align(wafer_txt, wafer_img, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 	hw_info->wafer_txt = wafer_txt;
 }
@@ -1774,7 +1811,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		for (u32 i = 0; i < rnd_off_cnt; i += 4)
 		{
 			// Generate new random numbers.
-			while (!se_gen_prng128(random_numbers))
+			while (!se_rng_pseudo(random_numbers, SE_RNG_BLOCK_SIZE))
 				;
 			// Clamp offsets to 256MB range.
 			random_offsets[i + 0] = random_numbers[0] % sct_rem_4kb;
@@ -1961,6 +1998,9 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 	case 0x45: // Unofficial.
 		strcat(txt_buf, "閃迪 ");
 		lv_win_add_btn(win, NULL, SYMBOL_FILE_ALT" 裝置報告", _create_mbox_emmc_sandisk_report);
+		break;
+	case 0x89: // Unofficial.
+		strcat(txt_buf, "Silicon Motion ");
 		break;
 	case 0x90:
 		strcat(txt_buf, "SK海力士 ");

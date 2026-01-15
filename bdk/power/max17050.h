@@ -25,17 +25,6 @@
 
 #include <utils/types.h>
 
-/* Board default values */
-#define MAX17050_BOARD_CGAIN 2 /* Actual: 1.99993 */
-#define MAX17050_BOARD_SNS_RESISTOR_UOHM 5000 /* 0.005 Ohm */
-
-#define MAX17050_STATUS_BattAbsent BIT(3)
-
-/* Consider RepCap which is less then 10 units below FullCAP full */
-#define MAX17050_FULL_THRESHOLD 10
-
-#define MAX17050_CHARACTERIZATION_DATA_SIZE 48
-
 #define MAXIM17050_I2C_ADDR 0x36
 
 enum MAX17050_reg {
@@ -134,6 +123,5 @@ int  max17050_get_version(u32 *value);
 int  max17050_get_property(enum MAX17050_reg reg, int *value);
 int  max17050_fix_configuration();
 void max17050_dump_regs(void *buf);
-u32  max17050_get_cached_batt_volt();
 
 #endif /* __MAX17050_H_ */

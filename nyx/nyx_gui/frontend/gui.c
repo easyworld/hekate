@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2025 CTCaer
+ * Copyright (c) 2018-2026 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -440,7 +440,14 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 
 		if (jc_drv_ctx.calibration_step != JC_CAL_MAX_STEPS)
 		{
+			if (jc_pad->plus || jc_pad->minus)
+				goto handle_console;
+
+			if (console_enabled)
+				goto console;
+
 			data->state = LV_INDEV_STATE_REL;
+
 			return false;
 		}
 	}
@@ -460,6 +467,7 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 	// Enable console.
 	if (jc_pad->plus || jc_pad->minus)
 	{
+handle_console:
 		if (((u32)get_tmr_ms() - jc_drv_ctx.console_timeout) > 1000)
 		{
 			if (!console_enabled)
@@ -481,22 +489,26 @@ static bool _jc_virt_mouse_read(lv_indev_data_t *data)
 		}
 
 		data->state = LV_INDEV_STATE_REL;
+
 		return false;
 	}
 
 	if (console_enabled)
 	{
+console:
 		// Print input debugging in console.
 		gfx_con_getpos(&gfx_con.savedx, &gfx_con.savedy, &gfx_con.savedcol);
 		gfx_con_setpos(32, 630, GFX_COL_AUTO);
 		gfx_con.fntsz = 8;
-		gfx_printf("x: %4X, y: %4X | rx: %4X, ry: %4X | b: %06X | bt: %d %d",
+		gfx_printf("x: %4X, y: %4X | rx: %4X, ry: %4X | b: %06X | c: %d (%d), %d (%d)",
 			jc_pad->lstick_x, jc_pad->lstick_y, jc_pad->rstick_x, jc_pad->rstick_y,
-			jc_pad->buttons, jc_pad->batt_info_l, jc_pad->batt_info_r);
+			jc_pad->buttons, jc_pad->batt_info_l, jc_pad->batt_chrg_l,
+			jc_pad->batt_info_r, jc_pad->batt_chrg_r);
 		gfx_con_setpos(gfx_con.savedx, gfx_con.savedy, gfx_con.savedcol);
 		gfx_con.fntsz = 16;
 
 		data->state = LV_INDEV_STATE_REL;
+
 		return false;
 	}
 
@@ -923,7 +935,7 @@ static void _launch_hos(u8 autoboot, u8 autoboot_list)
 
 	sd_end();
 
-	hw_deinit(false, 0);
+	hw_deinit(false);
 
 	(*main_ptr)();
 }
@@ -958,7 +970,7 @@ void reload_nyx(lv_obj_t *obj, bool force)
 
 	sd_end();
 
-	hw_deinit(false, 0);
+	hw_deinit(false);
 
 	(*main_ptr)();
 }
@@ -1253,9 +1265,9 @@ static void _create_tab_about(lv_theme_t * th, lv_obj_t * parent)
 	lv_label_set_recolor(lbl_credits, true);
 	lv_label_set_static_text(lbl_credits,
 		"#C7EA46 hekate# (c) 2018,      #C7EA46 naehrwert#, #C7EA46 st4rk#\n"
-		"       (c) 2018-2025, #C7EA46 CTCaer#\n"
+		"       (c) 2018-2026, #C7EA46 CTCaer#\n"
 		"\n"
-		"#C7EA46 Nyx#    (c) 2019-2025, #C7EA46 CTCaer#\n"
+		"#C7EA46 Nyx#    (c) 2019-2026, #C7EA46 CTCaer#\n"
 		"\n"
 		"Thanks to: #00CCFF derrek, nedwill, plutoo, #\n"
 		"           #00CCFF shuffle2, smea, thexyz, yellows8 #\n"
@@ -2492,7 +2504,7 @@ void nyx_load_and_run()
 	}
 	else
 	{
-		// Alternate DRAM frequencies. Saves 280 mW.
+		// Alternate DRAM frequencies. Total stall < 1ms. Saves 300+ mW.
 		while (true)
 		{
 			minerva_change_freq(FREQ_1600);  // Takes 295 us.
@@ -2500,6 +2512,7 @@ void nyx_load_and_run()
 			lv_task_handler();
 
 			minerva_change_freq(FREQ_800);   // Takes 80 us.
+			usleep(125); // Min 20us.
 		}
 	}
 }

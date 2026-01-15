@@ -30,15 +30,16 @@
 #define WINDOW_D 3
 
 /*! Display registers. */
-#define _DIREG(reg) ((reg) * 4)
+// All Display/DSI/MIPI register defines and macros are index based (not offset).
+// DC_CMD/DC_COM/WINC Non-shadowed. DC_DISP/DC_WIN/DC_WINBUF Shadowed.
 
 // Display controller scratch registers.
 #define DC_D_WINBUF_DD_SCRATCH_REGISTER_0 0xED
 #define DC_D_WINBUF_DD_SCRATCH_REGISTER_1 0xEE
 #define DC_T_WINBUF_TD_SCRATCH_REGISTER_0 0x16D
 #define DC_T_WINBUF_TD_SCRATCH_REGISTER_1 0x16E
-#define DC_COM_SCRATCH_REGISTER_A 0x325
-#define DC_COM_SCRATCH_REGISTER_B 0x326
+#define DC_COM_SCRATCH_REGISTER_A         0x325
+#define DC_COM_SCRATCH_REGISTER_B         0x326
 #define DC_A_WINBUF_AD_SCRATCH_REGISTER_0 0xBED
 #define DC_A_WINBUF_AD_SCRATCH_REGISTER_1 0xBEE
 #define DC_B_WINBUF_BD_SCRATCH_REGISTER_0 0xDED
@@ -280,8 +281,8 @@
 #define DC_DISP_CURSOR_BACKGROUND    0x43D
 #define  CURSOR_COLOR(r,g,b) (((r) & 0xFF) | (((g) & 0xFF) << 8) | (((b) & 0xFF) << 16))
 
-#define DC_DISP_CURSOR_START_ADDR    0x43E
-#define DC_DISP_CURSOR_START_ADDR_NS 0x43F
+#define DC_DISP_CURSOR_START_ADDR       0x43E
+#define DC_DISP_CURSOR_START_ADDR_NS    0x43F
 #define  CURSOR_CLIPPING(w) ((w) << 28)
 #define   CURSOR_CLIP_WIN_A 1
 #define   CURSOR_CLIP_WIN_B 2
@@ -290,11 +291,10 @@
 #define  CURSOR_SIZE_64  (1 << 24)
 #define  CURSOR_SIZE_128 (2 << 24)
 #define  CURSOR_SIZE_256 (3 << 24)
-#define DC_DISP_CURSOR_POSITION      0x440
-#define DC_DISP_BLEND_BACKGROUND_COLOR 0x4E4
-#define DC_DISP_CURSOR_START_ADDR_HI 0x4EC
+#define DC_DISP_CURSOR_POSITION         0x440
+#define DC_DISP_CURSOR_START_ADDR_HI    0x4EC
 #define DC_DISP_CURSOR_START_ADDR_HI_NS 0x4ED
-#define DC_DISP_BLEND_CURSOR_CONTROL 0x4F1
+#define DC_DISP_BLEND_CURSOR_CONTROL    0x4F1
 #define  CURSOR_BLEND_2BIT     (0 << 24)
 #define  CURSOR_BLEND_R8G8B8A8 (1 << 24)
 #define  CURSOR_BLEND_SRC_FACTOR(n) ((n) << 8)
@@ -304,10 +304,13 @@
 #define   CURSOR_BLEND_NK1 2
 // End of cursor cfg regs.
 
-#define DC_DISP_DC_MCCIF_FIFOCTRL 0x480
-#define DC_DISP_SD_BL_PARAMETERS 0x4D7
-#define DC_DISP_SD_BL_CONTROL 0x4DC
+#define DC_DISP_DC_MCCIF_FIFOCTRL      0x480
+#define DC_DISP_SD_BL_PARAMETERS       0x4D7
+#define DC_DISP_SD_BL_CONTROL          0x4DC
 #define DC_DISP_BLEND_BACKGROUND_COLOR 0x4E4
+
+#define DC_DISP_DISPLAY_SPARE0         0x4F7 // Used by SW/HW.
+#define DC_DISP_DISPLAY_SPARE1         0x4F8
 
 #define DC_WINC_COLOR_PALETTE 0x500
 #define  COLOR_PALETTE_IDX(off) (DC_WINC_COLOR_PALETTE + (off))
@@ -466,9 +469,10 @@
 
 #define DC_WINBUF_MEMFETCH_CONTROL 0x82B
 
-/*! Display serial interface registers. */
-#define _DSIREG(reg) ((reg) * 4)
+/* Scratch register to store DCS backlight level (custom). */
+#define DC_DCS_BACKLIGHT_LEVEL DC_COM_SCRATCH_REGISTER_B
 
+/*! Display serial interface registers. */
 #define DSI_INCR_SYNCPT_CNTRL 0x1
 #define  DSI_INCR_SYNCPT_SOFT_RESET BIT(0)
 #define  DSI_INCR_SYNCPT_NO_STALL   BIT(8)
@@ -884,10 +888,9 @@ void display_dsi_vblank_write(u8 cmd, u32 len, void *data);
 /*! Show one single color on the display. */
 void display_color_screen(u32 color);
 
-/*! Switches screen backlight ON/OFF. */
+/*! Screen backlight ON/OFF or set via duty and fading. */
 void display_backlight(bool enable);
 void display_backlight_brightness(u32 brightness, u32 step_delay);
-u32  display_get_backlight_brightness();
 
 u32 *display_init_window_a_pitch();
 u32 *display_init_window_a_pitch_vic();
