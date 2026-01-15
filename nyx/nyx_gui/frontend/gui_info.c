@@ -2000,7 +2000,7 @@ static lv_res_t _create_window_emmc_info_status(lv_obj_t *btn)
 		lv_win_add_btn(win, NULL, SYMBOL_FILE_ALT" 裝置報告", _create_mbox_emmc_sandisk_report);
 		break;
 	case 0x89: // Unofficial.
-		strcat(txt_buf, "Silicon Motion ");
+		strcat(txt_buf, "慧榮科技 ");
 		break;
 	case 0x90:
 		strcat(txt_buf, "SK海力士 ");

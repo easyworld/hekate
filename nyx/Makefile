@@ -55,7 +55,7 @@ OBJS += diskio ff ffunicode ffsystem \
 		lv_draw lv_draw_rbasic lv_draw_vbasic lv_draw_arc lv_draw_img \
 		lv_draw_label lv_draw_line lv_draw_rect lv_draw_triangle \
 		lv_hal_disp lv_hal_indev lv_hal_tick \
-		interui_20 interui_30 ubuntu_mono harmony_os_sans_20 harmony_os_sans_30hekate_symbol_20 hekate_symbol_30 hekate_symbol_120 lv_font_builtin \
+		interui_20 interui_30 ubuntu_mono harmony_os_sans_20 harmony_os_sans_30 hekate_symbol_20 hekate_symbol_30 hekate_symbol_120 lv_font_builtin \
 		lv_anim lv_area lv_circ lv_color lv_font lv_ll lv_math lv_mem lv_task lv_txt lv_gc \
 		lv_bar lv_btn lv_btnm lv_cb lv_cont lv_ddlist lv_img lv_label lv_line lv_list lv_lmeter lv_mbox \
 		lv_page lv_roller lv_slider lv_sw lv_tabview lv_ta lv_win lv_log lv_imgbtn \
