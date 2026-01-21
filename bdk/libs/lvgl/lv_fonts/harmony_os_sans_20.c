@@ -6903,6 +6903,29 @@ static const uint8_t glyph_bitmap[] =
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 
 
+/* 差 */
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x39,0x66,0x39,0x00,0x00,0x00,0x65,0x8e,0x39,0x00,0x00,0x00,  //....+....++....
+0x00,0x00,0x00,0x00,0xfe,0xfe,0x00,0x00,0x00,0xda,0xfe,0x00,0x00,0x00,0x00,  //....@@...%@....
+0x39,0xb5,0xb6,0xb6,0xda,0xff,0xda,0xb6,0xda,0xff,0xda,0xb6,0xb6,0xb5,0x00,  //.%%%%@%%%@%%%%.
+0x00,0x39,0x3a,0x3a,0x3a,0x3a,0x8e,0xda,0x65,0x3a,0x3a,0x3a,0x3a,0x39,0x00,  //......+%+......
+0x00,0x39,0x66,0x66,0x66,0x66,0xb5,0xdb,0x8e,0x66,0x66,0x66,0x65,0x39,0x00,  //..++++%%+++++..
+0x00,0x65,0xb5,0xb6,0xb6,0xb6,0xda,0xfe,0xda,0xb6,0xb6,0xb6,0xb5,0x39,0x00,  //.+%%%%%@%%%%%..
+0x00,0x00,0x00,0x00,0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x00,0x00,0x00,0x00,  //......+%+......
+0x8e,0xfe,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfe,0x65,  //+@@@@@@@@@@@@@+
+0x00,0x00,0x00,0x00,0xb5,0xfe,0x65,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //....%@+........
+0x00,0x00,0x00,0x8e,0xfe,0xda,0xb6,0xb6,0xb6,0xb6,0xb6,0xb6,0xb5,0x39,0x00,  //...+@%%%%%%%%..
+0x00,0x39,0xb5,0xdb,0xb5,0x66,0x66,0xda,0xfe,0x8e,0x66,0x66,0x65,0x00,0x00,  //..%%%++%@++++..
+0x8e,0xfe,0xfe,0x65,0x00,0x00,0x00,0xb5,0xfe,0x39,0x00,0x00,0x00,0x00,0x00,  //+@@+...%@......
+0x39,0x3a,0x66,0x66,0x66,0x66,0x66,0xda,0xfe,0x8e,0x66,0x66,0x66,0x65,0x39,  //..+++++%@+++++.
+0x00,0x39,0xb5,0xb6,0xb6,0xb6,0xb6,0xb6,0xb6,0xb6,0xb6,0xb6,0xb6,0xb5,0x39,  //..%%%%%%%%%%%%.
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+
+
 /* 已 */
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
@@ -11342,6 +11365,29 @@ static const uint8_t glyph_bitmap[] =
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 
 
+/* 甚 */
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x39,0x65,0x39,0x00,0x00,0x00,0x39,0x65,0x39,0x00,0x00,0x00,  //....+.....+....
+0x00,0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x00,0x65,0xda,0x8e,0x00,0x00,0x00,  //...+%+...+%+...
+0x00,0xb5,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xda,0x00,  //.%@@@@@@@@@@@%.
+0x00,0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x00,0x65,0xda,0x8e,0x00,0x00,0x00,  //...+%+...+%+...
+0x00,0x00,0x00,0x8e,0xfe,0xfe,0xdb,0xdb,0xdb,0xfe,0xfe,0x8e,0x00,0x00,0x00,  //...+@@%%%@@+...
+0x00,0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x00,0x65,0xda,0x8e,0x00,0x00,0x00,  //...+%+...+%+...
+0x00,0x00,0x00,0x8e,0xfe,0xfe,0xdb,0xdb,0xdb,0xfe,0xfe,0x8e,0x00,0x00,0x00,  //...+@@%%%@@+...
+0x00,0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x00,0x65,0xda,0x8e,0x00,0x00,0x00,  //...+%+...+%+...
+0x39,0xb5,0xb6,0xda,0xfe,0xda,0xb6,0xb6,0xb6,0xda,0xfe,0xda,0xb6,0xb5,0x39,  //.%%%@%%%%%@%%%.
+0x00,0x39,0xda,0xda,0x3a,0x8e,0xda,0x8e,0xda,0xda,0x3a,0x3a,0x3a,0x39,0x00,  //..%%.+%+%%.....
+0x00,0x00,0xda,0xda,0x65,0xfe,0xda,0x00,0xda,0xfe,0x66,0x66,0x39,0x00,0x00,  //..%%+@%.%@++...
+0x00,0x00,0xda,0xda,0xdb,0xb5,0x00,0x00,0x65,0xb5,0xb6,0xb5,0x65,0x00,0x00,  //..%%%%..+%%%+..
+0x00,0x00,0xda,0xda,0x3a,0x3a,0x3a,0x3a,0x3a,0x3a,0x3a,0x3a,0x39,0x00,0x00,  //..%%...........
+0x00,0x00,0x8e,0xda,0xdb,0xdb,0xdb,0xdb,0xdb,0xdb,0xdb,0xdb,0xda,0x65,0x00,  //..+%%%%%%%%%%+.
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+
+
 /* 生 */
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
@@ -11453,6 +11499,29 @@ static const uint8_t glyph_bitmap[] =
 0x00,0x39,0xfe,0xfe,0xb6,0xb6,0xda,0xfe,0xda,0xb6,0xb6,0xfe,0xfe,0x00,0x00,  //..@@%%%@%%%@@..
 0x00,0x39,0xfe,0xda,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0xda,0xfe,0x00,0x00,  //..@%+++++++%@..
 0x00,0x00,0x39,0x39,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x39,0x39,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+
+
+/* 異 */
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0xfe,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xfe,0x00,0x00,  //..@@@@@@@@@@@..
+0x00,0x00,0xfe,0xb5,0x00,0x00,0x65,0xb6,0x65,0x00,0x00,0xb5,0xfe,0x00,0x00,  //..@%..+%+..%@..
+0x00,0x00,0xfe,0xfe,0xdb,0xdb,0xfe,0xff,0xfe,0xdb,0xdb,0xfe,0xfe,0x00,0x00,  //..@@%%@@@%%@@..
+0x00,0x00,0xfe,0xb5,0x00,0x00,0x65,0xb6,0x65,0x00,0x00,0xb5,0xfe,0x00,0x00,  //..@%..+%+..%@..
+0x00,0x00,0xfe,0xfe,0xdb,0xdb,0xfe,0xff,0xfe,0xdb,0xdb,0xfe,0xfe,0x00,0x00,  //..@@%%@@@%%@@..
+0x00,0x00,0x39,0x3a,0xda,0xb5,0x3a,0x3a,0x3a,0xda,0xb5,0x3a,0x39,0x00,0x00,  //....%%...%%....
+0x00,0x39,0x66,0x66,0xfe,0xda,0x66,0x66,0x66,0xfe,0xda,0x66,0x66,0x39,0x00,  //..++@%+++@%++..
+0x00,0x8e,0xb6,0xb6,0xfe,0xfe,0xb6,0xb6,0xb6,0xfe,0xfe,0xb6,0xb6,0x8e,0x00,  //.+%%@@%%%@@%%+.
+0x00,0x00,0x00,0x00,0xfe,0xda,0x00,0x00,0x00,0xfe,0xda,0x00,0x00,0x00,0x00,  //....@%...@%....
+0x8e,0xda,0xdb,0xdb,0xff,0xfe,0xdb,0xdb,0xdb,0xff,0xfe,0xdb,0xdb,0xda,0x8e,  //+%%%@@%%%@@%%%+
+0x00,0x3a,0x3a,0x3a,0x3a,0x8e,0x65,0x3a,0x65,0x8e,0x3a,0x3a,0x3a,0x3a,0x00,  //.....++.++.....
+0x00,0x00,0x65,0xda,0xfe,0xfe,0x8e,0x00,0x65,0xda,0xff,0xda,0x8e,0x39,0x00,  //..+%@@+.+%@%+..
+0x00,0xfe,0xfe,0xb5,0x39,0x00,0x00,0x00,0x00,0x00,0x39,0x8e,0xfe,0xfe,0x00,  //.@@%.......+@@.
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 
@@ -12188,6 +12257,29 @@ static const uint8_t glyph_bitmap[] =
 0x00,0x65,0xda,0xfe,0xff,0xb5,0xda,0x3a,0xda,0x8e,0xfe,0xb5,0xb5,0xfe,0x39,  //.+%@@%%.%+@%%@.
 0xb5,0xfe,0xb5,0x65,0x39,0x8e,0xda,0x3a,0xda,0x8e,0xfe,0xb5,0xb5,0xfe,0x39,  //%@%+.+%.%+@%%@.
 0x00,0x00,0x00,0x00,0x00,0x8e,0xda,0x39,0x39,0x00,0x00,0xda,0xff,0xfe,0x00,  //.....+%....%@@.
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+
+
+/* 符 */
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0xb5,0x8e,0x00,0x00,0x00,0x39,0x8f,0x65,0x00,0x00,0x00,0x00,  //...%+....++....
+0x00,0x00,0x8e,0xdb,0x8e,0x00,0x00,0x00,0xb5,0xfe,0x65,0x00,0x00,0x00,0x00,  //..+%+...%@+....
+0x00,0x39,0xfe,0xff,0xff,0xff,0xff,0xda,0xfe,0xff,0xff,0xff,0xff,0xfe,0x8e,  //..@@@@@%@@@@@@+
+0x00,0xda,0xfe,0x65,0xda,0xfe,0x00,0xb5,0xfe,0x65,0x8e,0xda,0x65,0x00,0x00,  //.%@+%@.%@++%+..
+0x8e,0xfe,0xb5,0x00,0x65,0x65,0x39,0xfe,0xb5,0x00,0x00,0x65,0x39,0x00,0x00,  //+@%.++.@%..+...
+0x00,0x39,0x00,0xda,0xfe,0x00,0x00,0x00,0x00,0x00,0x8e,0xb6,0x65,0x00,0x00,  //...%@.....+%+..
+0x00,0x00,0x8e,0xdb,0x8e,0x65,0x66,0x66,0x66,0x66,0xb5,0xdb,0x8e,0x66,0x39,  //..+%++++++%%++.
+0x00,0x39,0xfe,0xfe,0x66,0xda,0xdb,0xdb,0xdb,0xdb,0xfe,0xff,0xfe,0xda,0x8e,  //..@@+%%%%%@@@%+
+0x00,0xfe,0xff,0xfe,0x65,0x00,0x8e,0x8e,0x00,0x00,0x8e,0xda,0x65,0x00,0x00,  //.@@@+.++..+%+..
+0x8e,0xda,0x8e,0xda,0x65,0x00,0xfe,0xfe,0x65,0x00,0x8e,0xda,0x65,0x00,0x00,  //+%+%+.@@+.+%+..
+0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0xfe,0xfe,0x39,0x8e,0xda,0x65,0x00,0x00,  //..+%+..@@.+%+..
+0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x39,0x65,0x00,0x8e,0xda,0x65,0x00,0x00,  //..+%+...+.+%+..
+0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x00,0x39,0x3a,0xb5,0xfe,0x65,0x00,0x00,  //..+%+.....%@+..
+0x00,0x00,0x8e,0xda,0x65,0x00,0x00,0x39,0xfe,0xff,0xff,0xda,0x00,0x00,0x00,  //..+%+...@@@%...
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
@@ -15252,6 +15344,29 @@ static const uint8_t glyph_bitmap[] =
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 
 
+/* 降 */
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xb5,0x65,0x00,0x00,0x00,0x00,0x00,  //........%+.....
+0x00,0xda,0xdb,0xdb,0xdb,0xb5,0x00,0xb5,0xfe,0x8e,0x3a,0x3a,0x3a,0x00,0x00,  //.%%%%%.%@+.....
+0x00,0xfe,0xda,0x8e,0xfe,0xb5,0x8e,0xfe,0xda,0xb6,0xb6,0xda,0xfe,0x8e,0x00,  //.@%+@%+@%%%%@+.
+0x00,0xfe,0xb5,0x65,0xb6,0x8e,0xfe,0xfe,0xfe,0x00,0x39,0xfe,0xda,0x00,0x00,  //.@%+%+@@@..@%..
+0x00,0xfe,0xb5,0xb5,0xfe,0x65,0x65,0x39,0xfe,0xfe,0xfe,0xda,0x00,0x00,0x00,  //.@%%@++.@@@%...
+0x00,0xfe,0xb5,0xfe,0xb5,0x00,0x00,0x65,0xfe,0xff,0xff,0xda,0x65,0x00,0x00,  //.@%@%..+@@@%+..
+0x00,0xfe,0xb5,0xfe,0xda,0xda,0xff,0xfe,0x8e,0x3a,0x3a,0xb5,0xfe,0xfe,0x8e,  //.@%@%%@@+..%@@+
+0x00,0xfe,0xb5,0x8e,0xda,0x65,0x39,0x00,0x00,0xfe,0xda,0x00,0x00,0x00,0x00,  //.@%+%+...@%....
+0x00,0xfe,0xb5,0x39,0xda,0x8f,0xfe,0xff,0xff,0xff,0xff,0xff,0xff,0xfe,0x00,  //.@%.%+@@@@@@@@.
+0x00,0xfe,0xb5,0x39,0xfe,0xb5,0xfe,0xb5,0x00,0xfe,0xda,0x00,0x00,0x00,0x00,  //.@%.@%@%.@%....
+0x00,0xfe,0xb5,0xda,0xdb,0x8e,0xda,0x8e,0x3a,0xfe,0xda,0x3a,0x3a,0x39,0x00,  //.@%%%+%+.@%....
+0x00,0xfe,0xb5,0xb5,0x8e,0x8e,0xda,0xdb,0xdb,0xff,0xfe,0xdb,0xdb,0xda,0x39,  //.@%%++%%%@@%%%.
+0x00,0xfe,0xb5,0x00,0x00,0x00,0x00,0x00,0x00,0xfe,0xda,0x00,0x00,0x00,0x00,  //.@%......@%....
+0x00,0xfe,0xb5,0x00,0x00,0x00,0x00,0x00,0x00,0xfe,0xda,0x00,0x00,0x00,0x00,  //.@%......@%....
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x39,0x39,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
+
+
 /* 限 */
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,  //...............
@@ -16385,405 +16500,410 @@ static const lv_font_glyph_dsc_t glyph_dsc[] =
     {.w_px = 15,	.glyph_index = 75740},/*(屬)*/
     {.w_px = 15,	.glyph_index = 76040},/*(工)*/
     {.w_px = 15,	.glyph_index = 76340},/*(左)*/
-    {.w_px = 15,	.glyph_index = 76640},/*(已)*/
-    {.w_px = 15,	.glyph_index = 76940},/*(巴)*/
-    {.w_px = 15,	.glyph_index = 77240},/*(常)*/
-    {.w_px = 15,	.glyph_index = 77540},/*(幕)*/
-    {.w_px = 15,	.glyph_index = 77840},/*(平)*/
-    {.w_px = 15,	.glyph_index = 78140},/*(年)*/
-    {.w_px = 15,	.glyph_index = 78440},/*(序)*/
-    {.w_px = 15,	.glyph_index = 78740},/*(度)*/
-    {.w_px = 15,	.glyph_index = 79040},/*(座)*/
-    {.w_px = 15,	.glyph_index = 79340},/*(康)*/
-    {.w_px = 15,	.glyph_index = 79640},/*(廠)*/
-    {.w_px = 15,	.glyph_index = 79940},/*(廣)*/
-    {.w_px = 15,	.glyph_index = 80240},/*(延)*/
-    {.w_px = 15,	.glyph_index = 80540},/*(建)*/
-    {.w_px = 15,	.glyph_index = 80840},/*(式)*/
-    {.w_px = 15,	.glyph_index = 81140},/*(引)*/
-    {.w_px = 15,	.glyph_index = 81440},/*(強)*/
-    {.w_px = 15,	.glyph_index = 81740},/*(彈)*/
-    {.w_px = 15,	.glyph_index = 82040},/*(形)*/
-    {.w_px = 15,	.glyph_index = 82340},/*(影)*/
-    {.w_px = 15,	.glyph_index = 82640},/*(往)*/
-    {.w_px = 15,	.glyph_index = 82940},/*(待)*/
-    {.w_px = 15,	.glyph_index = 83240},/*(後)*/
-    {.w_px = 15,	.glyph_index = 83540},/*(徑)*/
-    {.w_px = 15,	.glyph_index = 83840},/*(從)*/
-    {.w_px = 15,	.glyph_index = 84140},/*(復)*/
-    {.w_px = 15,	.glyph_index = 84440},/*(德)*/
-    {.w_px = 15,	.glyph_index = 84740},/*(心)*/
-    {.w_px = 15,	.glyph_index = 85040},/*(必)*/
-    {.w_px = 15,	.glyph_index = 85340},/*(快)*/
-    {.w_px = 15,	.glyph_index = 85640},/*(性)*/
-    {.w_px = 15,	.glyph_index = 85940},/*(恢)*/
-    {.w_px = 15,	.glyph_index = 86240},/*(息)*/
-    {.w_px = 15,	.glyph_index = 86540},/*(您)*/
-    {.w_px = 15,	.glyph_index = 86840},/*(情)*/
-    {.w_px = 15,	.glyph_index = 87140},/*(想)*/
-    {.w_px = 15,	.glyph_index = 87440},/*(意)*/
-    {.w_px = 15,	.glyph_index = 87740},/*(感)*/
-    {.w_px = 15,	.glyph_index = 88040},/*(態)*/
-    {.w_px = 15,	.glyph_index = 88340},/*(慢)*/
-    {.w_px = 15,	.glyph_index = 88640},/*(慧)*/
-    {.w_px = 15,	.glyph_index = 88940},/*(應)*/
-    {.w_px = 15,	.glyph_index = 89240},/*(懷)*/
-    {.w_px = 15,	.glyph_index = 89540},/*(成)*/
-    {.w_px = 15,	.glyph_index = 89840},/*(或)*/
-    {.w_px = 15,	.glyph_index = 90140},/*(截)*/
-    {.w_px = 15,	.glyph_index = 90440},/*(所)*/
-    {.w_px = 15,	.glyph_index = 90740},/*(扇)*/
-    {.w_px = 15,	.glyph_index = 91040},/*(手)*/
-    {.w_px = 15,	.glyph_index = 91340},/*(才)*/
-    {.w_px = 15,	.glyph_index = 91640},/*(打)*/
-    {.w_px = 15,	.glyph_index = 91940},/*(批)*/
-    {.w_px = 15,	.glyph_index = 92240},/*(找)*/
-    {.w_px = 15,	.glyph_index = 92540},/*(技)*/
-    {.w_px = 15,	.glyph_index = 92840},/*(把)*/
-    {.w_px = 15,	.glyph_index = 93140},/*(拆)*/
-    {.w_px = 15,	.glyph_index = 93440},/*(拔)*/
-    {.w_px = 15,	.glyph_index = 93740},/*(括)*/
-    {.w_px = 15,	.glyph_index = 94040},/*(指)*/
-    {.w_px = 15,	.glyph_index = 94340},/*(按)*/
-    {.w_px = 15,	.glyph_index = 94640},/*(掉)*/
-    {.w_px = 15,	.glyph_index = 94940},/*(排)*/
-    {.w_px = 15,	.glyph_index = 95240},/*(掛)*/
-    {.w_px = 15,	.glyph_index = 95540},/*(探)*/
-    {.w_px = 15,	.glyph_index = 95840},/*(接)*/
-    {.w_px = 15,	.glyph_index = 96140},/*(控)*/
-    {.w_px = 15,	.glyph_index = 96440},/*(提)*/
-    {.w_px = 15,	.glyph_index = 96740},/*(插)*/
-    {.w_px = 15,	.glyph_index = 97040},/*(換)*/
-    {.w_px = 15,	.glyph_index = 97340},/*(援)*/
-    {.w_px = 15,	.glyph_index = 97640},/*(損)*/
-    {.w_px = 15,	.glyph_index = 97940},/*(搖)*/
-    {.w_px = 15,	.glyph_index = 98240},/*(搜)*/
-    {.w_px = 15,	.glyph_index = 98540},/*(擁)*/
-    {.w_px = 15,	.glyph_index = 98840},/*(擇)*/
-    {.w_px = 15,	.glyph_index = 99140},/*(操)*/
-    {.w_px = 15,	.glyph_index = 99440},/*(擦)*/
-    {.w_px = 15,	.glyph_index = 99740},/*(擬)*/
-    {.w_px = 15,	.glyph_index = 100040},/*(擴)*/
-    {.w_px = 15,	.glyph_index = 100340},/*(支)*/
-    {.w_px = 15,	.glyph_index = 100640},/*(收)*/
-    {.w_px = 15,	.glyph_index = 100940},/*(改)*/
-    {.w_px = 15,	.glyph_index = 101240},/*(故)*/
-    {.w_px = 15,	.glyph_index = 101540},/*(效)*/
-    {.w_px = 15,	.glyph_index = 101840},/*(敗)*/
-    {.w_px = 15,	.glyph_index = 102140},/*(整)*/
-    {.w_px = 15,	.glyph_index = 102440},/*(數)*/
-    {.w_px = 15,	.glyph_index = 102740},/*(文)*/
-    {.w_px = 15,	.glyph_index = 103040},/*(料)*/
-    {.w_px = 15,	.glyph_index = 103340},/*(新)*/
-    {.w_px = 15,	.glyph_index = 103640},/*(斷)*/
-    {.w_px = 15,	.glyph_index = 103940},/*(方)*/
-    {.w_px = 15,	.glyph_index = 104240},/*(於)*/
-    {.w_px = 15,	.glyph_index = 104540},/*(日)*/
-    {.w_px = 15,	.glyph_index = 104840},/*(星)*/
-    {.w_px = 15,	.glyph_index = 105140},/*(映)*/
-    {.w_px = 15,	.glyph_index = 105440},/*(是)*/
-    {.w_px = 15,	.glyph_index = 105740},/*(時)*/
-    {.w_px = 15,	.glyph_index = 106040},/*(普)*/
-    {.w_px = 15,	.glyph_index = 106340},/*(景)*/
-    {.w_px = 15,	.glyph_index = 106640},/*(晶)*/
-    {.w_px = 15,	.glyph_index = 106940},/*(暖)*/
-    {.w_px = 15,	.glyph_index = 107240},/*(暫)*/
-    {.w_px = 15,	.glyph_index = 107540},/*(更)*/
-    {.w_px = 15,	.glyph_index = 107840},/*(最)*/
-    {.w_px = 15,	.glyph_index = 108140},/*(會)*/
-    {.w_px = 15,	.glyph_index = 108440},/*(月)*/
-    {.w_px = 15,	.glyph_index = 108740},/*(有)*/
-    {.w_px = 15,	.glyph_index = 109040},/*(期)*/
-    {.w_px = 15,	.glyph_index = 109340},/*(未)*/
-    {.w_px = 15,	.glyph_index = 109640},/*(本)*/
-    {.w_px = 15,	.glyph_index = 109940},/*(束)*/
-    {.w_px = 15,	.glyph_index = 110240},/*(東)*/
-    {.w_px = 15,	.glyph_index = 110540},/*(松)*/
-    {.w_px = 15,	.glyph_index = 110840},/*(板)*/
-    {.w_px = 15,	.glyph_index = 111140},/*(析)*/
-    {.w_px = 15,	.glyph_index = 111440},/*(果)*/
-    {.w_px = 15,	.glyph_index = 111740},/*(柄)*/
-    {.w_px = 15,	.glyph_index = 112040},/*(染)*/
-    {.w_px = 15,	.glyph_index = 112340},/*(查)*/
-    {.w_px = 15,	.glyph_index = 112640},/*(校)*/
-    {.w_px = 15,	.glyph_index = 112940},/*(核)*/
-    {.w_px = 15,	.glyph_index = 113240},/*(根)*/
-    {.w_px = 15,	.glyph_index = 113540},/*(格)*/
-    {.w_px = 15,	.glyph_index = 113840},/*(案)*/
-    {.w_px = 15,	.glyph_index = 114140},/*(桿)*/
-    {.w_px = 15,	.glyph_index = 114440},/*(條)*/
-    {.w_px = 15,	.glyph_index = 114740},/*(業)*/
-    {.w_px = 15,	.glyph_index = 115040},/*(極)*/
-    {.w_px = 15,	.glyph_index = 115340},/*(榮)*/
-    {.w_px = 15,	.glyph_index = 115640},/*(構)*/
-    {.w_px = 15,	.glyph_index = 115940},/*(槽)*/
-    {.w_px = 15,	.glyph_index = 116240},/*(標)*/
-    {.w_px = 15,	.glyph_index = 116540},/*(模)*/
-    {.w_px = 15,	.glyph_index = 116840},/*(樣)*/
-    {.w_px = 15,	.glyph_index = 117140},/*(機)*/
-    {.w_px = 15,	.glyph_index = 117440},/*(檔)*/
-    {.w_px = 15,	.glyph_index = 117740},/*(檢)*/
-    {.w_px = 15,	.glyph_index = 118040},/*(欄)*/
-    {.w_px = 15,	.glyph_index = 118340},/*(權)*/
-    {.w_px = 15,	.glyph_index = 118640},/*(次)*/
-    {.w_px = 15,	.glyph_index = 118940},/*(歡)*/
-    {.w_px = 15,	.glyph_index = 119240},/*(止)*/
-    {.w_px = 15,	.glyph_index = 119540},/*(正)*/
-    {.w_px = 15,	.glyph_index = 119840},/*(此)*/
-    {.w_px = 15,	.glyph_index = 120140},/*(步)*/
-    {.w_px = 15,	.glyph_index = 120440},/*(歷)*/
-    {.w_px = 15,	.glyph_index = 120740},/*(歸)*/
-    {.w_px = 15,	.glyph_index = 121040},/*(殘)*/
-    {.w_px = 15,	.glyph_index = 121340},/*(段)*/
-    {.w_px = 15,	.glyph_index = 121640},/*(每)*/
-    {.w_px = 15,	.glyph_index = 121940},/*(比)*/
-    {.w_px = 15,	.glyph_index = 122240},/*(氣)*/
-    {.w_px = 15,	.glyph_index = 122540},/*(永)*/
-    {.w_px = 15,	.glyph_index = 122840},/*(求)*/
-    {.w_px = 15,	.glyph_index = 123140},/*(汙)*/
-    {.w_px = 15,	.glyph_index = 123440},/*(江)*/
-    {.w_px = 15,	.glyph_index = 123740},/*(池)*/
-    {.w_px = 15,	.glyph_index = 124040},/*(決)*/
-    {.w_px = 15,	.glyph_index = 124340},/*(沒)*/
-    {.w_px = 15,	.glyph_index = 124640},/*(況)*/
-    {.w_px = 15,	.glyph_index = 124940},/*(法)*/
-    {.w_px = 15,	.glyph_index = 125240},/*(波)*/
-    {.w_px = 15,	.glyph_index = 125540},/*(注)*/
-    {.w_px = 15,	.glyph_index = 125840},/*(洞)*/
-    {.w_px = 15,	.glyph_index = 126140},/*(流)*/
-    {.w_px = 15,	.glyph_index = 126440},/*(海)*/
-    {.w_px = 15,	.glyph_index = 126740},/*(消)*/
-    {.w_px = 15,	.glyph_index = 127040},/*(涼)*/
-    {.w_px = 15,	.glyph_index = 127340},/*(混)*/
-    {.w_px = 15,	.glyph_index = 127640},/*(測)*/
-    {.w_px = 15,	.glyph_index = 127940},/*(湊)*/
-    {.w_px = 15,	.glyph_index = 128240},/*(源)*/
-    {.w_px = 15,	.glyph_index = 128540},/*(準)*/
-    {.w_px = 15,	.glyph_index = 128840},/*(溫)*/
-    {.w_px = 15,	.glyph_index = 129140},/*(滿)*/
-    {.w_px = 15,	.glyph_index = 129440},/*(漏)*/
-    {.w_px = 15,	.glyph_index = 129740},/*(炎)*/
-    {.w_px = 15,	.glyph_index = 130040},/*(為)*/
-    {.w_px = 15,	.glyph_index = 130340},/*(無)*/
-    {.w_px = 15,	.glyph_index = 130640},/*(熔)*/
-    {.w_px = 15,	.glyph_index = 130940},/*(熱)*/
-    {.w_px = 15,	.glyph_index = 131240},/*(爽)*/
-    {.w_px = 15,	.glyph_index = 131540},/*(片)*/
-    {.w_px = 15,	.glyph_index = 131840},/*(版)*/
-    {.w_px = 15,	.glyph_index = 132140},/*(物)*/
-    {.w_px = 15,	.glyph_index = 132440},/*(特)*/
-    {.w_px = 15,	.glyph_index = 132740},/*(狀)*/
-    {.w_px = 15,	.glyph_index = 133040},/*(獨)*/
-    {.w_px = 15,	.glyph_index = 133340},/*(獲)*/
-    {.w_px = 15,	.glyph_index = 133640},/*(率)*/
-    {.w_px = 15,	.glyph_index = 133940},/*(現)*/
-    {.w_px = 15,	.glyph_index = 134240},/*(理)*/
-    {.w_px = 15,	.glyph_index = 134540},/*(生)*/
-    {.w_px = 15,	.glyph_index = 134840},/*(產)*/
-    {.w_px = 15,	.glyph_index = 135140},/*(用)*/
-    {.w_px = 15,	.glyph_index = 135440},/*(界)*/
-    {.w_px = 15,	.glyph_index = 135740},/*(留)*/
-    {.w_px = 15,	.glyph_index = 136040},/*(當)*/
-    {.w_px = 15,	.glyph_index = 136340},/*(疏)*/
-    {.w_px = 15,	.glyph_index = 136640},/*(發)*/
-    {.w_px = 15,	.glyph_index = 136940},/*(白)*/
-    {.w_px = 15,	.glyph_index = 137240},/*(的)*/
-    {.w_px = 15,	.glyph_index = 137540},/*(目)*/
-    {.w_px = 15,	.glyph_index = 137840},/*(直)*/
-    {.w_px = 15,	.glyph_index = 138140},/*(相)*/
-    {.w_px = 15,	.glyph_index = 138440},/*(真)*/
-    {.w_px = 15,	.glyph_index = 138740},/*(眠)*/
-    {.w_px = 15,	.glyph_index = 139040},/*(知)*/
-    {.w_px = 15,	.glyph_index = 139340},/*(短)*/
-    {.w_px = 15,	.glyph_index = 139640},/*(破)*/
-    {.w_px = 15,	.glyph_index = 139940},/*(硬)*/
-    {.w_px = 15,	.glyph_index = 140240},/*(碟)*/
-    {.w_px = 15,	.glyph_index = 140540},/*(確)*/
-    {.w_px = 15,	.glyph_index = 140840},/*(碼)*/
-    {.w_px = 15,	.glyph_index = 141140},/*(磁)*/
-    {.w_px = 15,	.glyph_index = 141440},/*(示)*/
-    {.w_px = 15,	.glyph_index = 141740},/*(禁)*/
-    {.w_px = 15,	.glyph_index = 142040},/*(科)*/
-    {.w_px = 15,	.glyph_index = 142340},/*(秒)*/
-    {.w_px = 15,	.glyph_index = 142640},/*(移)*/
-    {.w_px = 15,	.glyph_index = 142940},/*(稀)*/
-    {.w_px = 15,	.glyph_index = 143240},/*(程)*/
-    {.w_px = 15,	.glyph_index = 143540},/*(稍)*/
-    {.w_px = 15,	.glyph_index = 143840},/*(種)*/
-    {.w_px = 15,	.glyph_index = 144140},/*(稱)*/
-    {.w_px = 15,	.glyph_index = 144440},/*(穎)*/
-    {.w_px = 15,	.glyph_index = 144740},/*(空)*/
-    {.w_px = 15,	.glyph_index = 145040},/*(立)*/
-    {.w_px = 15,	.glyph_index = 145340},/*(端)*/
-    {.w_px = 15,	.glyph_index = 145640},/*(第)*/
-    {.w_px = 15,	.glyph_index = 145940},/*(等)*/
-    {.w_px = 15,	.glyph_index = 146240},/*(管)*/
-    {.w_px = 15,	.glyph_index = 146540},/*(範)*/
-    {.w_px = 15,	.glyph_index = 146840},/*(簇)*/
-    {.w_px = 15,	.glyph_index = 147140},/*(系)*/
-    {.w_px = 15,	.glyph_index = 147440},/*(級)*/
-    {.w_px = 15,	.glyph_index = 147740},/*(索)*/
-    {.w_px = 15,	.glyph_index = 148040},/*(終)*/
-    {.w_px = 15,	.glyph_index = 148340},/*(組)*/
-    {.w_px = 15,	.glyph_index = 148640},/*(結)*/
-    {.w_px = 15,	.glyph_index = 148940},/*(絡)*/
-    {.w_px = 15,	.glyph_index = 149240},/*(統)*/
-    {.w_px = 15,	.glyph_index = 149540},/*(經)*/
-    {.w_px = 15,	.glyph_index = 149840},/*(線)*/
-    {.w_px = 15,	.glyph_index = 150140},/*(緩)*/
-    {.w_px = 15,	.glyph_index = 150440},/*(總)*/
-    {.w_px = 15,	.glyph_index = 150740},/*(繼)*/
-    {.w_px = 15,	.glyph_index = 151040},/*(續)*/
-    {.w_px = 15,	.glyph_index = 151340},/*(纜)*/
-    {.w_px = 15,	.glyph_index = 151640},/*(缺)*/
-    {.w_px = 15,	.glyph_index = 151940},/*(置)*/
-    {.w_px = 15,	.glyph_index = 152240},/*(美)*/
-    {.w_px = 15,	.glyph_index = 152540},/*(群)*/
-    {.w_px = 15,	.glyph_index = 152840},/*(義)*/
-    {.w_px = 15,	.glyph_index = 153140},/*(者)*/
-    {.w_px = 15,	.glyph_index = 153440},/*(而)*/
-    {.w_px = 15,	.glyph_index = 153740},/*(耗)*/
-    {.w_px = 15,	.glyph_index = 154040},/*(聯)*/
-    {.w_px = 15,	.glyph_index = 154340},/*(背)*/
-    {.w_px = 15,	.glyph_index = 154640},/*(能)*/
-    {.w_px = 15,	.glyph_index = 154940},/*(腦)*/
-    {.w_px = 15,	.glyph_index = 155240},/*(臨)*/
-    {.w_px = 15,	.glyph_index = 155540},/*(自)*/
-    {.w_px = 15,	.glyph_index = 155840},/*(至)*/
-    {.w_px = 15,	.glyph_index = 156140},/*(致)*/
-    {.w_px = 15,	.glyph_index = 156440},/*(與)*/
-    {.w_px = 15,	.glyph_index = 156740},/*(舊)*/
-    {.w_px = 15,	.glyph_index = 157040},/*(色)*/
-    {.w_px = 15,	.glyph_index = 157340},/*(芝)*/
-    {.w_px = 15,	.glyph_index = 157640},/*(芽)*/
-    {.w_px = 15,	.glyph_index = 157940},/*(若)*/
-    {.w_px = 15,	.glyph_index = 158240},/*(英)*/
-    {.w_px = 15,	.glyph_index = 158540},/*(荷)*/
-    {.w_px = 15,	.glyph_index = 158840},/*(著)*/
-    {.w_px = 15,	.glyph_index = 159140},/*(藍)*/
-    {.w_px = 15,	.glyph_index = 159440},/*(處)*/
-    {.w_px = 15,	.glyph_index = 159740},/*(虛)*/
-    {.w_px = 15,	.glyph_index = 160040},/*(號)*/
-    {.w_px = 15,	.glyph_index = 160340},/*(螢)*/
-    {.w_px = 15,	.glyph_index = 160640},/*(行)*/
-    {.w_px = 15,	.glyph_index = 160940},/*(衝)*/
-    {.w_px = 15,	.glyph_index = 161240},/*(表)*/
-    {.w_px = 15,	.glyph_index = 161540},/*(被)*/
-    {.w_px = 15,	.glyph_index = 161840},/*(補)*/
-    {.w_px = 15,	.glyph_index = 162140},/*(裝)*/
-    {.w_px = 15,	.glyph_index = 162440},/*(裡)*/
-    {.w_px = 15,	.glyph_index = 162740},/*(製)*/
-    {.w_px = 15,	.glyph_index = 163040},/*(西)*/
-    {.w_px = 15,	.glyph_index = 163340},/*(要)*/
-    {.w_px = 15,	.glyph_index = 163640},/*(視)*/
-    {.w_px = 15,	.glyph_index = 163940},/*(解)*/
-    {.w_px = 15,	.glyph_index = 164240},/*(觸)*/
-    {.w_px = 15,	.glyph_index = 164540},/*(訂)*/
-    {.w_px = 15,	.glyph_index = 164840},/*(計)*/
-    {.w_px = 15,	.glyph_index = 165140},/*(訊)*/
-    {.w_px = 15,	.glyph_index = 165440},/*(訪)*/
-    {.w_px = 15,	.glyph_index = 165740},/*(設)*/
-    {.w_px = 15,	.glyph_index = 166040},/*(許)*/
-    {.w_px = 15,	.glyph_index = 166340},/*(試)*/
-    {.w_px = 15,	.glyph_index = 166640},/*(該)*/
-    {.w_px = 15,	.glyph_index = 166940},/*(誌)*/
-    {.w_px = 15,	.glyph_index = 167240},/*(誤)*/
-    {.w_px = 15,	.glyph_index = 167540},/*(調)*/
-    {.w_px = 15,	.glyph_index = 167840},/*(請)*/
-    {.w_px = 15,	.glyph_index = 168140},/*(證)*/
-    {.w_px = 15,	.glyph_index = 168440},/*(識)*/
-    {.w_px = 15,	.glyph_index = 168740},/*(警)*/
-    {.w_px = 15,	.glyph_index = 169040},/*(議)*/
-    {.w_px = 15,	.glyph_index = 169340},/*(讀)*/
-    {.w_px = 15,	.glyph_index = 169640},/*(變)*/
-    {.w_px = 15,	.glyph_index = 169940},/*(象)*/
-    {.w_px = 15,	.glyph_index = 170240},/*(資)*/
-    {.w_px = 15,	.glyph_index = 170540},/*(質)*/
-    {.w_px = 15,	.glyph_index = 170840},/*(起)*/
-    {.w_px = 15,	.glyph_index = 171140},/*(超)*/
-    {.w_px = 15,	.glyph_index = 171440},/*(足)*/
-    {.w_px = 15,	.glyph_index = 171740},/*(路)*/
-    {.w_px = 15,	.glyph_index = 172040},/*(跳)*/
-    {.w_px = 15,	.glyph_index = 172340},/*(載)*/
-    {.w_px = 15,	.glyph_index = 172640},/*(輸)*/
-    {.w_px = 15,	.glyph_index = 172940},/*(轉)*/
-    {.w_px = 15,	.glyph_index = 173240},/*(迎)*/
-    {.w_px = 15,	.glyph_index = 173540},/*(返)*/
-    {.w_px = 15,	.glyph_index = 173840},/*(迪)*/
-    {.w_px = 15,	.glyph_index = 174140},/*(透)*/
-    {.w_px = 15,	.glyph_index = 174440},/*(這)*/
-    {.w_px = 15,	.glyph_index = 174740},/*(通)*/
-    {.w_px = 15,	.glyph_index = 175040},/*(速)*/
-    {.w_px = 15,	.glyph_index = 175340},/*(造)*/
-    {.w_px = 15,	.glyph_index = 175640},/*(連)*/
-    {.w_px = 15,	.glyph_index = 175940},/*(進)*/
-    {.w_px = 15,	.glyph_index = 176240},/*(運)*/
-    {.w_px = 15,	.glyph_index = 176540},/*(遍)*/
-    {.w_px = 15,	.glyph_index = 176840},/*(過)*/
-    {.w_px = 15,	.glyph_index = 177140},/*(道)*/
-    {.w_px = 15,	.glyph_index = 177440},/*(達)*/
-    {.w_px = 15,	.glyph_index = 177740},/*(適)*/
-    {.w_px = 15,	.glyph_index = 178040},/*(遲)*/
-    {.w_px = 15,	.glyph_index = 178340},/*(遷)*/
-    {.w_px = 15,	.glyph_index = 178640},/*(選)*/
-    {.w_px = 15,	.glyph_index = 178940},/*(還)*/
-    {.w_px = 15,	.glyph_index = 179240},/*(部)*/
-    {.w_px = 15,	.glyph_index = 179540},/*(都)*/
-    {.w_px = 15,	.glyph_index = 179840},/*(配)*/
-    {.w_px = 15,	.glyph_index = 180140},/*(醒)*/
-    {.w_px = 15,	.glyph_index = 180440},/*(重)*/
-    {.w_px = 15,	.glyph_index = 180740},/*(量)*/
-    {.w_px = 15,	.glyph_index = 181040},/*(金)*/
-    {.w_px = 15,	.glyph_index = 181340},/*(鈕)*/
-    {.w_px = 15,	.glyph_index = 181640},/*(錄)*/
-    {.w_px = 15,	.glyph_index = 181940},/*(錯)*/
-    {.w_px = 15,	.glyph_index = 182240},/*(錸)*/
-    {.w_px = 15,	.glyph_index = 182540},/*(鍵)*/
-    {.w_px = 15,	.glyph_index = 182840},/*(鐘)*/
-    {.w_px = 15,	.glyph_index = 183140},/*(鑰)*/
-    {.w_px = 15,	.glyph_index = 183440},/*(閃)*/
-    {.w_px = 15,	.glyph_index = 183740},/*(閉)*/
-    {.w_px = 15,	.glyph_index = 184040},/*(開)*/
-    {.w_px = 15,	.glyph_index = 184340},/*(間)*/
-    {.w_px = 15,	.glyph_index = 184640},/*(關)*/
-    {.w_px = 15,	.glyph_index = 184940},/*(防)*/
-    {.w_px = 15,	.glyph_index = 185240},/*(阻)*/
-    {.w_px = 15,	.glyph_index = 185540},/*(限)*/
-    {.w_px = 15,	.glyph_index = 185840},/*(除)*/
-    {.w_px = 15,	.glyph_index = 186140},/*(隆)*/
-    {.w_px = 15,	.glyph_index = 186440},/*(階)*/
-    {.w_px = 15,	.glyph_index = 186740},/*(際)*/
-    {.w_px = 15,	.glyph_index = 187040},/*(障)*/
-    {.w_px = 15,	.glyph_index = 187340},/*(隨)*/
-    {.w_px = 15,	.glyph_index = 187640},/*(隻)*/
-    {.w_px = 15,	.glyph_index = 187940},/*(雜)*/
-    {.w_px = 15,	.glyph_index = 188240},/*(零)*/
-    {.w_px = 15,	.glyph_index = 188540},/*(電)*/
-    {.w_px = 15,	.glyph_index = 188840},/*(需)*/
-    {.w_px = 15,	.glyph_index = 189140},/*(非)*/
-    {.w_px = 15,	.glyph_index = 189440},/*(面)*/
-    {.w_px = 15,	.glyph_index = 189740},/*(韌)*/
-    {.w_px = 15,	.glyph_index = 190040},/*(音)*/
-    {.w_px = 15,	.glyph_index = 190340},/*(響)*/
-    {.w_px = 15,	.glyph_index = 190640},/*(頁)*/
-    {.w_px = 15,	.glyph_index = 190940},/*(項)*/
-    {.w_px = 15,	.glyph_index = 191240},/*(順)*/
-    {.w_px = 15,	.glyph_index = 191540},/*(須)*/
-    {.w_px = 15,	.glyph_index = 191840},/*(預)*/
-    {.w_px = 15,	.glyph_index = 192140},/*(頓)*/
-    {.w_px = 15,	.glyph_index = 192440},/*(題)*/
-    {.w_px = 15,	.glyph_index = 192740},/*(顏)*/
-    {.w_px = 15,	.glyph_index = 193040},/*(類)*/
-    {.w_px = 15,	.glyph_index = 193340},/*(顯)*/
-    {.w_px = 15,	.glyph_index = 193640},/*(餘)*/
-    {.w_px = 15,	.glyph_index = 193940},/*(驅)*/
-    {.w_px = 15,	.glyph_index = 194240},/*(驗)*/
-    {.w_px = 15,	.glyph_index = 194540},/*(體)*/
-    {.w_px = 15,	.glyph_index = 194840},/*(高)*/
-    {.w_px = 15,	.glyph_index = 195140},/*(黃)*/
-    {.w_px = 15,	.glyph_index = 195440},/*(點)*/
-    {.w_px = 15,	.glyph_index = 195740},/*(齊)*/
-    {.w_px = 15,	.glyph_index = 196040},/*(龍)*/
+    {.w_px = 15,	.glyph_index = 76640},/*(差)*/
+    {.w_px = 15,	.glyph_index = 76940},/*(已)*/
+    {.w_px = 15,	.glyph_index = 77240},/*(巴)*/
+    {.w_px = 15,	.glyph_index = 77540},/*(常)*/
+    {.w_px = 15,	.glyph_index = 77840},/*(幕)*/
+    {.w_px = 15,	.glyph_index = 78140},/*(平)*/
+    {.w_px = 15,	.glyph_index = 78440},/*(年)*/
+    {.w_px = 15,	.glyph_index = 78740},/*(序)*/
+    {.w_px = 15,	.glyph_index = 79040},/*(度)*/
+    {.w_px = 15,	.glyph_index = 79340},/*(座)*/
+    {.w_px = 15,	.glyph_index = 79640},/*(康)*/
+    {.w_px = 15,	.glyph_index = 79940},/*(廠)*/
+    {.w_px = 15,	.glyph_index = 80240},/*(廣)*/
+    {.w_px = 15,	.glyph_index = 80540},/*(延)*/
+    {.w_px = 15,	.glyph_index = 80840},/*(建)*/
+    {.w_px = 15,	.glyph_index = 81140},/*(式)*/
+    {.w_px = 15,	.glyph_index = 81440},/*(引)*/
+    {.w_px = 15,	.glyph_index = 81740},/*(強)*/
+    {.w_px = 15,	.glyph_index = 82040},/*(彈)*/
+    {.w_px = 15,	.glyph_index = 82340},/*(形)*/
+    {.w_px = 15,	.glyph_index = 82640},/*(影)*/
+    {.w_px = 15,	.glyph_index = 82940},/*(往)*/
+    {.w_px = 15,	.glyph_index = 83240},/*(待)*/
+    {.w_px = 15,	.glyph_index = 83540},/*(後)*/
+    {.w_px = 15,	.glyph_index = 83840},/*(徑)*/
+    {.w_px = 15,	.glyph_index = 84140},/*(從)*/
+    {.w_px = 15,	.glyph_index = 84440},/*(復)*/
+    {.w_px = 15,	.glyph_index = 84740},/*(德)*/
+    {.w_px = 15,	.glyph_index = 85040},/*(心)*/
+    {.w_px = 15,	.glyph_index = 85340},/*(必)*/
+    {.w_px = 15,	.glyph_index = 85640},/*(快)*/
+    {.w_px = 15,	.glyph_index = 85940},/*(性)*/
+    {.w_px = 15,	.glyph_index = 86240},/*(恢)*/
+    {.w_px = 15,	.glyph_index = 86540},/*(息)*/
+    {.w_px = 15,	.glyph_index = 86840},/*(您)*/
+    {.w_px = 15,	.glyph_index = 87140},/*(情)*/
+    {.w_px = 15,	.glyph_index = 87440},/*(想)*/
+    {.w_px = 15,	.glyph_index = 87740},/*(意)*/
+    {.w_px = 15,	.glyph_index = 88040},/*(感)*/
+    {.w_px = 15,	.glyph_index = 88340},/*(態)*/
+    {.w_px = 15,	.glyph_index = 88640},/*(慢)*/
+    {.w_px = 15,	.glyph_index = 88940},/*(慧)*/
+    {.w_px = 15,	.glyph_index = 89240},/*(應)*/
+    {.w_px = 15,	.glyph_index = 89540},/*(懷)*/
+    {.w_px = 15,	.glyph_index = 89840},/*(成)*/
+    {.w_px = 15,	.glyph_index = 90140},/*(或)*/
+    {.w_px = 15,	.glyph_index = 90440},/*(截)*/
+    {.w_px = 15,	.glyph_index = 90740},/*(所)*/
+    {.w_px = 15,	.glyph_index = 91040},/*(扇)*/
+    {.w_px = 15,	.glyph_index = 91340},/*(手)*/
+    {.w_px = 15,	.glyph_index = 91640},/*(才)*/
+    {.w_px = 15,	.glyph_index = 91940},/*(打)*/
+    {.w_px = 15,	.glyph_index = 92240},/*(批)*/
+    {.w_px = 15,	.glyph_index = 92540},/*(找)*/
+    {.w_px = 15,	.glyph_index = 92840},/*(技)*/
+    {.w_px = 15,	.glyph_index = 93140},/*(把)*/
+    {.w_px = 15,	.glyph_index = 93440},/*(拆)*/
+    {.w_px = 15,	.glyph_index = 93740},/*(拔)*/
+    {.w_px = 15,	.glyph_index = 94040},/*(括)*/
+    {.w_px = 15,	.glyph_index = 94340},/*(指)*/
+    {.w_px = 15,	.glyph_index = 94640},/*(按)*/
+    {.w_px = 15,	.glyph_index = 94940},/*(掉)*/
+    {.w_px = 15,	.glyph_index = 95240},/*(排)*/
+    {.w_px = 15,	.glyph_index = 95540},/*(掛)*/
+    {.w_px = 15,	.glyph_index = 95840},/*(探)*/
+    {.w_px = 15,	.glyph_index = 96140},/*(接)*/
+    {.w_px = 15,	.glyph_index = 96440},/*(控)*/
+    {.w_px = 15,	.glyph_index = 96740},/*(提)*/
+    {.w_px = 15,	.glyph_index = 97040},/*(插)*/
+    {.w_px = 15,	.glyph_index = 97340},/*(換)*/
+    {.w_px = 15,	.glyph_index = 97640},/*(援)*/
+    {.w_px = 15,	.glyph_index = 97940},/*(損)*/
+    {.w_px = 15,	.glyph_index = 98240},/*(搖)*/
+    {.w_px = 15,	.glyph_index = 98540},/*(搜)*/
+    {.w_px = 15,	.glyph_index = 98840},/*(擁)*/
+    {.w_px = 15,	.glyph_index = 99140},/*(擇)*/
+    {.w_px = 15,	.glyph_index = 99440},/*(操)*/
+    {.w_px = 15,	.glyph_index = 99740},/*(擦)*/
+    {.w_px = 15,	.glyph_index = 100040},/*(擬)*/
+    {.w_px = 15,	.glyph_index = 100340},/*(擴)*/
+    {.w_px = 15,	.glyph_index = 100640},/*(支)*/
+    {.w_px = 15,	.glyph_index = 100940},/*(收)*/
+    {.w_px = 15,	.glyph_index = 101240},/*(改)*/
+    {.w_px = 15,	.glyph_index = 101540},/*(故)*/
+    {.w_px = 15,	.glyph_index = 101840},/*(效)*/
+    {.w_px = 15,	.glyph_index = 102140},/*(敗)*/
+    {.w_px = 15,	.glyph_index = 102440},/*(整)*/
+    {.w_px = 15,	.glyph_index = 102740},/*(數)*/
+    {.w_px = 15,	.glyph_index = 103040},/*(文)*/
+    {.w_px = 15,	.glyph_index = 103340},/*(料)*/
+    {.w_px = 15,	.glyph_index = 103640},/*(新)*/
+    {.w_px = 15,	.glyph_index = 103940},/*(斷)*/
+    {.w_px = 15,	.glyph_index = 104240},/*(方)*/
+    {.w_px = 15,	.glyph_index = 104540},/*(於)*/
+    {.w_px = 15,	.glyph_index = 104840},/*(日)*/
+    {.w_px = 15,	.glyph_index = 105140},/*(星)*/
+    {.w_px = 15,	.glyph_index = 105440},/*(映)*/
+    {.w_px = 15,	.glyph_index = 105740},/*(是)*/
+    {.w_px = 15,	.glyph_index = 106040},/*(時)*/
+    {.w_px = 15,	.glyph_index = 106340},/*(普)*/
+    {.w_px = 15,	.glyph_index = 106640},/*(景)*/
+    {.w_px = 15,	.glyph_index = 106940},/*(晶)*/
+    {.w_px = 15,	.glyph_index = 107240},/*(暖)*/
+    {.w_px = 15,	.glyph_index = 107540},/*(暫)*/
+    {.w_px = 15,	.glyph_index = 107840},/*(更)*/
+    {.w_px = 15,	.glyph_index = 108140},/*(最)*/
+    {.w_px = 15,	.glyph_index = 108440},/*(會)*/
+    {.w_px = 15,	.glyph_index = 108740},/*(月)*/
+    {.w_px = 15,	.glyph_index = 109040},/*(有)*/
+    {.w_px = 15,	.glyph_index = 109340},/*(期)*/
+    {.w_px = 15,	.glyph_index = 109640},/*(未)*/
+    {.w_px = 15,	.glyph_index = 109940},/*(本)*/
+    {.w_px = 15,	.glyph_index = 110240},/*(束)*/
+    {.w_px = 15,	.glyph_index = 110540},/*(東)*/
+    {.w_px = 15,	.glyph_index = 110840},/*(松)*/
+    {.w_px = 15,	.glyph_index = 111140},/*(板)*/
+    {.w_px = 15,	.glyph_index = 111440},/*(析)*/
+    {.w_px = 15,	.glyph_index = 111740},/*(果)*/
+    {.w_px = 15,	.glyph_index = 112040},/*(柄)*/
+    {.w_px = 15,	.glyph_index = 112340},/*(染)*/
+    {.w_px = 15,	.glyph_index = 112640},/*(查)*/
+    {.w_px = 15,	.glyph_index = 112940},/*(校)*/
+    {.w_px = 15,	.glyph_index = 113240},/*(核)*/
+    {.w_px = 15,	.glyph_index = 113540},/*(根)*/
+    {.w_px = 15,	.glyph_index = 113840},/*(格)*/
+    {.w_px = 15,	.glyph_index = 114140},/*(案)*/
+    {.w_px = 15,	.glyph_index = 114440},/*(桿)*/
+    {.w_px = 15,	.glyph_index = 114740},/*(條)*/
+    {.w_px = 15,	.glyph_index = 115040},/*(業)*/
+    {.w_px = 15,	.glyph_index = 115340},/*(極)*/
+    {.w_px = 15,	.glyph_index = 115640},/*(榮)*/
+    {.w_px = 15,	.glyph_index = 115940},/*(構)*/
+    {.w_px = 15,	.glyph_index = 116240},/*(槽)*/
+    {.w_px = 15,	.glyph_index = 116540},/*(標)*/
+    {.w_px = 15,	.glyph_index = 116840},/*(模)*/
+    {.w_px = 15,	.glyph_index = 117140},/*(樣)*/
+    {.w_px = 15,	.glyph_index = 117440},/*(機)*/
+    {.w_px = 15,	.glyph_index = 117740},/*(檔)*/
+    {.w_px = 15,	.glyph_index = 118040},/*(檢)*/
+    {.w_px = 15,	.glyph_index = 118340},/*(欄)*/
+    {.w_px = 15,	.glyph_index = 118640},/*(權)*/
+    {.w_px = 15,	.glyph_index = 118940},/*(次)*/
+    {.w_px = 15,	.glyph_index = 119240},/*(歡)*/
+    {.w_px = 15,	.glyph_index = 119540},/*(止)*/
+    {.w_px = 15,	.glyph_index = 119840},/*(正)*/
+    {.w_px = 15,	.glyph_index = 120140},/*(此)*/
+    {.w_px = 15,	.glyph_index = 120440},/*(步)*/
+    {.w_px = 15,	.glyph_index = 120740},/*(歷)*/
+    {.w_px = 15,	.glyph_index = 121040},/*(歸)*/
+    {.w_px = 15,	.glyph_index = 121340},/*(殘)*/
+    {.w_px = 15,	.glyph_index = 121640},/*(段)*/
+    {.w_px = 15,	.glyph_index = 121940},/*(每)*/
+    {.w_px = 15,	.glyph_index = 122240},/*(比)*/
+    {.w_px = 15,	.glyph_index = 122540},/*(氣)*/
+    {.w_px = 15,	.glyph_index = 122840},/*(永)*/
+    {.w_px = 15,	.glyph_index = 123140},/*(求)*/
+    {.w_px = 15,	.glyph_index = 123440},/*(汙)*/
+    {.w_px = 15,	.glyph_index = 123740},/*(江)*/
+    {.w_px = 15,	.glyph_index = 124040},/*(池)*/
+    {.w_px = 15,	.glyph_index = 124340},/*(決)*/
+    {.w_px = 15,	.glyph_index = 124640},/*(沒)*/
+    {.w_px = 15,	.glyph_index = 124940},/*(況)*/
+    {.w_px = 15,	.glyph_index = 125240},/*(法)*/
+    {.w_px = 15,	.glyph_index = 125540},/*(波)*/
+    {.w_px = 15,	.glyph_index = 125840},/*(注)*/
+    {.w_px = 15,	.glyph_index = 126140},/*(洞)*/
+    {.w_px = 15,	.glyph_index = 126440},/*(流)*/
+    {.w_px = 15,	.glyph_index = 126740},/*(海)*/
+    {.w_px = 15,	.glyph_index = 127040},/*(消)*/
+    {.w_px = 15,	.glyph_index = 127340},/*(涼)*/
+    {.w_px = 15,	.glyph_index = 127640},/*(混)*/
+    {.w_px = 15,	.glyph_index = 127940},/*(測)*/
+    {.w_px = 15,	.glyph_index = 128240},/*(湊)*/
+    {.w_px = 15,	.glyph_index = 128540},/*(源)*/
+    {.w_px = 15,	.glyph_index = 128840},/*(準)*/
+    {.w_px = 15,	.glyph_index = 129140},/*(溫)*/
+    {.w_px = 15,	.glyph_index = 129440},/*(滿)*/
+    {.w_px = 15,	.glyph_index = 129740},/*(漏)*/
+    {.w_px = 15,	.glyph_index = 130040},/*(炎)*/
+    {.w_px = 15,	.glyph_index = 130340},/*(為)*/
+    {.w_px = 15,	.glyph_index = 130640},/*(無)*/
+    {.w_px = 15,	.glyph_index = 130940},/*(熔)*/
+    {.w_px = 15,	.glyph_index = 131240},/*(熱)*/
+    {.w_px = 15,	.glyph_index = 131540},/*(爽)*/
+    {.w_px = 15,	.glyph_index = 131840},/*(片)*/
+    {.w_px = 15,	.glyph_index = 132140},/*(版)*/
+    {.w_px = 15,	.glyph_index = 132440},/*(物)*/
+    {.w_px = 15,	.glyph_index = 132740},/*(特)*/
+    {.w_px = 15,	.glyph_index = 133040},/*(狀)*/
+    {.w_px = 15,	.glyph_index = 133340},/*(獨)*/
+    {.w_px = 15,	.glyph_index = 133640},/*(獲)*/
+    {.w_px = 15,	.glyph_index = 133940},/*(率)*/
+    {.w_px = 15,	.glyph_index = 134240},/*(現)*/
+    {.w_px = 15,	.glyph_index = 134540},/*(理)*/
+    {.w_px = 15,	.glyph_index = 134840},/*(甚)*/
+    {.w_px = 15,	.glyph_index = 135140},/*(生)*/
+    {.w_px = 15,	.glyph_index = 135440},/*(產)*/
+    {.w_px = 15,	.glyph_index = 135740},/*(用)*/
+    {.w_px = 15,	.glyph_index = 136040},/*(界)*/
+    {.w_px = 15,	.glyph_index = 136340},/*(留)*/
+    {.w_px = 15,	.glyph_index = 136640},/*(異)*/
+    {.w_px = 15,	.glyph_index = 136940},/*(當)*/
+    {.w_px = 15,	.glyph_index = 137240},/*(疏)*/
+    {.w_px = 15,	.glyph_index = 137540},/*(發)*/
+    {.w_px = 15,	.glyph_index = 137840},/*(白)*/
+    {.w_px = 15,	.glyph_index = 138140},/*(的)*/
+    {.w_px = 15,	.glyph_index = 138440},/*(目)*/
+    {.w_px = 15,	.glyph_index = 138740},/*(直)*/
+    {.w_px = 15,	.glyph_index = 139040},/*(相)*/
+    {.w_px = 15,	.glyph_index = 139340},/*(真)*/
+    {.w_px = 15,	.glyph_index = 139640},/*(眠)*/
+    {.w_px = 15,	.glyph_index = 139940},/*(知)*/
+    {.w_px = 15,	.glyph_index = 140240},/*(短)*/
+    {.w_px = 15,	.glyph_index = 140540},/*(破)*/
+    {.w_px = 15,	.glyph_index = 140840},/*(硬)*/
+    {.w_px = 15,	.glyph_index = 141140},/*(碟)*/
+    {.w_px = 15,	.glyph_index = 141440},/*(確)*/
+    {.w_px = 15,	.glyph_index = 141740},/*(碼)*/
+    {.w_px = 15,	.glyph_index = 142040},/*(磁)*/
+    {.w_px = 15,	.glyph_index = 142340},/*(示)*/
+    {.w_px = 15,	.glyph_index = 142640},/*(禁)*/
+    {.w_px = 15,	.glyph_index = 142940},/*(科)*/
+    {.w_px = 15,	.glyph_index = 143240},/*(秒)*/
+    {.w_px = 15,	.glyph_index = 143540},/*(移)*/
+    {.w_px = 15,	.glyph_index = 143840},/*(稀)*/
+    {.w_px = 15,	.glyph_index = 144140},/*(程)*/
+    {.w_px = 15,	.glyph_index = 144440},/*(稍)*/
+    {.w_px = 15,	.glyph_index = 144740},/*(種)*/
+    {.w_px = 15,	.glyph_index = 145040},/*(稱)*/
+    {.w_px = 15,	.glyph_index = 145340},/*(穎)*/
+    {.w_px = 15,	.glyph_index = 145640},/*(空)*/
+    {.w_px = 15,	.glyph_index = 145940},/*(立)*/
+    {.w_px = 15,	.glyph_index = 146240},/*(端)*/
+    {.w_px = 15,	.glyph_index = 146540},/*(符)*/
+    {.w_px = 15,	.glyph_index = 146840},/*(第)*/
+    {.w_px = 15,	.glyph_index = 147140},/*(等)*/
+    {.w_px = 15,	.glyph_index = 147440},/*(管)*/
+    {.w_px = 15,	.glyph_index = 147740},/*(範)*/
+    {.w_px = 15,	.glyph_index = 148040},/*(簇)*/
+    {.w_px = 15,	.glyph_index = 148340},/*(系)*/
+    {.w_px = 15,	.glyph_index = 148640},/*(級)*/
+    {.w_px = 15,	.glyph_index = 148940},/*(索)*/
+    {.w_px = 15,	.glyph_index = 149240},/*(終)*/
+    {.w_px = 15,	.glyph_index = 149540},/*(組)*/
+    {.w_px = 15,	.glyph_index = 149840},/*(結)*/
+    {.w_px = 15,	.glyph_index = 150140},/*(絡)*/
+    {.w_px = 15,	.glyph_index = 150440},/*(統)*/
+    {.w_px = 15,	.glyph_index = 150740},/*(經)*/
+    {.w_px = 15,	.glyph_index = 151040},/*(線)*/
+    {.w_px = 15,	.glyph_index = 151340},/*(緩)*/
+    {.w_px = 15,	.glyph_index = 151640},/*(總)*/
+    {.w_px = 15,	.glyph_index = 151940},/*(繼)*/
+    {.w_px = 15,	.glyph_index = 152240},/*(續)*/
+    {.w_px = 15,	.glyph_index = 152540},/*(纜)*/
+    {.w_px = 15,	.glyph_index = 152840},/*(缺)*/
+    {.w_px = 15,	.glyph_index = 153140},/*(置)*/
+    {.w_px = 15,	.glyph_index = 153440},/*(美)*/
+    {.w_px = 15,	.glyph_index = 153740},/*(群)*/
+    {.w_px = 15,	.glyph_index = 154040},/*(義)*/
+    {.w_px = 15,	.glyph_index = 154340},/*(者)*/
+    {.w_px = 15,	.glyph_index = 154640},/*(而)*/
+    {.w_px = 15,	.glyph_index = 154940},/*(耗)*/
+    {.w_px = 15,	.glyph_index = 155240},/*(聯)*/
+    {.w_px = 15,	.glyph_index = 155540},/*(背)*/
+    {.w_px = 15,	.glyph_index = 155840},/*(能)*/
+    {.w_px = 15,	.glyph_index = 156140},/*(腦)*/
+    {.w_px = 15,	.glyph_index = 156440},/*(臨)*/
+    {.w_px = 15,	.glyph_index = 156740},/*(自)*/
+    {.w_px = 15,	.glyph_index = 157040},/*(至)*/
+    {.w_px = 15,	.glyph_index = 157340},/*(致)*/
+    {.w_px = 15,	.glyph_index = 157640},/*(與)*/
+    {.w_px = 15,	.glyph_index = 157940},/*(舊)*/
+    {.w_px = 15,	.glyph_index = 158240},/*(色)*/
+    {.w_px = 15,	.glyph_index = 158540},/*(芝)*/
+    {.w_px = 15,	.glyph_index = 158840},/*(芽)*/
+    {.w_px = 15,	.glyph_index = 159140},/*(若)*/
+    {.w_px = 15,	.glyph_index = 159440},/*(英)*/
+    {.w_px = 15,	.glyph_index = 159740},/*(荷)*/
+    {.w_px = 15,	.glyph_index = 160040},/*(著)*/
+    {.w_px = 15,	.glyph_index = 160340},/*(藍)*/
+    {.w_px = 15,	.glyph_index = 160640},/*(處)*/
+    {.w_px = 15,	.glyph_index = 160940},/*(虛)*/
+    {.w_px = 15,	.glyph_index = 161240},/*(號)*/
+    {.w_px = 15,	.glyph_index = 161540},/*(螢)*/
+    {.w_px = 15,	.glyph_index = 161840},/*(行)*/
+    {.w_px = 15,	.glyph_index = 162140},/*(衝)*/
+    {.w_px = 15,	.glyph_index = 162440},/*(表)*/
+    {.w_px = 15,	.glyph_index = 162740},/*(被)*/
+    {.w_px = 15,	.glyph_index = 163040},/*(補)*/
+    {.w_px = 15,	.glyph_index = 163340},/*(裝)*/
+    {.w_px = 15,	.glyph_index = 163640},/*(裡)*/
+    {.w_px = 15,	.glyph_index = 163940},/*(製)*/
+    {.w_px = 15,	.glyph_index = 164240},/*(西)*/
+    {.w_px = 15,	.glyph_index = 164540},/*(要)*/
+    {.w_px = 15,	.glyph_index = 164840},/*(視)*/
+    {.w_px = 15,	.glyph_index = 165140},/*(解)*/
+    {.w_px = 15,	.glyph_index = 165440},/*(觸)*/
+    {.w_px = 15,	.glyph_index = 165740},/*(訂)*/
+    {.w_px = 15,	.glyph_index = 166040},/*(計)*/
+    {.w_px = 15,	.glyph_index = 166340},/*(訊)*/
+    {.w_px = 15,	.glyph_index = 166640},/*(訪)*/
+    {.w_px = 15,	.glyph_index = 166940},/*(設)*/
+    {.w_px = 15,	.glyph_index = 167240},/*(許)*/
+    {.w_px = 15,	.glyph_index = 167540},/*(試)*/
+    {.w_px = 15,	.glyph_index = 167840},/*(該)*/
+    {.w_px = 15,	.glyph_index = 168140},/*(誌)*/
+    {.w_px = 15,	.glyph_index = 168440},/*(誤)*/
+    {.w_px = 15,	.glyph_index = 168740},/*(調)*/
+    {.w_px = 15,	.glyph_index = 169040},/*(請)*/
+    {.w_px = 15,	.glyph_index = 169340},/*(證)*/
+    {.w_px = 15,	.glyph_index = 169640},/*(識)*/
+    {.w_px = 15,	.glyph_index = 169940},/*(警)*/
+    {.w_px = 15,	.glyph_index = 170240},/*(議)*/
+    {.w_px = 15,	.glyph_index = 170540},/*(讀)*/
+    {.w_px = 15,	.glyph_index = 170840},/*(變)*/
+    {.w_px = 15,	.glyph_index = 171140},/*(象)*/
+    {.w_px = 15,	.glyph_index = 171440},/*(資)*/
+    {.w_px = 15,	.glyph_index = 171740},/*(質)*/
+    {.w_px = 15,	.glyph_index = 172040},/*(起)*/
+    {.w_px = 15,	.glyph_index = 172340},/*(超)*/
+    {.w_px = 15,	.glyph_index = 172640},/*(足)*/
+    {.w_px = 15,	.glyph_index = 172940},/*(路)*/
+    {.w_px = 15,	.glyph_index = 173240},/*(跳)*/
+    {.w_px = 15,	.glyph_index = 173540},/*(載)*/
+    {.w_px = 15,	.glyph_index = 173840},/*(輸)*/
+    {.w_px = 15,	.glyph_index = 174140},/*(轉)*/
+    {.w_px = 15,	.glyph_index = 174440},/*(迎)*/
+    {.w_px = 15,	.glyph_index = 174740},/*(返)*/
+    {.w_px = 15,	.glyph_index = 175040},/*(迪)*/
+    {.w_px = 15,	.glyph_index = 175340},/*(透)*/
+    {.w_px = 15,	.glyph_index = 175640},/*(這)*/
+    {.w_px = 15,	.glyph_index = 175940},/*(通)*/
+    {.w_px = 15,	.glyph_index = 176240},/*(速)*/
+    {.w_px = 15,	.glyph_index = 176540},/*(造)*/
+    {.w_px = 15,	.glyph_index = 176840},/*(連)*/
+    {.w_px = 15,	.glyph_index = 177140},/*(進)*/
+    {.w_px = 15,	.glyph_index = 177440},/*(運)*/
+    {.w_px = 15,	.glyph_index = 177740},/*(遍)*/
+    {.w_px = 15,	.glyph_index = 178040},/*(過)*/
+    {.w_px = 15,	.glyph_index = 178340},/*(道)*/
+    {.w_px = 15,	.glyph_index = 178640},/*(達)*/
+    {.w_px = 15,	.glyph_index = 178940},/*(適)*/
+    {.w_px = 15,	.glyph_index = 179240},/*(遲)*/
+    {.w_px = 15,	.glyph_index = 179540},/*(遷)*/
+    {.w_px = 15,	.glyph_index = 179840},/*(選)*/
+    {.w_px = 15,	.glyph_index = 180140},/*(還)*/
+    {.w_px = 15,	.glyph_index = 180440},/*(部)*/
+    {.w_px = 15,	.glyph_index = 180740},/*(都)*/
+    {.w_px = 15,	.glyph_index = 181040},/*(配)*/
+    {.w_px = 15,	.glyph_index = 181340},/*(醒)*/
+    {.w_px = 15,	.glyph_index = 181640},/*(重)*/
+    {.w_px = 15,	.glyph_index = 181940},/*(量)*/
+    {.w_px = 15,	.glyph_index = 182240},/*(金)*/
+    {.w_px = 15,	.glyph_index = 182540},/*(鈕)*/
+    {.w_px = 15,	.glyph_index = 182840},/*(錄)*/
+    {.w_px = 15,	.glyph_index = 183140},/*(錯)*/
+    {.w_px = 15,	.glyph_index = 183440},/*(錸)*/
+    {.w_px = 15,	.glyph_index = 183740},/*(鍵)*/
+    {.w_px = 15,	.glyph_index = 184040},/*(鐘)*/
+    {.w_px = 15,	.glyph_index = 184340},/*(鑰)*/
+    {.w_px = 15,	.glyph_index = 184640},/*(閃)*/
+    {.w_px = 15,	.glyph_index = 184940},/*(閉)*/
+    {.w_px = 15,	.glyph_index = 185240},/*(開)*/
+    {.w_px = 15,	.glyph_index = 185540},/*(間)*/
+    {.w_px = 15,	.glyph_index = 185840},/*(關)*/
+    {.w_px = 15,	.glyph_index = 186140},/*(防)*/
+    {.w_px = 15,	.glyph_index = 186440},/*(阻)*/
+    {.w_px = 15,	.glyph_index = 186740},/*(降)*/
+    {.w_px = 15,	.glyph_index = 187040},/*(限)*/
+    {.w_px = 15,	.glyph_index = 187340},/*(除)*/
+    {.w_px = 15,	.glyph_index = 187640},/*(隆)*/
+    {.w_px = 15,	.glyph_index = 187940},/*(階)*/
+    {.w_px = 15,	.glyph_index = 188240},/*(際)*/
+    {.w_px = 15,	.glyph_index = 188540},/*(障)*/
+    {.w_px = 15,	.glyph_index = 188840},/*(隨)*/
+    {.w_px = 15,	.glyph_index = 189140},/*(隻)*/
+    {.w_px = 15,	.glyph_index = 189440},/*(雜)*/
+    {.w_px = 15,	.glyph_index = 189740},/*(零)*/
+    {.w_px = 15,	.glyph_index = 190040},/*(電)*/
+    {.w_px = 15,	.glyph_index = 190340},/*(需)*/
+    {.w_px = 15,	.glyph_index = 190640},/*(非)*/
+    {.w_px = 15,	.glyph_index = 190940},/*(面)*/
+    {.w_px = 15,	.glyph_index = 191240},/*(韌)*/
+    {.w_px = 15,	.glyph_index = 191540},/*(音)*/
+    {.w_px = 15,	.glyph_index = 191840},/*(響)*/
+    {.w_px = 15,	.glyph_index = 192140},/*(頁)*/
+    {.w_px = 15,	.glyph_index = 192440},/*(項)*/
+    {.w_px = 15,	.glyph_index = 192740},/*(順)*/
+    {.w_px = 15,	.glyph_index = 193040},/*(須)*/
+    {.w_px = 15,	.glyph_index = 193340},/*(預)*/
+    {.w_px = 15,	.glyph_index = 193640},/*(頓)*/
+    {.w_px = 15,	.glyph_index = 193940},/*(題)*/
+    {.w_px = 15,	.glyph_index = 194240},/*(顏)*/
+    {.w_px = 15,	.glyph_index = 194540},/*(類)*/
+    {.w_px = 15,	.glyph_index = 194840},/*(顯)*/
+    {.w_px = 15,	.glyph_index = 195140},/*(餘)*/
+    {.w_px = 15,	.glyph_index = 195440},/*(驅)*/
+    {.w_px = 15,	.glyph_index = 195740},/*(驗)*/
+    {.w_px = 15,	.glyph_index = 196040},/*(體)*/
+    {.w_px = 15,	.glyph_index = 196340},/*(高)*/
+    {.w_px = 15,	.glyph_index = 196640},/*(黃)*/
+    {.w_px = 15,	.glyph_index = 196940},/*(點)*/
+    {.w_px = 15,	.glyph_index = 197240},/*(齊)*/
+    {.w_px = 15,	.glyph_index = 197540},/*(龍)*/
 };
 
 
@@ -17089,6 +17209,7 @@ static const uint32_t unicode_list[] =
     0x5c6c,	/*(屬)*/
     0x5de5,	/*(工)*/
     0x5de6,	/*(左)*/
+    0x5dee,	/*(差)*/
     0x5df2,	/*(已)*/
     0x5df4,	/*(巴)*/
     0x5e38,	/*(常)*/
@@ -17282,11 +17403,13 @@ static const uint32_t unicode_list[] =
     0x7387,	/*(率)*/
     0x73fe,	/*(現)*/
     0x7406,	/*(理)*/
+    0x751a,	/*(甚)*/
     0x751f,	/*(生)*/
     0x7522,	/*(產)*/
     0x7528,	/*(用)*/
     0x754c,	/*(界)*/
     0x7559,	/*(留)*/
+    0x7570,	/*(異)*/
     0x7576,	/*(當)*/
     0x758f,	/*(疏)*/
     0x767c,	/*(發)*/
@@ -17319,6 +17442,7 @@ static const uint32_t unicode_list[] =
     0x7a7a,	/*(空)*/
     0x7acb,	/*(立)*/
     0x7aef,	/*(端)*/
+    0x7b26,	/*(符)*/
     0x7b2c,	/*(第)*/
     0x7b49,	/*(等)*/
     0x7ba1,	/*(管)*/
@@ -17452,6 +17576,7 @@ static const uint32_t unicode_list[] =
     0x95dc,	/*(關)*/
     0x9632,	/*(防)*/
     0x963b,	/*(阻)*/
+    0x964d,	/*(降)*/
     0x9650,	/*(限)*/
     0x9664,	/*(除)*/
     0x9686,	/*(隆)*/

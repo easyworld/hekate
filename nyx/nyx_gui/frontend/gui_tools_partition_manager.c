@@ -1861,7 +1861,7 @@ static lv_res_t _emmc_create_mbox_start_partitioning()
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-	static const char *mbox_btn_map[] =  { "\251", "\222OK", "\251", "" };
+	static const char *mbox_btn_map[] =  { "\251", "\222確定", "\251", "" };
 	static const char *mbox_btn_map1[] = { "\222刷寫 Linux", "\222刷寫 Android", "\221確定", "" };
 	static const char *mbox_btn_map2[] = { "\222刷寫 Linux", "\221確定", "" };
 	static const char *mbox_btn_map3[] = { "\222刷寫 Android", "\221確定", "" };
