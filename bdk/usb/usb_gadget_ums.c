@@ -597,7 +597,7 @@ static int _scsi_write(usbd_gadget_ums_t *ums, bulk_ctxt_t *bulk_ctxt)
 
 			if (usb_lba_offset >= ums->lun.num_sectors)
 			{
-				ums->set_text(ums->label, "#FFDD00 錯誤:# 寫入 - 超出最後一個扇區!");
+				ums->set_text(ums->label, "#FFDD00 錯誤:# 寫入 - 超出最後一個磁區!");
 				ums->lun.sense_data      = SS_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE;
 				ums->lun.sense_data_info = usb_lba_offset;
 				ums->lun.info_valid      = 1;

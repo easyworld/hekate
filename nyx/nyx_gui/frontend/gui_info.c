@@ -1775,7 +1775,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 
 		// Calculate rate for transfer.
 		u32 rate_1k = (u64)size_bytes_seq * 1000 * 1000 * 1000 / mb_div / timer;
-		s_printf(txt_buf + strlen(txt_buf), " 順序16MB - 速率: #C7EA46 %3d.%02d %s#",
+		s_printf(txt_buf + strlen(txt_buf), " 順序 16MB - 速率: #C7EA46 %3d.%02d %s#",
 			rate_1k / 1000, (rate_1k % 1000) / 10, mbs_text);
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_obj_align(lbl_status, NULL, LV_ALIGN_CENTER, 0, 0);
@@ -1838,7 +1838,7 @@ static lv_res_t _create_mbox_benchmark(bool sd_bench)
 		rate_1k = (u64)size_bytes_4kb * 1000 * 1000 * 1000 / mb_div / timer;
 		u32 iops = ((u64)(sct_rem_4kb / sct_num_1mb) * 1024 * 1000 * 1000 * 1000) / (4096 / 1024) / timer / 1000;
 		s_printf(txt_buf + strlen(txt_buf), "       平均 #C7EA46 95th#  #FF3C28 5th#\n");
-		s_printf(txt_buf + strlen(txt_buf), " 順序 4KB - 速率: #C7EA46 %3d.%02d %s# IOPS: #C7EA46 %4d# %4d %4d \n",
+		s_printf(txt_buf + strlen(txt_buf), " 順序  4KB - 速率: #C7EA46 %3d.%02d %s# IOPS: #C7EA46 %4d# %4d %4d \n",
 			rate_1k / 1000, (rate_1k % 1000) / 10, mbs_text, iops, 1000000 / pct95, 1000000 / pct05);
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_obj_align(lbl_status, NULL, LV_ALIGN_CENTER, 0, 0);
@@ -1929,9 +1929,9 @@ error:
 	if (error)
 	{
 		if (error == -1)
-			s_printf(txt_buf + strlen(txt_buf), "\n#FFDD00                         中斷!                     #");
+			s_printf(txt_buf + strlen(txt_buf), "\n\n#FFDD00                         中斷!                     #");
 		else
-			s_printf(txt_buf + strlen(txt_buf), "\n#FFDD00                        發生IO錯誤!                #");
+			s_printf(txt_buf + strlen(txt_buf), "\n\n#FFDD00                        發生IO錯誤!                #");
 
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_obj_align(lbl_status, NULL, LV_ALIGN_CENTER, 0, 0);
