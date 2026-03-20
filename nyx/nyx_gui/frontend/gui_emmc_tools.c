@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2025 CTCaer
+ * Copyright (c) 2018-2026 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -28,8 +28,6 @@
 #include "../hos/hos.h"
 #include <libs/fatfs/ff.h>
 
-extern boot_cfg_t b_cfg;
-
 extern char *emmcsn_path_impl(char *path, char *sub_dir, char *filename, sdmmc_storage_t *storage);
 
 typedef struct _emmc_backup_buttons_t
@@ -54,7 +52,7 @@ static void _create_window_backup_restore(emmcPartType_t type, const char* win_l
 
 	s_printf(win_label_full, "%s%s", emmc_btn_ctxt.restore ? SYMBOL_DOWNLOAD"  恢復 " : SYMBOL_UPLOAD"  備份 ", win_label+3);
 
-	lv_obj_t *win = nyx_create_standard_window(win_label_full);
+	lv_obj_t *win = nyx_create_standard_window(win_label_full, NULL);
 
 	//Disable buttons.
 	nyx_window_toggle_buttons(win, true);
@@ -285,9 +283,9 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 		emmc_btn_ctxt.restore = true;
 
 	if (!emmc_btn_ctxt.restore)
-		win = nyx_create_standard_window(SYMBOL_SD" 備份");
+		win = nyx_create_standard_window(SYMBOL_SD" 備份", NULL);
 	else
-		win = nyx_create_standard_window(SYMBOL_SD" 恢復");
+		win = nyx_create_standard_window(SYMBOL_SD" 恢復", NULL);
 
 	static lv_style_t h_style;
 	lv_style_copy(&h_style, &lv_style_transp);
@@ -335,14 +333,14 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt2,
-			"允許您備份BOOT物理分割槽.\n"
+			"允許您備份BOOT物理分割區.\n"
 			"它們包含BCT, 金鑰和各種package1.\n"
 			"#FF8000 這些需要與原始GPP備份資料配對.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt2,
-			"允許您恢復BOOT物理分割槽.\n"
+			"允許您恢復BOOT物理分割區.\n"
 			"它們包含BCT, 金鑰和各種package1.\n"
 			"#FF8000 這些需要與原始GPP恢復資料配對.#");
 	}
@@ -365,16 +363,16 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt2,
-			"允許您備份GPP物理分割槽.\n"
-			"它包含CAL0, 各種package2, 系統分割槽, 使用者分割槽等.\n"
-			"#FF8000 這些需要與BOOT0/1分割槽備份資料配對.#");
+			"允許您備份GPP物理分割區.\n"
+			"它包含CAL0, 各種package2, 系統分割區, 使用者分割區等.\n"
+			"#FF8000 這些需要與BOOT0/1分割區備份資料配對.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt2,
-			"允許您恢復GPP物理分割槽.\n"
-			"它包含CAL0, 各種package2, 系統分割槽, 使用者分割槽等.\n"
-			"#FF8000 這些需要與BOOT0/1分割槽恢復資料配對.#");
+			"允許您恢復GPP物理分割區.\n"
+			"它包含CAL0, 各種package2, 系統分割區, 使用者分割區等.\n"
+			"#FF8000 這些需要與BOOT0/1分割區恢復資料配對.#");
 	}
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
@@ -392,7 +390,7 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	lv_label_set_static_text(label_sep, "");
 
 	lv_obj_t *label_txt3 = lv_label_create(h2, NULL);
-	lv_label_set_static_text(label_txt3, "GPP分割槽");
+	lv_label_set_static_text(label_txt3, "GPP分割區");
 	lv_obj_set_style(label_txt3, lv_theme_get_current()->label.prim);
 	lv_obj_align(label_txt3, label_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, -LV_DPI * 4 / 21);
 
@@ -416,15 +414,15 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 	if (!emmc_btn_ctxt.restore)
 	{
 		lv_label_set_static_text(label_txt4,
-			"允許您備份原始GPP中除使用者分割槽以外的分割槽.\n"
-			"它包含CAL0, 各種package2, 系統分割槽等.\n"
+			"允許您備份原始GPP中除使用者分割區以外的分割區.\n"
+			"它包含CAL0, 各種package2, 系統分割區等.\n"
 			"#FF8000 這是一個不完整的備份.#");
 	}
 	else
 	{
 		lv_label_set_static_text(label_txt4,
-			"允許您從原始GPP備份中恢復所有分割槽.\n"
-			"它包含CAL0, 各種package2, 系統分割槽, 使用者分割槽等.\n");
+			"允許您從原始GPP備份中恢復所有分割區.\n"
+			"它包含CAL0, 各種package2, 系統分割區, 使用者分割區等.\n");
 	}
 
 	lv_obj_set_style(label_txt4, &hint_small_style);
@@ -443,7 +441,7 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 		label_txt4 = lv_label_create(h2, NULL);
 		lv_label_set_recolor(label_txt4, true);
 		lv_label_set_static_text(label_txt4,
-			"允許您從原始GPP備份使用者分割槽.\n"
+			"允許您從原始GPP備份使用者分割區.\n"
 			"#FF8000 這是一個不完整的備份.#\n");
 		lv_obj_set_style(label_txt4, &hint_small_style);
 		lv_obj_align(label_txt4, btn4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
@@ -464,7 +462,7 @@ lv_res_t create_window_backup_restore_tool(lv_obj_t *btn)
 
 	lv_obj_t *sd_emummc_raw = lv_btn_create(h3, NULL);
 	nyx_create_onoff_button(lv_theme_get_current(), h3,
-		sd_emummc_raw, SYMBOL_SD" SD卡emuMMC分割槽", _emmc_backup_buttons_raw_toggle, false);
+		sd_emummc_raw, SYMBOL_SD" SD卡emuMMC分割區", _emmc_backup_buttons_raw_toggle, false);
 	emmc_btn_ctxt.raw_emummc = false;
 
 	return LV_RES_OK;
