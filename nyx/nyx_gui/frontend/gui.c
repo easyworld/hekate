@@ -1974,36 +1974,6 @@ failed_sd_mount:
 
 	free(tmp_path);
 
-	// detect unknown pkg1
-	if (!no_boot_entries && pkg1_support == 0 && emmc_initialize(false))
-	{
-		emmc_set_partition(EMMC_BOOT0);
-		// Read package1.
-		static const u32 BOOTLOADER_SIZE          = SZ_256K;
-		static const u32 BOOTLOADER_MAIN_OFFSET   = 0x100000;
-
-		u8 *pkg1 = (u8 *)zalloc(SZ_256K);
-		u32 pk1_offset =  h_cfg.t210b01 ? sizeof(bl_hdr_t210b01_t) : 0; // Skip T210B01 OEM header.
-		sdmmc_storage_read(&emmc_storage, BOOTLOADER_MAIN_OFFSET / EMMC_BLOCKSIZE, BOOTLOADER_SIZE / EMMC_BLOCKSIZE, pkg1);
-
-		const pkg1_id_t *pkg1_id = pkg1_identify(pkg1 + pk1_offset, NULL);
-		// Warning if unknown.
-		pkg1_support = pkg1_id ? 1 : 2; // 1 = support, 2 = not support
-		free(pkg1);
-		emmc_end();
-	}
-	// Show warning if unknown pkg1.
-	if (!no_boot_entries && pkg1_support == 2)
-	{
-		static const char * mbox_btn_map[] = {"\251", "\222确定!", "\251", ""};
-		lv_obj_t * mbox = lv_mbox_create(lv_scr_act(), NULL);
-		lv_mbox_set_recolor_text(mbox, true);
-		lv_mbox_set_text(mbox, "#FF8000 警告#\n\n#96FF00 检测到未知pkg1, 真实系统可能无法启动!#\n请等待hekate更新.");
-		lv_mbox_add_btns(mbox, mbox_btn_map, NULL);
-		lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
-		lv_obj_set_top(mbox, true);
-	}
-
 	// No boot entries found.
 	if (no_boot_entries)
 	{

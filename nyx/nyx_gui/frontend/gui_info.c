@@ -3033,7 +3033,7 @@ void create_tab_info(lv_theme_t *th, lv_obj_t *parent)
 	{
 		lv_label_set_static_text(label_txt2,
 			"查看Ipatches, 并转储未打补丁和已打补丁版本的BootROM.\n"
-			"或者通过#C7EA46 Lockpick RCM#转储每个密钥.\n");
+			"或者通过#C7EA46 Lockpick RCM#转储每个密钥.\n\n");
 	}
 	else
 	{
