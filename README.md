@@ -1,204 +1,204 @@
 # hekate - Nyx
 
-![Image of Hekate](https://user-images.githubusercontent.com/3665130/60391760-bc1e8c00-9afe-11e9-8b7a-b065873081b2.png)
+![Hekate图片](https://user-images.githubusercontent.com/3665130/60391760-bc1e8c00-9afe-11e9-8b7a-b065873081b2.png)
 
 
-Custom Graphical Nintendo Switch bootloader, firmware patcher, tools, and many more.
-
-
-
-- [Features](#features)
-- [Bootloader folders and files](#bootloader-folders-and-files)
-- [Bootloader configuration](#bootloader-configuration)
-  * [hekate global Configuration keys/values](#hekate-global-configuration-keysvalues-when-entry-is-config)
-  * [Boot entry key/value combinations](#boot-entry-keyvalue-combinations)
-  * [Boot entry key/value combinations for Exosphère](#boot-entry-keyvalue-combinations-for-exosphère)
-  * [Payload storage](#payload-storage)
-  * [Nyx Configuration keys/values](#nyx-configuration-keysvalues-nyxini)
+自定义图形化 Nintendo Switch 引导程序、固件补丁工具及更多实用工具。
 
 
 
-## Features
-
-- **Fully Configurable and Graphical** with Touchscreen and Joycon input support
-- **Launcher Style, Background and Color Themes**
-- **HOS (Switch OS) Bootloader** -- For CFW Sys/Emu, OFW Sys and Stock Sys
-- **Android & Linux Bootloader**
-- **Payload Launcher**
-- **eMMC/emuMMC Backup/Restore Tools**
-- **SD Card Partition Manager** -- Prepares and formats SD Card for any combo of HOS (Sys/emuMMC), Android and Linux
-- **emuMMC Creation & Manager** -- Can also migrate and fix existing emuMMC
-- **Switch Android & Linux flasher**
-- **USB Mass Storage (UMS) for SD/eMMC/emuMMC** -- Converts Switch into a SD Card Reader
-- **USB Gamepad** -- Converts Switch with Joycon into a USB HID Gamepad
-- **Hardware and Peripherals info** (SoC, Fuses, RAM, Display, Touch, eMMC, SD, Battery, PSU, Charger)
-- **Many other tools** like Archive Bit Fixer, Touch Calibration, SD/eMMC Benchmark, AutoRCM enabler and more
-
-
-## Bootloader folders and files
-
-| Folder/File              | Description                                                           |
-| ------------------------ | --------------------------------------------------------------------- |
-| bootloader               | Main folder.                                                          |
-|  \|__ bootlogo.bmp       | It is used if no `logopath` key is found. User provided. Can be skipped. |
-|  \|__ hekate_ipl.ini     | Main bootloader configuration and boot entries in `Launch` menu.      |
-|  \|__ nyx.ini            | Nyx GUI configuration                                                 |
-|  \|__ patches.ini        | Add external patches. Can be skipped. A template can be found [here](./res/patches_template.ini) |
-|  \|__ update.bin         | If newer, it is loaded at boot. Normally for modchips. Auto updated and created at first boot. |
-| bootloader/ini/          | For individual inis. `More configs` menu. Autoboot is supported.   |
-| bootloader/res/          | Nyx user resources. Icons and more.                                   |
-|  \|__ background.bmp     | Nyx - Custom background. User provided.                               |
-|  \|__ icon_switch.bmp    | Nyx - Default icon for CFWs.                                          |
-|  \|__ icon_payload.bmp   | Nyx - Default icon for Payloads.                                      |
-| bootloader/sys/          | hekate and Nyx system modules folder. !Important!                     |
-|  \|__ emummc.kipm        | emuMMC KIP1 module.                                                   |
-|  \|__ libsys_lp0.bso     | LP0 (sleep mode) module.                                              |
-|  \|__ libsys_minerva.bso | Minerva Training Cell. Used for DRAM Frequency training.              |
-|  \|__ nyx.bin            | Nyx - hekate's GUI.                                                   |
-|  \|__ res.pak            | Nyx resources package.                                                |
-|  \|__ thk.bin            | Atmosphère Tsec Hovi Keygen.                                          |
-|  \|__ /l4t/              | Folder with firmware relevant to L4T (Linux/Android).                 |
-| bootloader/screenshots/  | Folder where Nyx screenshots are saved                                |
-| bootloader/payloads/     | For the `Payloads` menu. All CFW bootloaders, tools, Linux payloads are supported. Autoboot only supported by including them into an ini. |
-| bootloader/libtools/     | Reserved                                                              |
+- [功能特性](#功能特性)
+- [引导程序文件夹和文件](#引导程序文件夹和文件)
+- [引导程序配置](#引导程序配置)
+  * [hekate 全局配置键/值](#hekate-全局配置键值当条目为config时)
+  * [启动条目键/值组合](#启动条目键值组合)
+  * [Exosphère 启动条目键/值组合](#exosphère-启动条目键值组合)
+  * [Payload 存储](#payload-存储)
+  * [Nyx 配置键/值（nyx.ini）](#nyx-配置键值nyxini)
 
 
 
-## Bootloader configuration
+## 功能特性
 
-The bootloader can be configured via `Nyx` -> `Options` or 'bootloader/hekate_ipl.ini'. The special section 'config' controls the actual global configuration. Any other ini section represents a boot entry and can only be edited manually via the ini.
-
-
-There are four possible type of entries. "**[ ]**": Boot entry, "**{ }**": Caption, "**#**": Comment, "*newline*": .ini cosmetic newline.
-
-
-**You can find a template [Here](./res/hekate_ipl_template.ini)**
-
-
-### hekate Configuration keys/values (section *[config]*)
-
-Use `Options` in Nyx to edit the following configuration:
-
-| Config option      | Description                                                    |
-| ------------------ | -------------------------------------------------------------- |
-| autoboot=0         | 0: Disable, #: Boot entry number to auto boot.                 |
-| autoboot_list=0    | 0: Read `autoboot` boot entry from hekate_ipl.ini, 1: Read from ini folder (ini files are ASCII ordered). |
-| bootwait=3         | 0: Disable (It also disables bootlogo. Having **VOL-** pressed since injection goes to menu.), #: Time to wait for **VOL-** to enter menu. Max: 20s. |
-| autohosoff=1       | 0: Disable, 1: If woke up from HOS via an RTC alarm, shows logo, then powers off completely, 2: No logo, immediately powers off.|
-| autonogc=1         | 0: Disable, 1: Automatically applies nogc patch if unburnt fuses found and a >= 4.0.0 HOS is booted. |
-| updater2p=0        | 0: Disable, 1: Force updates (if needed) the reboot2payload binary to be hekate. |
-| backlight=100      | Screen backlight level. 0-255.                                 |
-| ------------------ | --------- *The following can be edited via ini only* --------- |
-| noticker=0         | 0: Animated line is drawn during custom bootlogo, signifying time left to skip to menu. 1: Disable. |
-| bootprotect=0      | 0: Disable, 1: Protect bootloader folder from being corrupted by disallowing reading or editing in HOS. |
+- **完全可配置的图形界面**，支持触摸屏和 Joycon 输入
+- **启动器风格、背景和颜色主题**
+- **HOS（Switch 系统）引导程序** —— 支持 CFW 正版系统/虚拟系统、OFW 正版系统和原厂系统
+- **Android 和 Linux 引导程序**
+- **Payload 启动器**
+- **eMMC/emuMMC 备份/恢复工具**
+- **SD 卡分区管理器** —— 为 HOS（正版系统/emuMMC）、Android 和 Linux 的任意组合准备和格式化 SD 卡
+- **emuMMC 创建和管理器** —— 还可以迁移和修复现有的 emuMMC
+- **Switch Android 和 Linux 刷写工具**
+- **SD/eMMC/emuMMC 的 USB 大容量存储（UMS）** —— 将 Switch 变为 SD 卡读卡器
+- **USB 游戏手柄** —— 将带有 Joycon 的 Switch 变为 USB HID 游戏手柄
+- **硬件和外设信息**（SoC、熔丝、RAM、显示屏、触摸屏、eMMC、SD、电池、电源、充电器）
+- **许多其他工具**，如存档位修复器、触摸校准、SD/eMMC 基准测试、AutoRCM 启用器等
 
 
-### Boot entry key/value combinations
+## 引导程序文件夹和文件
 
-A boot entry needs to be manually added/edited with the user's chosen key/value combos.
-
-| Config option          | Description                                                |
-| ---------------------- | ---------------------------------------------------------- |
-| warmboot={FILE path}   | Replaces the warmboot binary                               |
-| secmon={FILE path}     | Replaces the security monitor binary                       |
-| kernel={FILE path}     | Replaces the kernel binary                                 |
-| kip1={FILE path}       | Replaces/Adds kernel initial process. Multiple can be set. |
-| kip1={FOLDER path}/*   | Loads every .kip/.kip1 inside a folder. Compatible with single kip1 keys. |
-| pkg3={FILE path}       | Takes an Atmosphere `package3` binary and `extracts` all needed parts from it. kips, exosphere, warmboot and mesophere. |
-| fss0={FILE path}       | Same as above. !Deprecated! |
-| pkg3ex=1               | Enables loading of experimental content from a PKG3/FSS0 storage |
-| pkg3kip1skip={KIP name} | Skips loading a kip from `pkg3`/`fss0`. Allows multiple and `,` as separator. The name must exactly match the name in `PKG3`. |
-| exofatal={FILE path}   | Replaces the exosphere fatal binary for Mariko             |
-| ---------------------- | ---------------------------------------------------------- |
-| kip1patch=patchname    | Enables a kip1 patch. Allows multiple and `,` as separator. If actual patch is not found, a warning will show up. |
-| emupath={FOLDER path}  | Forces emuMMC to use the selected one. (=emuMMC/RAW1, =emuMMC/SD00, etc). emuMMC must be created by hekate because it uses the raw_based/file_based files. |
-| emummcforce=1          | Forces the use of emuMMC. If emummc.ini is disabled or not found, then it causes an error. |
-| emummc_force_disable=1 | Disables emuMMC, if it's enabled.                           |
-| stock=1                | OFW via hekate bootloader. Disables unneeded kernel patching and CFW kips when running stock. `If emuMMC is enabled, emummc_force_disable=1` is required. emuMMC is not supported on stock. If additional KIPs are needed other than OFW's, you can define them with `kip1` key. No kip should be used that relies on Atmosphère patching, because it will hang. If `NOGC` is needed, use `kip1patch=nogc`. |
-| fullsvcperm=1          | Disables SVC verification (full services permission). Doesn't work with Mesosphere as kernel. |
-| debugmode=1            | Enables Debug mode. Obsolete when used with exosphere as secmon. |
-| kernelprocid=1         | Enables stock kernel process id send/recv patching. Not needed when `pkg3`/`fss0` is used. |
-| ---------------------- | ---------------------------------------------------------- |
-| payload={FILE path}    | Payload launching. Tools, Android/Linux, CFW bootloaders, etc. Any key above when used with that, doesn't get into account. |
-| ---------------------- | ---------------------------------------------------------- |
-| l4t=1                  | L4T Linux/Android native launching.                        |
-| boot_prefixes={FOLDER path} | L4T bootstack directory.                              |
-| ram_oc=0               | L4T RAM Overclocking. Check README_CONFIG.txt for more info. |
-| ram_oc_vdd2=1100       | L4T RAM VDD2 Voltage. Set VDD2 (T210B01) or VDD2/VDDQ (T210) voltage. 1050-1175. |
-| ram_oc_vddq=600        | L4T RAM VDDQ Voltage. Set VDDQ (T210B01). 550-650.         |
-| uart_port=0            | Enables logging on serial port for L4T uboot/kernel.       |
-| sld_type=0x31444C53    | Controls the type of seamless display support. 0x0: Disable, 0x31444C53: L4T seamless display. |
-| Additional keys        | Each distro supports more keys. Check README_CONFIG.txt  for more info. |
-| ---------------------- | ---------------------------------------------------------- |
-| bootwait=3             | Overrides global bootwait from `[config]`.                 |
-| id=IDNAME              | Identifies boot entry for forced boot via id. Max 7 chars. |
-| logopath={FILE path}   | If it exists, it will load the specified bitmap. Otherwise `bootloader/bootlogo.bmp` will be used if exists |
-| icon={FILE path}       | Force Nyx to use the icon defined here. If this is not found, it will check for a bmp named as the boot entry ([Test 2] -> `bootloader/res/Test 2.bmp`). Otherwise defaults will be used. |
+| 文件夹/文件 | 描述 |
+| --- | --- |
+| bootloader | 主文件夹。 |
+|  \|__ bootlogo.bmp | 如果未找到 `logopath` 键则使用。由用户提供。可省略。 |
+|  \|__ hekate_ipl.ini | 主引导程序配置和 `启动` 菜单中的启动条目。 |
+|  \|__ nyx.ini | Nyx GUI 配置 |
+|  \|__ patches.ini | 添加外部补丁。可省略。可在[此处](./res/patches_template.ini)找到模板 |
+|  \|__ update.bin | 如果版本较新，则在启动时加载。通常用于芯片。首次启动时自动更新和创建。 |
+| bootloader/ini/ | 用于单个 ini 文件。`更多配置` 菜单。支持自动启动。 |
+| bootloader/res/ | Nyx 用户资源。图标等。 |
+|  \|__ background.bmp | Nyx - 自定义背景。由用户提供。 |
+|  \|__ icon_switch.bmp | Nyx - CFW 的默认图标。 |
+|  \|__ icon_payload.bmp | Nyx - Payload 的默认图标。 |
+| bootloader/sys/ | hekate 和 Nyx 系统模块文件夹。!重要! |
+|  \|__ emummc.kipm | emuMMC KIP1 模块。 |
+|  \|__ libsys_lp0.bso | LP0（睡眠模式）模块。 |
+|  \|__ libsys_minerva.bso | Minerva 训练单元。用于 DRAM 频率训练。 |
+|  \|__ nyx.bin | Nyx - hekate 的 GUI。 |
+|  \|__ res.pak | Nyx 资源包。 |
+|  \|__ thk.bin | Atmosphère Tsec Hovi 密钥生成器。 |
+|  \|__ /l4t/ | 包含 L4T（Linux/Android）相关固件的文件夹。 |
+| bootloader/screenshots/ | 保存 Nyx 截图的文件夹 |
+| bootloader/payloads/ | 用于 `Payloads` 菜单。支持所有 CFW 引导程序、工具、Linux payload。仅当包含在 ini 中时才支持自动启动。 |
+| bootloader/libtools/ | 保留 |
 
 
-**Note1**: When using the wildcard (`/*`) with `kip1` you can still use the normal `kip1` after that to load extra single kips.
 
-**Note2**: When using PKG3/FSS0 it parses exosphere, warmboot and all core kips. You can override the first 2 by using `secmon`/`warmboot` after defining `pkg3`/`fss0`.
-You can define `kip1` to load an extra kip or many via the wildcard (`/*`) usage.
+## 引导程序配置
 
-**Warning**: Careful when you override *pkg3/fss core* kips with `kip1`.
-That's in case the kips are incompatible between them. If compatible, you can override `pkg3`/`fss0` kips with no issues (useful for testing with intermediate kip changes). In such cases, the `kip1` line must be **after** `pkg3`/`fss0` line.
+引导程序可以通过 `Nyx` -> `选项` 或 'bootloader/hekate_ipl.ini' 进行配置。特殊节 'config' 控制实际的全局配置。任何其他 ini 节代表一个启动条目，只能通过 ini 手动编辑。
 
 
-### Boot entry key/value combinations for Exosphère
-
-The following can be paired together with a HOS boot entry:
-
-| Config option          | Description                                                |
-| ---------------------- | ---------------------------------------------------------- |
-| nouserexceptions=1     | Disables usermode exception handlers when paired with Exosphère. |
-| userpmu=1              | Enables user access to PMU when paired with Exosphère.     |
-| cal0blank=1            | Overrides Exosphère config `blank_prodinfo_{sys/emu}mmc`. If that key doesn't exist, `exosphere.ini` will be used. |
-| cal0writesys=1         | Overrides Exosphère config `allow_writing_to_cal_sysmmc`. If that key doesn't exist, `exosphere.ini` will be used. |
-| usb3force=1            | Overrides system settings mitm config `usb30_force_enabled`. If that key doesn't exist, `system_settings.ini` will be used. |
-| memmode=1              | Enables boot config memory mode for retail units. By default, max ram is limited to 4GB. Enabling this will automatically choose size. |
+共有四种可能的条目类型。"**[ ]**"：启动条目，"**{ }**"：标题，"**#**"：注释，"*换行*"：.ini 的装饰性空行。
 
 
-**Note**: `cal0blank`, `cal0writesys`, `usb3force`, as stated override the `exosphere.ini` or `system_settings.ini`. 0: Disable, 1: Enable, Key Missing: Use original value.
+**您可以在[此处](./res/hekate_ipl_template.ini)找到模板**
 
 
-**Note2**: `blank_prodinfo_{sys/emu}mmc`, `allow_writing_to_cal_sysmmc` and `usb30_force_enabled` in `exosphere.ini` and `system_settings.ini` respectively, are the only atmosphere config keys that can affect hekate booting configuration externally, **if** the equivalent keys in hekate config are missing.
+### hekate 全局配置键/值（*[config]*部分）
+
+使用 Nyx 中的 `选项` 编辑以下配置：
+
+| 配置选项 | 描述 |
+| --- | --- |
+| autoboot=0 | 0：禁用，#：自动启动的启动条目编号。 |
+| autoboot_list=0 | 0：从 hekate_ipl.ini 读取 `autoboot` 启动条目，1：从 ini 文件夹读取（ini 文件按 ASCII 排序）。 |
+| bootwait=3 | 0：禁用（同时禁用启动 Logo。注入后一直按住 **VOL-** 可进入菜单。），#：等待 **VOL-** 进入菜单的时间。最大：20秒。 |
+| autohosoff=1 | 0：禁用，1：如果通过 RTC 闹钟从 HOS 唤醒，显示 Logo 后完全关机，2：不显示 Logo，立即关机。 |
+| autonogc=1 | 0：禁用，1：如果发现未烧毁的熔丝且启动 >= 4.0.0 的 HOS，则自动应用 nogc 补丁。 |
+| updater2p=0 | 0：禁用，1：强制更新（如需要）reboot2payload 二进制文件为 hekate。 |
+| backlight=100 | 屏幕背光级别。0-255。 |
+| --- | --------- *以下仅可通过 ini 编辑* --------- |
+| noticker=0 | 0：在自定义启动 Logo 期间绘制动画线条，表示跳转到菜单的剩余时间。1：禁用。 |
+| bootprotect=0 | 0：禁用，1：通过禁止在 HOS 中读取或编辑来保护 bootloader 文件夹免受损坏。 |
 
 
-## Payload storage
+### 启动条目键/值组合
 
-hekate has a boot storage in the binary that helps it configure it outside of BPMP environment:
+启动条目需要由用户手动添加/编辑所选的键/值组合。
 
-| Offset / Name           | Description                                                       |
-| ----------------------- | ----------------------------------------------------------------- |
-| '0x94' boot_cfg         | bit0: `Force AutoBoot`, bit1: `Show launch log`, bit2: `Boot from ID`, bit3: `Boot to emuMMC`. |
-| '0x95' autoboot         | If `Force AutoBoot`, 0: Force go to menu, else boot that entry.   |
-| '0x96' autoboot_list    | If `Force AutoBoot` and `autoboot` then it boots from ini folder. |
-| '0x97' extra_cfg        | When menu is forced: bit5: `Run UMS`.                             |
-| '0x98' xt_str[128]      | Depends on the set cfg bits.                                      |
-| '0x98' ums[1]           | When `Run UMS` is set, it will launch the selected UMS. 0: SD, 1/2/3: eMMC BOOT0/BOOT1/GPP, 4/5/6: emuMMC BOOT0/BOOT1/GPP,  |
-| '0x98' id[8]            | When `Boot from ID` is set, it will search all inis automatically and find the boot entry with that id and boot it. Must be NULL terminated. |
-| '0xA0' emummc_path[120] | When `Boot to emuMMC` is set, it will override the current emuMMC (boot entry or emummc.ini). Must be NULL terminated. |
+| 配置选项 | 描述 |
+| --- | --- |
+| warmboot={FILE path} | 替换 warmboot 二进制文件 |
+| secmon={FILE path} | 替换安全监视器二进制文件 |
+| kernel={FILE path} | 替换内核二进制文件 |
+| kip1={FILE path} | 替换/添加内核初始进程。可设置多个。 |
+| kip1={FOLDER path}/* | 加载文件夹内的所有 .kip/.kip1 文件。与单个 kip1 键兼容。 |
+| pkg3={FILE path} | 接受 Atmosphere `package3` 二进制文件并从中 `提取` 所有需要的部分。包括 kip、exosphere、warmboot 和 mesosphere。 |
+| fss0={FILE path} | 同上。!已弃用! |
+| pkg3ex=1 | 启用从 PKG3/FSS0 存储加载实验性内容 |
+| pkg3kip1skip={KIP name} | 跳过从 `pkg3`/`fss0` 加载的 kip。允许多个，用 `,` 分隔。名称必须与 `PKG3` 中的名称完全匹配。 |
+| exofatal={FILE path} | 替换 Mariko 的 exosphere fatal 二进制文件 |
+| --- | --- |
+| kip1patch=patchname | 启用 kip1 补丁。允许多个，用 `,` 分隔。如果未找到实际补丁，将显示警告。 |
+| emupath={FOLDER path} | 强制 emuMMC 使用选定的路径。（=emuMMC/RAW1, =emuMMC/SD00 等）。emuMMC 必须由 hekate 创建，因为它使用 raw_based/file_based 文件。 |
+| emummcforce=1 | 强制使用 emuMMC。如果 emummc.ini 被禁用或未找到，则会导致错误。 |
+| emummc_force_disable=1 | 如果 emuMMC 已启用，则禁用它。 |
+| stock=1 | 通过 hekate 引导程序启动 OFW。在运行原厂系统时禁用不需要的内核补丁和 CFW kip。`如果 emuMMC 已启用，则需要 emummc_force_disable=1`。emuMMC 在原厂系统上不受支持。如果需要 OFW 之外的额外 KIP，可以用 `kip1` 键定义。不应使用依赖 Atmosphère 补丁的 kip，因为会导致卡死。如果需要 `NOGC`，请使用 `kip1patch=nogc`。 |
+| fullsvcperm=1 | 禁用 SVC 验证（完全服务权限）。不适用于以 Mesosphere 为内核的情况。 |
+| debugmode=1 | 启用调试模式。使用 exosphere 作为 secmon 时已过时。 |
+| kernelprocid=1 | 启用原厂内核进程 ID 发送/接收补丁。使用 `pkg3`/`fss0` 时不需要。 |
+| --- | --- |
+| payload={FILE path} | Payload 启动。工具、Android/Linux、CFW 引导程序等。使用时上述任何键都不生效。 |
+| --- | --- |
+| l4t=1 | L4T Linux/Android 原生启动。 |
+| boot_prefixes={FOLDER path} | L4T 启动栈目录。 |
+| ram_oc=0 | L4T RAM 超频。查看 README_CONFIG.txt 获取更多信息。 |
+| ram_oc_vdd2=1100 | L4T RAM VDD2 电压。设置 VDD2（T210B01）或 VDD2/VDDQ（T210）电压。1050-1175。 |
+| ram_oc_vddq=600 | L4T RAM VDDQ 电压。设置 VDDQ（T210B01）。550-650。 |
+| uart_port=0 | 为 L4T uboot/内核启用串口日志。 |
+| sld_type=0x31444C53 | 控制无缝显示支持的类型。0x0：禁用，0x31444C53：L4T 无缝显示。 |
+| Additional keys | 各发行版支持更多键。查看 README_CONFIG.txt 获取更多信息。 |
+| --- | --- |
+| bootwait=3 | 覆盖 `[config]` 中的全局 bootwait。 |
+| id=IDNAME | 用于通过 ID 强制启动的启动条目标识符。最多 7 个字符。 |
+| logopath={FILE path} | 如果存在，将加载指定的位图。否则如果存在 `bootloader/bootlogo.bmp` 将使用它 |
+| icon={FILE path} | 强制 Nyx 使用此处定义的图标。如果未找到，将检查以启动条目命名的 bmp（[Test 2] -> `bootloader/res/Test 2.bmp`）。否则使用默认图标。 |
 
 
-## Nyx Configuration keys/values (nyx.ini)
+**注意1**：使用通配符（`/*`）搭配 `kip1` 时，仍可在之后使用普通的 `kip1` 加载额外的单个 kip。
 
-Use `Nyx Settings` in Nyx to edit the following configuration:
+**注意2**：使用 PKG3/FSS0 时，它会解析 exosphere、warmboot 和所有核心 kip。您可以在定义 `pkg3`/`fss0` 之后使用 `secmon`/`warmboot` 来覆盖前两个。
+您可以使用 `kip1` 加载额外的 kip，或通过通配符（`/*`）加载多个。
 
-| Config option      | Description                                                |
-| ------------------ | ---------------------------------------------------------- |
-| themebg=2d2d2d     | Sets Nyx background color in HEX. 0x0B0B0B to 0xC7C7C7.    |
-| themecolor=167     | Sets Nyx color of text highlights.                         |
-| entries5col=0      | 1: Sets Launch entry columns from 4 to 5 per line. For a total of 10 entries. |
-| timeoffset=0       | Sets time offset in HEX. Must be in epoch format           |
-| timedst=1          | Enables automatic daylight saving hour adjustment          |
-| homescreen=0       | Sets home screen. 0: Home menu, 1: All configs (merges Launch and More configs), 2: Launch, 3: More Configs. |
-| verification=1     | 0: Disable Backup/Restore verification, 1: Sparse (block based, fast and mostly reliable), 2: Full (sha256 based, slow and 100% reliable). |
-| ------------------ | ----- *The following can be edited via nyx.ini only* ----- |
-| umsemmcrw=0        | 1: eMMC/emuMMC UMS will be mounted as writable by default. |
-| jcdisable=0        | 1: Disables Joycon driver completely.                      |
-| jcforceright=0     | 1: Forces right joycon to be used as main mouse control.   |
-| bpmpclock=1        | 0: Auto, 1: 589 MHz, 2: 576 MHz, 3: 563 MHz, 4: 544 MHz, 5: 408 MHz. Use 2 to 5 if Nyx hangs or some functions like UMS/Backup Verification fail. |
+**警告**：使用 `kip1` 覆盖 *pkg3/fss0 核心* kip 时请小心。
+如果 kip 之间不兼容可能会出问题。如果兼容，则可以无问题地覆盖 `pkg3`/`fss0` 的 kip（适用于测试中间 kip 更改的情况）。在这种情况下，`kip1` 行必须在 `pkg3`/`fss0` 行**之后**。
+
+
+### Exosphère 启动条目键/值组合
+
+以下内容可与 HOS 启动条目配对使用：
+
+| 配置选项 | 描述 |
+| --- | --- |
+| nouserexceptions=1 | 与 Exosphère 配对时禁用用户态异常处理器。 |
+| userpmu=1 | 与 Exosphère 配对时启用用户态对 PMU 的访问。 |
+| cal0blank=1 | 覆盖 Exosphère 配置 `blank_prodinfo_{sys/emu}mmc`。如果该键不存在，将使用 `exosphere.ini`。 |
+| cal0writesys=1 | 覆盖 Exosphère 配置 `allow_writing_to_cal_sysmmc`。如果该键不存在，将使用 `exosphere.ini`。 |
+| usb3force=1 | 覆盖系统设置 mitm 配置 `usb30_force_enabled`。如果该键不存在，将使用 `system_settings.ini`。 |
+| memmode=1 | 为零售设备启用引导配置内存模式。默认情况下，最大 RAM 限制为 4GB。启用后将自动选择大小。 |
+
+
+**注意**：如上所述，`cal0blank`、`cal0writesys`、`usb3force` 会覆盖 `exosphere.ini` 或 `system_settings.ini`。0：禁用，1：启用，键缺失：使用原始值。
+
+
+**注意2**：`exosphere.ini` 和 `system_settings.ini` 中的 `blank_prodinfo_{sys/emu}mmc`、`allow_writing_to_cal_sysmmc` 和 `usb30_force_enabled` 分别是唯一可以在 hekate 启动配置外部产生影响的 Atmosphère 配置键，**前提是** hekate 配置中的等效键缺失。
+
+
+## Payload 存储
+
+hekate 在二进制文件中有一个启动存储，帮助其在 BPMP 环境之外进行配置：
+
+| 偏移 / 名称 | 描述 |
+| --- | --- |
+| '0x94' boot_cfg | bit0：`强制自动启动`，bit1：`显示启动日志`，bit2：`从 ID 启动`，bit3：`启动到 emuMMC`。 |
+| '0x95' autoboot | 如果 `强制自动启动`，0：强制进入菜单，否则启动该条目。 |
+| '0x96' autoboot_list | 如果 `强制自动启动` 且有 `autoboot`，则从 ini 文件夹启动。 |
+| '0x97' extra_cfg | 当菜单被强制时：bit5：`运行 UMS`。 |
+| '0x98' xt_str[128] | 取决于设置的配置位。 |
+| '0x98' ums[1] | 当设置 `运行 UMS` 时，将启动选定的 UMS。0：SD，1/2/3：eMMC BOOT0/BOOT1/GPP，4/5/6：emuMMC BOOT0/BOOT1/GPP， |
+| '0x98' id[8] | 当设置 `从 ID 启动` 时，将自动搜索所有 ini 并找到具有该 ID 的启动条目并启动。必须以 NULL 结尾。 |
+| '0xA0' emummc_path[120] | 当设置 `启动到 emuMMC` 时，将覆盖当前的 emuMMC（启动条目或 emummc.ini）。必须以 NULL 结尾。 |
+
+
+## Nyx 配置键/值（nyx.ini）
+
+使用 Nyx 中的 `Nyx 设置` 编辑以下配置：
+
+| 配置选项 | 描述 |
+| --- | --- |
+| themebg=2d2d2d | 以 HEX 设置 Nyx 背景颜色。0x0B0B0B 到 0xC7C7C7。 |
+| themecolor=167 | 设置 Nyx 文本高亮颜色。 |
+| entries5col=0 | 1：将启动条目列数从每行 4 个设为 5 个。总共 10 个条目。 |
+| timeoffset=0 | 以 HEX 设置时区偏移。必须为 epoch 格式 |
+| timedst=1 | 启用自动夏令时调整 |
+| homescreen=0 | 设置主屏幕。0：主菜单，1：所有配置（合并启动和更多配置），2：启动，3：更多配置。 |
+| verification=1 | 0：禁用备份/恢复验证，1：稀疏（基于块，快速且基本可靠），2：完整（基于 sha256，慢但 100% 可靠）。 |
+| --- | ----- *以下仅可通过 nyx.ini 编辑* ----- |
+| umsemmcrw=0 | 1：eMMC/emuMMC UMS 默认以可写模式挂载。 |
+| jcdisable=0 | 1：完全禁用 Joycon 驱动。 |
+| jcforceright=0 | 1：强制使用右侧 Joycon 作为主鼠标控制。 |
+| bpmpclock=1 | 0：自动，1：589 MHz，2：576 MHz，3：563 MHz，4：544 MHz，5：408 MHz。如果 Nyx 卡死或 UMS/备份验证等功能失败，请使用 2 到 5。 |
 
 
 ```
