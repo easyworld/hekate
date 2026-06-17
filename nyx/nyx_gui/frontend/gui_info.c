@@ -1634,12 +1634,12 @@ static lv_res_t _create_mbox_sd_vendor_info(lv_obj_t * btn)
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-	static const char * mbox_btn_map[] = { "\251", "\222Close", "\251", "" };
+	static const char * mbox_btn_map[] = { "\251", "\222关闭", "\251", "" };
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 5);
 
-	lv_mbox_set_text(mbox, "#C7EA46 SD Vendor/Reserved Data#\nPlease wait..");
+	lv_mbox_set_text(mbox, "#C7EA46 SD卡厂商/保留数据#\n请稍等..");
 	manual_system_maintenance(true);
 
 	u8 *buf = zalloc(EMMC_BLOCKSIZE);
@@ -1671,7 +1671,7 @@ static lv_res_t _create_mbox_sd_vendor_info(lv_obj_t * btn)
 
 	if (sd_mount())
 	{
-		lv_label_set_text(lb_desc, "#FFDD00 Failed to init SD!#");
+		lv_label_set_text(lb_desc, "#FFDD00 初始化SD卡失败!#");
 		goto out;
 	}
 
@@ -1687,7 +1687,7 @@ static lv_res_t _create_mbox_sd_vendor_info(lv_obj_t * btn)
 		"#FF8000 CSD[030:029]:# %X\n"
 		"#FF8000 CSD[125:120]:# %02X\n"
 
-		"#FF8000 SCR Vendor:#   %08X\n"
+		"#FF8000 SCR厂商:#   %08X\n"
 		"#FF8000 SCR[037:036]:# %X\n\n"
 
 		"#FF8000 SSR[031:000]:# %08X\n"
@@ -1754,7 +1754,7 @@ static lv_res_t _create_mbox_sd_vendor_info(lv_obj_t * btn)
 			// 0x00000021,
 		};
 
-		strcpy(txt_buf2 + strlen(txt_buf2), "#00DDFF Health Report Data#");
+		strcpy(txt_buf2 + strlen(txt_buf2), "#00DDFF 健康报告数据#");
 
 		for (u32 i = 0; i < ARRAY_SIZE(health_rpt_args); i++)
 		{
@@ -1764,15 +1764,15 @@ static lv_res_t _create_mbox_sd_vendor_info(lv_obj_t * btn)
 				test |= buf[i];
 
 			if (test)
-				s_printf(txt_buf2 + strlen(txt_buf2), "\n#FF8000 %08X:# Has data!", health_rpt_args[i]);
+				s_printf(txt_buf2 + strlen(txt_buf2), "\n#FF8000 %08X:# 有数据!", health_rpt_args[i]);
 			else
-				s_printf(txt_buf2 + strlen(txt_buf2), "\n#FF8000 %08X:# Empty", health_rpt_args[i]);
+				s_printf(txt_buf2 + strlen(txt_buf2), "\n#FF8000 %08X:# 无数据", health_rpt_args[i]);
 		}
 	}
 	else
-		strcpy(txt_buf2 + strlen(txt_buf2), "#00DDFF Health Report Data#\n#FFDD00 Not supported!#");
+		strcpy(txt_buf2 + strlen(txt_buf2), "#00DDFF 健康报告数据#\n#FFDD00 不支持!#");
 
-	lv_mbox_set_text(mbox, "#C7EA46 SD Vendor/Reserved Data#");
+	lv_mbox_set_text(mbox, "#C7EA46 SD卡厂商/保留数据#");
 
 	lv_label_set_text(lb_desc, txt_buf);
 	lv_label_set_text(lb_desc2, txt_buf2);
@@ -2620,7 +2620,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 		(sd_storage.cid.oemid >> 8) & 0xFF, sd_storage.cid.oemid & 0xFF, sd_storage.cid.oemid,
 		sd_storage.cid.hwrev, sd_storage.cid.fwrev, sd_storage.cid.serial,
 		sd_storage.cid.month, sd_storage.cid.year,
-		secret_bits ? "#FF8000 Contact me#" : "",
+		secret_bits ? "#FF8000 请联系作者#" : "",
 		max_power_nominal * 3600 / 1000, sd_storage.max_power);
 
 	switch (nyx_str->info.sd_init)
@@ -2676,7 +2676,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	switch (sd_storage.csd.write_protect)
 	{
 	case 0:
-		wp_info = "Inactive";
+		wp_info = "未启用";
 		break;
 	case 1:
 		wp_info = "临时";
