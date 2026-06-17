@@ -908,7 +908,7 @@ static u32 _sdmmc_check_mask_interrupt(sdmmc_t *sdmmc, u16 *pout, u16 mask)
 	u16 norintsts = sdmmc->regs->norintsts;
 	u16 errintsts = sdmmc->regs->errintsts;
 
-	DPRINTF("norintsts %08X, errintsts %08X\n", norintsts, errintsts);
+	DPRINTF("norintsts %04X, errintsts %04X\n", norintsts, errintsts);
 
 	if (pout)
 		*pout = norintsts;
@@ -917,7 +917,7 @@ static u32 _sdmmc_check_mask_interrupt(sdmmc_t *sdmmc, u16 *pout, u16 mask)
 	if (norintsts & SDHCI_INT_ERROR)
 	{
 #ifdef ERROR_EXTRA_PRINTING
-		EPRINTFARGS("SDMMC%d: intsts %08X, errintsts %08X", sdmmc->id + 1, norintsts, errintsts);
+		EPRINTFARGS("SDMMC%d: intsts %04X, errintsts %04X", sdmmc->id + 1, norintsts, errintsts);
 #endif
 		sdmmc->error_sts = errintsts;
 		sdmmc->regs->errintsts = errintsts;
@@ -1128,7 +1128,7 @@ static int _sdmmc_execute_cmd_inner(sdmmc_t *sdmmc, sdmmc_cmd_t *cmd, sdmmc_req_
 	if (_sdmmc_send_cmd(sdmmc, cmd, is_data_present))
 	{
 #ifdef ERROR_EXTRA_PRINTING
-		EPRINTFARGS("SDMMC%d: Wrong Response type %08X!", sdmmc->id + 1, cmd->rsp_type);
+		EPRINTFARGS("SDMMC%d: Wrong Response type %d!", sdmmc->id + 1, cmd->rsp_type);
 #endif
 		return 1;
 	}

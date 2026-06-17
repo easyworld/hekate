@@ -968,7 +968,7 @@ static u32 _get_available_l4t_partition()
 
 	// Search for a suitable partition.
 	u32 size_sct = 0;
-	if (!memcmp(&gpt->header.signature, "EFI PART", 8) || gpt->header.num_part_ents > 128)
+	if (!memcmp(&gpt->header.signature, "EFI PART", 8) && gpt->header.num_part_ents <= 128)
 	{
 		for (u32 i = 0; i < gpt->header.num_part_ents; i++)
 		{
