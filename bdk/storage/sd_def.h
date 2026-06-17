@@ -1,6 +1,6 @@
 /*
  *  Copyright (c) 2005-2007 Pierre Ossman, All Rights Reserved.
- *  Copyright (c) 2018-2025 CTCaer
+ *  Copyright (c) 2018-2026 CTCaer
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -11,52 +11,96 @@
 #ifndef SD_DEF_H
 #define SD_DEF_H
 
-/* SD commands                           type  argument     response */
+/* SD commands                         type  argument     response */
 /* class 0 */
 /* This is basically the same command as for MMC with some quirks. */
 #define SD_SEND_RELATIVE_ADDR     3 /* bcr                     R6  */
 #define SD_SEND_IF_COND           8 /* bcr  [11:0] See below   R7  */
-#define SD_SWITCH_VOLTAGE        11 /* ac                      R1  */
+#define SD_VOLTAGE_SWITCH        11 /* ac                      R1  */
+/* Class 1 */
+#define SD_Q_MANAGEMENT          43 /* ac                      R1b */
+#define SD_Q_TASK_INFO_A         44 /* ac                      R1  */
+#define SD_Q_TASK_INFO_B         45 /* ac                      R1  */
+#define SD_Q_RD_TASK             46 /* adtc                    R1  */
+#define SD_Q_WR_TASK             47 /* adtc                    R1  */
 /* Class 2 */
-#define SD_ADDR_EXT              22 /* ac   [5:0]              R1  */
-/* class 10 */
-#define SD_SWITCH                 6 /* adtc [31:0] See below   R1  */
+#define SD_SEND_TUNING_BLOCK     19 /* ac                      R1b */
+#define SD_SPEED_CLASS_CONTROL   20 /* ac   [31:0]             R1  */
+#define SD_ADDRESS_EXTENSION     22 /* ac   [5:0] UC ext addr  R1  */
 /* class 5 */
 #define SD_ERASE_WR_BLK_START    32 /* ac   [31:0] data addr   R1  */
 #define SD_ERASE_WR_BLK_END      33 /* ac   [31:0] data addr   R1  */
+/* Class 9 */
+#define SD_IO_SEND_OP_COND        5 /* bcr  [31:0] OCR         R4  */
+#define SD_IO_RW_DIRECT          52 /* ac                      R5  */
+#define SD_IO_RW_EXTENDED        53 /* adtc                    R5  */
+/* class 10 */
+#define SD_SWITCH                 6 /* adtc [31:0] See below   R1  */
+#define SD_CMD_SYSTEM_34         34 /* cmd system defined          */
+#define SD_CMD_SYSTEM_35         35 /* cmd system defined          */
+#define SD_CMD_SYSTEM_36         36 /* cmd system defined          */
+#define SD_CMD_SYSTEM_37         37 /* cmd system defined          */
+#define SD_CMD_SYSTEM_50         50 /* cmd system defined          */
+#define SD_CMD_SYSTEM_57         57 /* cmd system defined          */
  /* class 11 */
 #define SD_READ_EXTR_SINGLE      48 /* adtc [31:0]             R1  */
 #define SD_WRITE_EXTR_SINGLE     49 /* adtc [31:0]             R1  */
+#define SD_READ_EXTR_MULTI       58 /* adtc [31:0]             R1  */
+#define SD_WRITE_EXTR_MULTI      59 /* adtc [31:0]             R1  */
+#define SD_VENDOR_CMD_60         60 /* vendor defined              */
+#define SD_VENDOR_CMD_61         61 /* vendor defined              */
+#define SD_VENDOR_CMD_62         62 /* vendor defined              */
+#define SD_VENDOR_CMD_63         63 /* vendor defined              */
 
 /* Application commands */
 #define SD_APP_SET_BUS_WIDTH             6 /* ac   [1:0] bus width    R1  */
 #define SD_APP_SD_STATUS                13 /* adtc                    R1  */
-#define SD_APP_SEND_NUM_WR_BLKS         22 /* adtc                    R1  */
-#define SD_APP_OP_COND                  41 /* bcr  [31:0] OCR         R3  */
+#define SD_APP_SEND_NUM_WR_BLOCKS       22 /* adtc                    R1  */
+#define SD_APP_SET_WR_BLK_ERASE_COUNT   23 /* ac                      R1  */
+#define SD_APP_SD_SEND_OP_COND          41 /* bcr  [31:0] OCR         R3  */
 #define SD_APP_SET_CLR_CARD_DETECT      42 /* adtc                    R1  */
 #define SD_APP_SEND_SCR                 51 /* adtc                    R1  */
 
-/* Application secure commands */
-#define SD_APP_SECURE_READ_MULTI_BLOCK  18 /* adtc                      R1  */
-#define SD_APP_SECURE_WRITE_MULTI_BLOCK 25 /* adtc                      R1  */
-#define SD_APP_SECURE_WRITE_MKB         26 /* adtc                      R1  */
-#define SD_APP_SECURE_ERASE             38 /* adtc                      R1b */
-#define SD_APP_GET_MKB                  43 /* adtc   [31:0] See below   R1  */
-#define SD_APP_GET_MID                  44 /* adtc                      R1  */
-#define SD_APP_SET_CER_RN1              45 /* adtc                      R1  */
-#define SD_APP_GET_CER_RN2              46 /* adtc                      R1  */
-#define SD_APP_SET_CER_RES2             47 /* adtc                      R1  */
-#define SD_APP_GET_CER_RES1             48 /* adtc                      R1  */
-#define SD_APP_CHANGE_SECURE_AREA       49 /* adtc                      R1b */
+/* Application sd secure commands */
+#define SD_APP_SECURE_READ_MULTI_BLOCK  18 /* adtc                    R1  */
+#define SD_APP_SECURE_WRITE_MULTI_BLOCK 25 /* adtc                    R1  */
+#define SD_APP_SECURE_WRITE_MKB         26 /* adtc                    R1  */
+#define SD_APP_SECURE_ERASE             38 /* adtc                    R1b */
+#define SD_APP_GET_MKB                  43 /* adtc   [31:0] See below R1  */
+#define SD_APP_GET_MID                  44 /* adtc                    R1  */
+#define SD_APP_SET_CER_RN1              45 /* adtc                    R1  */
+#define SD_APP_GET_CER_RN2              46 /* adtc                    R1  */
+#define SD_APP_SET_CER_RES2             47 /* adtc                    R1  */
+#define SD_APP_GET_CER_RES1             48 /* adtc                    R1  */
+#define SD_APP_CHANGE_SECURE_AREA       49 /* adtc                    R1b */
+
+/* ICR bit definitions */
+#define SD_ICR_PATTERN      0xAA          /* Check pattern */
+#define SD_ICR_VHS_27_36    (1U << 8)     /* VDD IO voltage 2.7 ~ 3.6 */
+#define SD_ICR_VHS_170_195  (2U << 8)     /* VDD IO voltage 1.7 ~ 1.95 (LVS-only) */
+#define SD_ICR_PCIE         (1U << 12)    /* PCIE availability */
+#define SD_ICR_PCIE_12      (1U << 13)    /* PCIE IO voltage 1.2 */
 
 /* OCR bit definitions */
-#define SD_OCR_VDD_18       (1U << 7)     /* VDD voltage 1.8 */
-#define SD_VHS_27_36        (1U << 8)     /* VDD voltage 2.7 ~ 3.6 */
-#define SD_OCR_VDD_32_33    (1U << 20)    /* VDD voltage 3.2 ~ 3.3 */
+#define SD_OCR_VDD_170_195  (1U << 7)     /* VDD IO voltage 1.7 ~ 1.95 (LVS-only or support) */
+#define SD_OCR_VDD_27_28    (1U << 15)    /* VDD IO voltage 2.7 ~ 2.8 */
+#define SD_OCR_VDD_28_29    (1U << 16)    /* VDD IO voltage 2.8 ~ 2.9 */
+#define SD_OCR_VDD_29_30    (1U << 17)    /* VDD IO voltage 2.9 ~ 3.0 */
+#define SD_OCR_VDD_30_31    (1U << 18)    /* VDD IO voltage 3.0 ~ 3.1 */
+#define SD_OCR_VDD_31_32    (1U << 19)    /* VDD IO voltage 3.1 ~ 3.2 */
+#define SD_OCR_VDD_32_33    (1U << 20)    /* VDD IO voltage 3.2 ~ 3.3 */
+#define SD_OCR_VDD_33_34    (1U << 21)    /* VDD IO voltage 3.3 ~ 3.4 */
+#define SD_OCR_VDD_34_35    (1U << 22)    /* VDD IO voltage 3.4 ~ 3.5 */
+#define SD_OCR_VDD_35_36    (1U << 23)    /* VDD IO voltage 3.5 ~ 3.6 */
 #define SD_OCR_S18R         (1U << 24)    /* 1.8V switching request */
-#define SD_ROCR_S18A        SD_OCR_S18R   /* 1.8V switching accepted by card */
-#define SD_OCR_XPC          (1U << 28)    /* SDXC power control */
-#define SD_OCR_CCS          (1U << 30)    /* Card Capacity Status */
+#define SD_OCR_S18A         SD_OCR_S18R   /* 1.8V switching accepted by card */
+#define SD_OCR_HO2T         (1U << 27)    /* SDUC support */
+#define SD_OCR_CO2T         SD_OCR_HO2T   /* SDUC Status */
+#define SD_OCR_XPC          (1U << 28)    /* SDXC power control - Max Performance */
+#define SD_OCR_FB           (1U << 29)    /* eSD Fast Boot Support */
+#define SD_OCR_UHSII        (1U << 29)    /* UHS-II Card Status */
+#define SD_OCR_HCS          (1U << 30)    /* Host Capacity Support */
+#define SD_OCR_CCS          SD_OCR_HCS    /* Card Capacity Status */
 #define SD_OCR_BUSY         (1U << 31)    /* Card Power up Status */
 
 /*
