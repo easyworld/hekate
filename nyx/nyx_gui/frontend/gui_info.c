@@ -1687,7 +1687,7 @@ static lv_res_t _create_mbox_sd_vendor_info(lv_obj_t * btn)
 		"#FF8000 CSD[030:029]:# %X\n"
 		"#FF8000 CSD[125:120]:# %02X\n"
 
-		"#FF8000 SCR厂商:#   %08X\n"
+		"#FF8000 SCR厂商:#      %08X\n"
 		"#FF8000 SCR[037:036]:# %X\n\n"
 
 		"#FF8000 SSR[031:000]:# %08X\n"
