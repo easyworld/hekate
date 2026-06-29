@@ -297,8 +297,8 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 		"#FF8000 序列号:#            %s\n"
 		"#FF8000 WLAN MAC:#          %02X:%02X:%02X:%02X:%02X:%02X\n"
 		"#FF8000 Bluetooth MAC:#     %02X:%02X:%02X:%02X:%02X:%02X\n"
-		"#FF8000 电池LOT:#          %s (%d)\n"
-		"#FF8000 LCD供应商:#        ",
+		"#FF8000 电池LOT:#           %s (%d)\n"
+		"#FF8000 LCD供应商:#         ",
 		cal0->version, cal0->update_cnt, cal0->serial_number,
 		cal0->wlan_mac[0], cal0->wlan_mac[1], cal0->wlan_mac[2], cal0->wlan_mac[3], cal0->wlan_mac[4], cal0->wlan_mac[5],
 		cal0->bd_mac[0], cal0->bd_mac[1], cal0->bd_mac[2], cal0->bd_mac[3], cal0->bd_mac[4], cal0->bd_mac[5],
@@ -355,14 +355,14 @@ static lv_res_t _create_mbox_cal0(lv_obj_t *btn)
 
 	s_printf(txt_buf + strlen(txt_buf),
 		" (%06X)\n#FF8000 触控供应商:#        %d\n"
-		"#FF8000 IMU类型/安装位置:# %d / %d\n"
+		"#FF8000 IMU类型/安装位置:#  %d / %d\n"
 		"#FF8000 摇杆左/右类型:#     %02X / %02X\n",
 		cal0->lcd_vendor, cal0->touch_ic_vendor_id,
 		cal0->console_6axis_sensor_type, cal0->console_6axis_sensor_mount_type,
 		cal0->analog_stick_type_l, cal0->analog_stick_type_r);
 
 	bool valid_cal0 = !memcmp(hash, cal0->body_sha256, 0x20);
-	s_printf(txt_buf + strlen(txt_buf), "#FF8000 SHA256哈希校验:#   %s", valid_cal0 ? "通过" : "失败");
+	s_printf(txt_buf + strlen(txt_buf), "#FF8000 SHA256哈希校验:#    %s", valid_cal0 ? "通过" : "失败");
 
 	lv_label_set_text(lb_desc, txt_buf);
 
@@ -2845,7 +2845,7 @@ static lv_res_t _create_window_sdcard_info_status(lv_obj_t *btn)
 	f_getfree("", &sd_fs.free_clst, NULL);
 
 	lv_label_set_text(lb_desc3,
-		"#00DDFF 检测到FAT文件系统:#\n"
+		"#00DDFF 检测到FAT系统:#\n"
 		"文件系统:\n"
 		"簇大小:\n"
 		"可用/总空间:"
