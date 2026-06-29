@@ -475,7 +475,7 @@ int usb_device_gadget_hid(usb_ctxt_t *usbs)
 	goto exit;
 
 error:
-	usbs->set_text(usbs->label, "#FFDD00 错误:# 超时或取消");
+	usbs->set_text(usbs->label, "#FFDD00 错误:# 超时或已取消");
 	res = 1;
 
 exit:

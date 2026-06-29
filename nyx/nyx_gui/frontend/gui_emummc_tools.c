@@ -57,9 +57,9 @@ static void _create_window_emummc()
 
 	lv_obj_t *win;
 	if (!mbr_ctx.part_idx)
-		win = nyx_create_standard_window(SYMBOL_DRIVE"  创建SD卡文件式emuMMC", _action_emummc_window_close);
+		win = nyx_create_standard_window(SYMBOL_DRIVE"  创建SD文件式emuMMC", _action_emummc_window_close);
 	else
-		win = nyx_create_standard_window(SYMBOL_DRIVE"  创建SD卡分区式emuMMC", _action_emummc_window_close);
+		win = nyx_create_standard_window(SYMBOL_DRIVE"  创建SD分区式emuMMC", _action_emummc_window_close);
 
 	//Disable buttons.
 	nyx_window_toggle_buttons(win, true);
@@ -253,18 +253,18 @@ static void _create_mbox_emummc_raw()
 	if (mbr_ctx.available)
 	{
 		s_printf(txt_buf,
-			"#C7EA46 找到适用的分区!#\n"
+			"#C7EA46 检测到可用分区!#\n"
 			"#FF8000 选择一个分区继续:#\n\n");
 	}
 	else
-		s_printf(txt_buf, "#FFDD00 找不到适用的分区!#\n\n");
+		s_printf(txt_buf, "#FFDD00 未找到适用分区!#\n\n");
 
 	s_printf(txt_buf + strlen(txt_buf),
 		"分区表:\n"
 		"#C0C0C0 第0部分: 类型: %02x, 起始: %08x, 大小: %08x#\n"
-		"#%s 第1部分: 类型: %02x, 起始: %08x, 大小: %08x#\n"
-		"#%s 第2部分: 类型: %02x, 起始: %08x, 大小: %08x#\n"
-		"#%s 第3部分: 类型: %02x, 起始: %08x, 大小: %08x#",
+		"#%s第1部分: 类型: %02x, 起始: %08x, 大小: %08x#\n"
+		"#%s第2部分: 类型: %02x, 起始: %08x, 大小: %08x#\n"
+		"#%s第3部分: 类型: %02x, 起始: %08x, 大小: %08x#",
 		mbr->partitions[0].type, mbr->partitions[0].start_sct, mbr->partitions[0].size_sct,
 		(mbr_ctx.available & BIT(0)) ? (mbr_ctx.resized_cnt[0] ? "FFDD00" : "C7EA46") : "C0C0C0",
 		 mbr->partitions[1].type, mbr->partitions[1].start_sct, mbr->partitions[1].size_sct,
@@ -274,11 +274,11 @@ static void _create_mbox_emummc_raw()
 		 mbr->partitions[3].type, mbr->partitions[3].start_sct, mbr->partitions[3].size_sct);
 
 	if (mbr_ctx.resized_cnt[0] || mbr_ctx.resized_cnt[1] || mbr_ctx.resized_cnt[2])
-		strcat(txt_buf, "\n\n#FFDD00 注意:# 黄色条目表示用户分区已被调整大小.");
+		strcat(txt_buf, "\n\n#FFDD00 注意:# 黄色条目表示USER分区已调整大小.");
 
 	if (!mbr_ctx.available)
 		strcat(txt_buf, "\n#FF8000 您想要对SD卡进行分区吗?#\n"
-						  "#FF8000  (您将被要求选择如何继续) #");
+						  "#FF8000  (接下来需要选择处理方式) #");
 
 	lv_mbox_set_text(mbox, txt_buf);
 	free(txt_buf);
@@ -351,7 +351,7 @@ static lv_res_t _create_mbox_emummc_create(lv_obj_t *btn)
 		"欢迎使用#C7EA46 emuMMC#创建工具!\n\n"
 		"请选择要创建的emuMMC类型.\n"
 		"#FF8000 SD卡文件# 以文件形式保存在FAT分区中.\n"
-		"#FF8000 SD卡分区# 以原始映像方式保存在可用分区中.");
+		"#FF8000 SD卡分区# 以RAW镜像方式保存在可用分区中.");
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, _create_emummc_action);
 
@@ -578,24 +578,24 @@ static lv_res_t _create_emummc_migrate_action(lv_obj_t * btns, const char * txt)
 	{
 		if (!emummc_backup)
 			s_printf(txt_buf,
-				"#C7EA46 找到了适合的eMMC备份!#\n\n"
+				"#C7EA46 检测到可迁移的eMMC备份!#\n\n"
 				"#FF8000 您想要迁移它吗?#\n");
 		else
 			s_printf(txt_buf,
-				"#C7EA46 找到了适合的emuMMC备份!#\n\n"
+				"#C7EA46 检测到可迁移的emuMMC备份!#\n\n"
 				"#FF8000 您想要迁移它吗?#\n");
 		lv_mbox_add_btns(mbox, mbox_btn_map, _create_emummc_mig1_action);
 	}
 	else if (emummc)
 	{
 		s_printf(txt_buf,
-			"#C7EA46 找到了基于SD卡分区的emuMMC!#\n\n"
+			"#C7EA46 检测到SD卡分区式emuMMC!#\n\n"
 			"#FF8000 您想修复它的配置和分区类型吗?#\n");
 		lv_mbox_add_btns(mbox, mbox_btn_map, _create_emummc_mig0_action);
 	}
 	else
 	{
-		s_printf(txt_buf, "没有找到emuMMC!\n");
+		s_printf(txt_buf, "未检测到emuMMC!\n");
 		lv_mbox_add_btns(mbox, mbox_btn_map1, nyx_mbox_action);
 	}
 
@@ -626,7 +626,7 @@ static lv_res_t _create_mbox_emummc_migrate(lv_obj_t *btn)
 	lv_obj_set_style(dark_bg, &mbox_darken);
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
-	static char *mbox_btn_map[] = { "\262备份", "\262修复原始分区", "\222取消", "" };
+	static char *mbox_btn_map[] = { "\262备份", "\262修复RAW分区", "\222取消", "" };
 	lv_obj_t * mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
@@ -634,7 +634,7 @@ static lv_res_t _create_mbox_emummc_migrate(lv_obj_t *btn)
 	lv_mbox_set_text(mbox,
 		"欢迎使用#C7EA46 emuMMC#迁移工具!\n\n"
 		"请选择要执行的迁移类型.\n"
-		"不支持的操作按钮都不可点击.");
+		"未检测到对应内容的选项将被禁用.");
 
 	char *path_buf = (char *)malloc(0x512);
 	mbr_t *mbr = (mbr_t *)malloc(sizeof(mbr_t));
@@ -936,7 +936,7 @@ out0:;
 	lv_label_set_static_text(label_sep, "");
 
 	lv_obj_t *label_txt = lv_label_create(h1, NULL);
-	lv_label_set_static_text(label_txt, "SD卡分区");
+	lv_label_set_static_text(label_txt, "SD RAW分区");
 	lv_obj_set_style(label_txt, lv_theme_get_current()->label.prim);
 	lv_obj_align(label_txt, label_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, -(LV_DPI / 2));
 
@@ -965,7 +965,7 @@ out0:;
 
 		if (emummc_img->part_type[raw_btn_idx] != 0x83)
 		{
-			s_printf(txt_buf, "SD卡原始分区%d", raw_btn_idx + 1);
+			s_printf(txt_buf, "SD RAW %d", raw_btn_idx + 1);
 			lv_label_set_text(btn_label, txt_buf);
 		}
 
@@ -1012,7 +1012,7 @@ out0:;
 	lv_label_set_static_text(label_sep, "");
 
 	lv_obj_t *label_txt3 = lv_label_create(h2, NULL);
-	lv_label_set_static_text(label_txt3, "SD卡文件");
+	lv_label_set_static_text(label_txt3, "SD文件式");
 	lv_obj_set_style(label_txt3, lv_theme_get_current()->label.prim);
 	lv_obj_align(label_txt3, label_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, -LV_DPI / 7);
 
@@ -1081,7 +1081,7 @@ lv_res_t create_win_emummc_tools(lv_obj_t *btn)
 	lv_label_set_static_text(label_sep, "");
 
 	lv_obj_t *label_txt = lv_label_create(h1, NULL);
-	lv_label_set_static_text(label_txt, "emuMMC信息和选项");
+	lv_label_set_static_text(label_txt, "emuMMC信息和选择");
 	lv_obj_set_style(label_txt, lv_theme_get_current()->label.prim);
 	lv_obj_align(label_txt, label_sep, LV_ALIGN_OUT_BOTTOM_LEFT, LV_DPI / 4, LV_DPI / 11);
 
@@ -1104,10 +1104,10 @@ lv_res_t create_win_emummc_tools(lv_obj_t *btn)
 	if (emu_info.enabled)
 	{
 		if (emu_info.sector)
-			s_printf(txt_buf, "#00DDFF 类型:# SD卡分区\n#00DDFF 扇区:# 0x%08X\n#00DDFF Nintendo文件夹:# %s\n",
+			s_printf(txt_buf, "#00DDFF 类型:# SD RAW分区\n#00DDFF 扇区:# 0x%08X\n#00DDFF Nintendo文件夹:# %s\n",
 				emu_info.sector, emu_info.nintendo_path ? emu_info.nintendo_path : "");
 		else
-			s_printf(txt_buf, "#00DDFF 类型:# SD卡文件\n#00DDFF 基准文件夹:# %s\n#00DDFF Nintendo文件夹:# %s\n",
+			s_printf(txt_buf, "#00DDFF 类型:# SD文件\n#00DDFF 基础文件夹:# %s\n#00DDFF Nintendo文件夹:# %s\n",
 				emu_info.path ? emu_info.path : "", emu_info.nintendo_path ? emu_info.nintendo_path : "");
 
 		lv_label_set_text(label_txt2, txt_buf);
@@ -1174,7 +1174,7 @@ lv_res_t create_win_emummc_tools(lv_obj_t *btn)
 	lv_obj_t *label_txt4 = lv_label_create(h2, NULL);
 	lv_label_set_recolor(label_txt4, true);
 	lv_label_set_static_text(label_txt4,
-		"允许您创建新的 #C7EA46 SD卡文件# 或 #C7EA46 SD卡原始分区# 的emuMMC.\n"
+		"允许您创建新的 #C7EA46 SD卡文件# 或 #C7EA46 SD卡RAW分区# emuMMC.\n"
 		"您可以从eMMC或eMMC备份创建它.\n");
 
 	lv_obj_set_style(label_txt4, &hint_small_style);
@@ -1191,7 +1191,7 @@ lv_res_t create_win_emummc_tools(lv_obj_t *btn)
 	label_txt4 = lv_label_create(h2, NULL);
 	lv_label_set_recolor(label_txt4, true);
 	lv_label_set_static_text(label_txt4,
-		"将备份迁移至 #C7EA46 SD卡文件emuMMC# 或修复现有的\n#C7EA46 SD卡原始分区emuMMC#.\n");
+		"将备份迁移至 #C7EA46 SD卡文件emuMMC# 或修复现有的\n#C7EA46 SD卡RAW分区emuMMC#.\n");
 	lv_obj_set_style(label_txt4, &hint_small_style);
 	lv_obj_align(label_txt4, btn4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 

@@ -200,7 +200,7 @@ static lv_res_t _create_mbox_hid(usb_ctxt_t *usbs)
 
 	lv_obj_t *lbl_tip = lv_label_create(mbox, NULL);
 	lv_label_set_recolor(lbl_tip, true);
-	lv_label_set_static_text(lbl_tip, "提示: 如果想要结束, 可以按 #C7EA46 L3# + #C7EA46 HOME# 或者断开连接线.");
+	lv_label_set_static_text(lbl_tip, "提示: 如果想要结束, 可以按 #C7EA46 L3# + #C7EA46 HOME# 或者拔掉线缆.");
 	lv_obj_set_style(lbl_tip, &hint_small_style);
 
 	lv_mbox_add_btns(mbox, mbox_btn_map_dis, nyx_mbox_action);
@@ -333,10 +333,10 @@ static lv_res_t _create_mbox_ums_error(int error)
 		lv_mbox_set_text(mbox, "#FF8000 USB大容量存储#\n\n#FFFF00 挂载SD卡错误!#");
 		break;
 	case 2:
-		lv_mbox_set_text(mbox, "#FF8000 USB大容量存储#\n\n#FFFF00 无可用emuMMC!#");
+		lv_mbox_set_text(mbox, "#FF8000 USB大容量存储#\n\n#FFFF00 未找到启用的emuMMC!#");
 		break;
 	case 3:
-		lv_mbox_set_text(mbox, "#FF8000 USB大容量存储#\n\n#FFFF00 emuMMC未使用分区!#");
+		lv_mbox_set_text(mbox, "#FF8000 USB大容量存储#\n\n#FFFF00 启用的emuMMC不是分区式!#");
 		break;
 	}
 
@@ -724,7 +724,7 @@ static lv_res_t _create_window_usb_tools(lv_obj_t *parent)
 	// Create RAW GPP button.
 	lv_obj_t *btn_gpp = lv_btn_create(h1, btn1);
 	label_btn = lv_label_create(btn_gpp, NULL);
-	lv_label_set_static_text(label_btn, SYMBOL_CHIP"  eMMC原始GPP");
+	lv_label_set_static_text(label_btn, SYMBOL_CHIP"  eMMC RAW GPP");
 	lv_obj_align(btn_gpp, label_txt2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 	lv_btn_set_action(btn_gpp, LV_BTN_ACTION_CLICK, _action_ums_emmc_gpp);
 
@@ -745,7 +745,7 @@ static lv_res_t _create_window_usb_tools(lv_obj_t *parent)
 	// Create emuMMC RAW GPP button.
 	lv_obj_t *btn_emu_gpp = lv_btn_create(h1, btn1);
 	label_btn = lv_label_create(btn_emu_gpp, NULL);
-	lv_label_set_static_text(label_btn, SYMBOL_MODULES_ALT"  emu原始GPP");
+	lv_label_set_static_text(label_btn, SYMBOL_MODULES_ALT"  emu RAW GPP");
 	lv_obj_align(btn_emu_gpp, btn_gpp, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 	lv_btn_set_action(btn_emu_gpp, LV_BTN_ACTION_CLICK, _action_ums_emuemmc_gpp);
 
@@ -945,7 +945,7 @@ static lv_res_t _create_window_unset_abit_tool(lv_obj_t *btn)
 	}
 	else
 	{
-		lv_label_set_text(lb_desc, "#00DDFF 遍历SD卡所有文件!#\n这可能需要一些时间...");
+		lv_label_set_text(lb_desc, "#00DDFF 正在扫描SD卡上的所有文件!#\n可能需要一些时间...");
 		lv_obj_set_width(lb_desc, lv_obj_get_width(desc));
 
 		lv_obj_t *val = lv_cont_create(win, NULL);
@@ -974,12 +974,12 @@ static lv_res_t _create_window_unset_abit_tool(lv_obj_t *btn)
 		if (!total[0] && !total[1])
 			s_printf(txt_buf, "#96FF00 完成! 无需更改.#");
 		else
-			s_printf(txt_buf, "#96FF00 完成! 归档位修复:# #FF8000 %d 未设置且 %d 已设置!#", total[1], total[0]);
+			s_printf(txt_buf, "#96FF00 完成! 归档位修复:# #FF8000 %d未设置且%d已设置!#", total[1], total[0]);
 
 		// Check errors.
 		if (total[2] || total[3])
 		{
-			s_printf(txt_buf, "\n\n#FFDD00 错误: 访问目录数: %d, 归档位修复数: %d!#\n"
+			s_printf(txt_buf, "\n\n#FFDD00 错误: 文件夹访问数: %d, 归档位修复数: %d!#\n"
 					          "#FFDD00 请检查文件系统是否有错误.#",
 					          total[2], total[3]);
 		}
@@ -1019,7 +1019,7 @@ static lv_res_t _create_mbox_fix_touchscreen(lv_obj_t *btn)
 
 	lv_mbox_set_text(mbox,
 		"#FFDD00 警告: 仅在触摸屏有问题时才需运行!#\n\n"
-		"按#FF8000 电源键# 继续.\n按 #FF8000 音量键# 中止.");
+		"按 #FF8000 电源键# 继续.\n按 #FF8000 音量键# 中止.");
 	manual_system_maintenance(true);
 
 	if (!(btn_wait() & BTN_POWER))
@@ -1031,7 +1031,7 @@ static lv_res_t _create_mbox_fix_touchscreen(lv_obj_t *btn)
 	u32 seconds = 5;
 	while (seconds)
 	{
-		s_printf(txt_buf + text_idx, "%d 秒后开始...", seconds);
+		s_printf(txt_buf + text_idx, "%d秒后开始...", seconds);
 		lv_mbox_set_text(mbox, txt_buf);
 		manual_system_maintenance(true);
 		msleep(1000);
@@ -1118,7 +1118,7 @@ out2:
 
 static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 {
-	lv_obj_t *win = nyx_create_standard_window(SYMBOL_MODULES" 提取package1/2", NULL);
+	lv_obj_t *win = nyx_create_standard_window(SYMBOL_MODULES" 转储package1/2", NULL);
 
 	// Disable buttons.
 	nyx_window_toggle_buttons(win, true);
@@ -1216,7 +1216,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 
 		const pkg1_id_t *pkg1_id = pkg1_identify(pkg1 + pk1_offset, build_date);
 
-		s_printf(txt_buf, "#00DDFF 找到 %s pkg1 ('%s')#\n\n", !idx ? "Main" : "Safe", build_date);
+		s_printf(txt_buf, "#00DDFF 检测到%s pkg1 ('%s')#\n\n", !idx ? "Main" : "Safe", build_date);
 		lv_label_set_text(lb_log, txt_buf);
 		manual_system_maintenance(true);
 		free(build_date);
@@ -1234,7 +1234,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 
 			if (!res)
 			{
-				strcat(txt_buf, "\n加密的pkg1提取到了pkg1_enc.bin");
+				strcat(txt_buf, "\n加密的pkg1已转储到pkg1_enc.bin");
 				lv_label_set_text(lb_log, txt_buf);
 				manual_system_maintenance(true);
 			}
@@ -1310,7 +1310,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 			emmcsn_path_impl(path, pkg1_paths[idx], "pkg1_decr.bin", &emmc_storage);
 			if (sd_save_to_file(pkg1, SZ_256K, path))
 				goto out;
-			strcat(txt_buf, "pkg1提取到了pkg1_decr.bin\n");
+			strcat(txt_buf, "Package1已转储到pkg1_decr.bin\n");
 			lv_label_set_text(lb_log, txt_buf);
 			manual_system_maintenance(true);
 
@@ -1318,7 +1318,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 			emmcsn_path_impl(path, pkg1_paths[idx], "nxloader.bin", &emmc_storage);
 			if (sd_save_to_file(loader, hdr_pk11->ldr_size, path))
 				goto out;
-			strcat(txt_buf, "NX Bootloader提取到了nxloader.bin\n");
+			strcat(txt_buf, "NX Bootloader已转储到nxloader.bin\n");
 			lv_label_set_text(lb_log, txt_buf);
 			manual_system_maintenance(true);
 
@@ -1326,7 +1326,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 			emmcsn_path_impl(path, pkg1_paths[idx], "secmon.bin", &emmc_storage);
 			if (sd_save_to_file(secmon, hdr_pk11->sm_size, path))
 				goto out;
-			strcat(txt_buf, "Secure Monitor提取到了secmon.bin\n");
+			strcat(txt_buf, "Secure Monitor已转储到secmon.bin\n");
 			lv_label_set_text(lb_log, txt_buf);
 			manual_system_maintenance(true);
 
@@ -1344,7 +1344,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 				if (sd_save_to_file(warmboot, hdr_pk11->wb_size, path))
 					goto out;
 			}
-			strcat(txt_buf, "Warmboot提取到了warmboot.bin\n\n");
+			strcat(txt_buf, "Warmboot已转储到warmboot.bin\n\n");
 			lv_label_set_text(lb_log, txt_buf);
 			manual_system_maintenance(true);
 		}
@@ -1381,7 +1381,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 
 			if (!res)
 			{
-				strcat(txt_buf, "\n加密的pkg2提取到了pkg2_encr.bin\n");
+				strcat(txt_buf, "\n加密的pkg2已转储到pkg2_encr.bin\n");
 				lv_label_set_text(lb_log, txt_buf);
 				manual_system_maintenance(true);
 			}
@@ -1405,7 +1405,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 		emmcsn_path_impl(path, pkg2_paths[idx], "pkg2_decr.bin", &emmc_storage);
 		if (sd_save_to_file(pkg2, pkg2_hdr->sec_size[PKG2_SEC_KERNEL] + pkg2_hdr->sec_size[PKG2_SEC_INI1], path))
 			goto out;
-		strcat(txt_buf, "pkg2提取到了pkg2_decr.bin\n");
+		strcat(txt_buf, "Package2已转储到pkg2_decr.bin\n");
 		lv_label_set_text(lb_log, txt_buf);
 		manual_system_maintenance(true);
 
@@ -1413,7 +1413,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 		emmcsn_path_impl(path, pkg2_paths[idx], "kernel.bin", &emmc_storage);
 		if (sd_save_to_file(pkg2_hdr->data, pkg2_hdr->sec_size[PKG2_SEC_KERNEL], path))
 			goto out;
-		strcat(txt_buf, "Kernel提取到了kernel.bin\n");
+		strcat(txt_buf, "Kernel已转储到kernel.bin\n");
 		lv_label_set_text(lb_log, txt_buf);
 		manual_system_maintenance(true);
 
@@ -1429,7 +1429,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 
 		if (!ini1_off)
 		{
-			strcat(txt_buf, "#FFDD00 提取INI1和kips失败!#\n");
+			strcat(txt_buf, "#FFDD00 转储INI1和kips失败!#\n");
 			goto out;
 		}
 
@@ -1438,7 +1438,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 		if (sd_save_to_file(ini1, ini1_size, path))
 			goto out;
 
-		strcat(txt_buf, "INI1提取到了ini1.bin\n");
+		strcat(txt_buf, "INI1已转储到ini1.bin\n");
 		lv_label_set_text(lb_log, txt_buf);
 		manual_system_maintenance(true);
 
@@ -1484,7 +1484,7 @@ static lv_res_t _create_window_dump_pk12_tool(lv_obj_t *btn)
 			if (sd_save_to_file(kip1, kip1_size, path))
 				goto out;
 
-			s_printf(txt_buf + strlen(txt_buf), "- kip提取到了%s.kip1\n", kip_name);
+			s_printf(txt_buf + strlen(txt_buf), "- 已转储%s.kip1\n", kip_name);
 			lv_label_set_text(lb_log, txt_buf);
 			manual_system_maintenance(true);
 
@@ -1550,8 +1550,8 @@ static void _create_tab_tools_emmc_sd_usb(lv_theme_t *th, lv_obj_t *parent)
 	lv_obj_t *label_txt2 = lv_label_create(h1, NULL);
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
-		"允许您将eMMC或emuMMC分区单独或作为整个原始镜像\n"
-		"备份到SD卡..\n"
+		"允许您将eMMC或emuMMC分区单独或作为整个RAW镜像\n"
+		"备份到SD卡.\n"
 		"#C7EA46 支持# #FF8000 4GB# #C7EA46 及以上SD卡. #"
 		"#FF8000 FAT32# #C7EA46 和 ##FF8000 exFAT##C7EA46 文件系统.#");
 	lv_obj_set_style(label_txt2, &hint_small_style);
@@ -1568,7 +1568,7 @@ static void _create_tab_tools_emmc_sd_usb(lv_theme_t *th, lv_obj_t *parent)
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
 		"允许您单独恢复eMMC或emuMMC分区\n"
-		"或从SD卡恢复整个原始镜像.\n"
+		"或从SD卡恢复整个RAW镜像.\n"
 		"#C7EA46 支持# #FF8000 4GB# #C7EA46 及以上SD卡. #"
 		"#FF8000 FAT32# #C7EA46 和 ##FF8000 exFAT##C7EA46 文件系统.#");
 	lv_obj_set_style(label_txt2, &hint_small_style);
@@ -1607,7 +1607,7 @@ static void _create_tab_tools_emmc_sd_usb(lv_theme_t *th, lv_obj_t *parent)
 	lv_label_set_recolor(label_txt4, true);
 	lv_label_set_static_text(label_txt4,
 		"允许您对SD卡进行分区以便与 #C7EA46 emuMMC#,\n"
-		"#C7EA46 Android# 和 #C7EA46 Linux# 一起使用. 你也可以直接刷入Linux和Android.\n");
+		"#C7EA46 Android# 和 #C7EA46 Linux# 配合使用. 也可以直接刷入Linux和Android.\n");
 	lv_obj_set_style(label_txt4, &hint_small_style);
 	lv_obj_align(label_txt4, btn3, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 
@@ -1622,7 +1622,7 @@ static void _create_tab_tools_emmc_sd_usb(lv_theme_t *th, lv_obj_t *parent)
 	lv_label_set_recolor(label_txt4, true);
 	lv_label_set_static_text(label_txt4,
 		"#C7EA46 USB大容量存储#, #C7EA46 手柄# 和其他USB工具.\n"
-		"大容量存储可以挂载SD卡, eMMC 和 emuMMC.\n"
+		"大容量存储可以挂载SD卡, eMMC和emuMMC.\n"
 		"手柄可以将Switch转变为输入设备.#");
 	lv_obj_set_style(label_txt4, &hint_small_style);
 	lv_obj_align(label_txt4, btn4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
@@ -1666,7 +1666,7 @@ static void _create_tab_tools_arc_rcm_pkg12(lv_theme_t *th, lv_obj_t *parent)
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
 		"允许修复所有文件夹的归档位, 包括\n"
-		"根目录和emuMMC的\'Nintendo\'文件夹.\n"
+		"根目录和emuMMC的 \'Nintendo\' 文件夹.\n"
 		"#C7EA46 它会为以 ##FF8000 .[ext]#\n"
 		"#FF8000 命名的文件夹设置归档位, 当出现损坏提示时,请使用此选项.#");
 	lv_obj_set_style(label_txt2, &hint_small_style);
@@ -1683,7 +1683,7 @@ static void _create_tab_tools_arc_rcm_pkg12(lv_theme_t *th, lv_obj_t *parent)
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
 		"允许您校准触摸屏模块.\n"
-		"#FF8000 这可以解决Nyx和官方系统中触摸屏的任何问题.#");
+		"#FF8000 可用于解决Nyx和HOS中的触摸屏问题.#");
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn2, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 
@@ -1736,10 +1736,10 @@ static void _create_tab_tools_arc_rcm_pkg12(lv_theme_t *th, lv_obj_t *parent)
 	char *txt_buf = (char *)malloc(SZ_4K);
 
 	s_printf(txt_buf,
-		"允许您在不使用 #C7EA46 音量+# 和 #C7EA46 HOME# (jig) 的情况下进入RCM.\n"
-		"#FF8000 它可以在需要时恢复所有版本的AutoRCM.#\n"
-		"#FF3C28 这会破坏BCT, 如果没有自定义引导加载程序#\n"
-		"#FF3C28 您将无法启动.#");
+		"开启后无需按 #C7EA46 音量+# + #C7EA46 HOME# (jig) 即可进入RCM.\n"
+		"#FF8000 可随时恢复各种版本的AutoRCM.#\n"
+		"#FF3C28 会破坏BCT, 如果没有自定义bootloader#\n"
+		"#FF3C28 主机将无法启动.#");
 
 	if (h_cfg.rcm_patched)
 		strcat(txt_buf, "#FF8000 此设备已修复RCM漏洞, 本选项禁用!#");
@@ -1759,15 +1759,15 @@ static void _create_tab_tools_arc_rcm_pkg12(lv_theme_t *th, lv_obj_t *parent)
 	// Create Dump Package1/2 button.
 	lv_obj_t *btn4 = lv_btn_create(h2, btn);
 	label_btn = lv_label_create(btn4, NULL);
-	lv_label_set_static_text(label_btn, SYMBOL_MODULES"  提取Package1/2");
+	lv_label_set_static_text(label_btn, SYMBOL_MODULES"  转储Package1/2");
 	lv_obj_align(btn4, label_txt4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 	lv_btn_set_action(btn4, LV_BTN_ACTION_CLICK, _create_window_dump_pk12_tool);
 
 	label_txt2 = lv_label_create(h2, NULL);
 	lv_label_set_recolor(label_txt2, true);
 	lv_label_set_static_text(label_txt2,
-		"允许您提取和解密 pkg1 和 pkg2\n"
-		"并进一步将其拆分为单独的部分. 它还能提取kip1.");
+		"允许您转储和解密pkg1和pkg2\n"
+		"并进一步将其拆分为单独的部分. 它还能转储kip1.");
 	lv_obj_set_style(label_txt2, &hint_small_style);
 	lv_obj_align(label_txt2, btn4, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 3);
 }
@@ -1792,7 +1792,7 @@ void create_tab_tools(lv_theme_t *th, lv_obj_t *parent)
 	lv_tabview_set_sliding(tv, false);
 	lv_tabview_set_btns_pos(tv, LV_TABVIEW_BTNS_POS_BOTTOM);
 
-	lv_obj_t *tab1= lv_tabview_add_tab(tv, "eMMC "SYMBOL_DOT" SD 分区 "SYMBOL_DOT" USB");
+	lv_obj_t *tab1= lv_tabview_add_tab(tv, "eMMC "SYMBOL_DOT" SD分区 "SYMBOL_DOT" USB");
 	lv_obj_t *tab2 = lv_tabview_add_tab(tv, "归档位 "SYMBOL_DOT" RCM "SYMBOL_DOT" 触摸 "SYMBOL_DOT" Pkg1/2");
 
 	lv_obj_t *line_sep = lv_line_create(tv, NULL);

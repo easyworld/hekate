@@ -775,11 +775,11 @@ static lv_res_t _action_flash_linux_data(lv_obj_t * btns, const char * txt)
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 10 * 5);
 
-	lv_mbox_set_text(mbox, "#FF8000 Linux 刷写器#");
+	lv_mbox_set_text(mbox, "#FF8000 Linux刷写器#");
 
 	lv_obj_t *lbl_status = lv_label_create(mbox, NULL);
 	lv_label_set_recolor(lbl_status, true);
-	lv_label_set_text(lbl_status, "#C7EA46 状态:# 正在刷入 Linux...");
+	lv_label_set_text(lbl_status, "#C7EA46 状态:# 正在刷入Linux...");
 
 	// Create container to keep content inside.
 	lv_obj_t *h1 = lv_cont_create(mbox, NULL);
@@ -1047,7 +1047,7 @@ static lv_res_t _action_check_flash_linux(lv_obj_t *btn)
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
 
-	lv_mbox_set_text(mbox, "#FF8000 Linux 刷写器#");
+	lv_mbox_set_text(mbox, "#FF8000 Linux刷写器#");
 
 	lv_obj_t *lbl_status = lv_label_create(mbox, NULL);
 	lv_label_set_recolor(lbl_status, true);
@@ -1112,7 +1112,7 @@ static lv_res_t _action_check_flash_linux(lv_obj_t *btn)
 			// If it exists, unaligned size for current part is not permitted.
 			if (!f_stat(path, NULL)) // NULL: Don't override current part fs info.
 			{
-				lv_label_set_text(lbl_status, "#FFDD00 错误:# 镜像没有4MiB对齐!");
+				lv_label_set_text(lbl_status, "#FFDD00 错误:# 镜像没有4 MiB对齐!");
 				goto error;
 			}
 
@@ -1134,7 +1134,7 @@ static lv_res_t _action_check_flash_linux(lv_obj_t *btn)
 
 	char *txt_buf = malloc(SZ_4K);
 	s_printf(txt_buf,
-		"#C7EA46 状态:# 发现安装文件和分区.\n"
+		"#C7EA46 状态:# 检测到安装文件和分区.\n"
 		"#00DDFF 偏移:# %08x, #00DDFF 大小:# %X, #00DDFF 镜像大小:# %d MiB\n"
 		"\n你要继续吗?", l4t_flash_ctxt.offset_sct, size_sct, l4t_flash_ctxt.image_size_sct >> 11);
 	lv_label_set_text(lbl_status, txt_buf);
@@ -1212,7 +1212,7 @@ static lv_res_t _action_flash_android_data(lv_obj_t * btns, const char * txt)
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
 
-	lv_mbox_set_text(mbox, "#FF8000 Android 刷写器#");
+	lv_mbox_set_text(mbox, "#FF8000 Android刷写器#");
 
 	lv_obj_t *lbl_status = lv_label_create(mbox, NULL);
 	lv_label_set_recolor(lbl_status, true);
@@ -1302,7 +1302,7 @@ boot_img_not_found:
 		strcpy(path, "switchroot/install/twrp.img");
 		if (f_stat(path, NULL))
 		{
-			strcat(txt_buf, "#FF8000 警告:# TWRP镜像未找到!\n");
+			strcat(txt_buf, "#FF8000 警告:# 未找到Recovery镜像!\n");
 			goto recovery_not_found;
 		}
 	}
@@ -1338,18 +1338,18 @@ boot_img_not_found:
 		}
 
 		if ((file_size >> 9) > size_sct)
-			strcat(txt_buf, "#FF8000 警告:# 恢复镜像太大!\n");
+			strcat(txt_buf, "#FF8000 警告:# Recovery镜像太大!\n");
 		else
 		{
 			sdmmc_storage_write(part_info.storage, offset_sct, file_size >> 9, buf);
-			strcat(txt_buf, "#C7EA46 成功:# 恢复镜像已刷入!\n");
+			strcat(txt_buf, "#C7EA46 成功:# Recovery镜像已刷入!\n");
 			f_unlink(path);
 		}
 
 		free(buf);
 	}
 	else
-		strcat(txt_buf, "#FF8000 警告:# 恢复分区未找到!\n");
+		strcat(txt_buf, "#FF8000 警告:# 未找到Recovery分区!\n");
 
 recovery_not_found:
 	lv_label_set_text(lbl_status, txt_buf);
@@ -1362,7 +1362,7 @@ recovery_not_found:
 		strcpy(path, "switchroot/install/tegra210-icosa.dtb");
 		if (f_stat(path, NULL))
 		{
-			strcat(txt_buf, "#FF8000 警告:# DTB镜像未找到!");
+			strcat(txt_buf, "#FF8000 警告:# 未找到DTB镜像!");
 			goto dtb_not_found;
 		}
 	}
@@ -1409,7 +1409,7 @@ recovery_not_found:
 		free(buf);
 	}
 	else
-		strcat(txt_buf, "#FF8000 警告:# DTB分区未找到!");
+		strcat(txt_buf, "#FF8000 警告:# 未找到DTB分区!");
 
 dtb_not_found:
 	lv_label_set_text(lbl_status, txt_buf);
@@ -1463,13 +1463,13 @@ static lv_res_t _action_flash_android(lv_obj_t *btn)
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
 
-	lv_mbox_set_text(mbox, "#FF8000 Android 刷写器#");
+	lv_mbox_set_text(mbox, "#FF8000 Android刷写器#");
 
 	lv_obj_t *lbl_status = lv_label_create(mbox, NULL);
 	lv_label_set_recolor(lbl_status, true);
 	lv_label_set_text(lbl_status,
-		"本操作将会刷写 #C7EA46 Kernel#, #C7EA46 DTB# 和 #C7EA46 Recovery#.\n"
-		"如果刷写成功这些将会被删除.\n"
+		"本操作将刷写 #C7EA46 Kernel#, #C7EA46 DTB# 和 #C7EA46 Recovery#.\n"
+		"刷写成功后会删除这些文件.\n"
 		"你要继续吗?");
 
 	lv_mbox_add_btns(mbox, mbox_btn_map, _action_flash_android_data);
@@ -1603,9 +1603,9 @@ static lv_res_t _sd_create_mbox_start_partitioning()
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
 	static const char *mbox_btn_map[] =  { "\251", "\222确定", "\251", "" };
-	static const char *mbox_btn_map1[] = { "\222SD UMS", "\222刷写 Linux", "\222刷写 Android", "\221确定", "" };
-	static const char *mbox_btn_map2[] = { "\222SD UMS", "\222刷写 Linux", "\221确定", "" };
-	static const char *mbox_btn_map3[] = { "\222SD UMS", "\222刷写 Android", "\221确定", "" };
+	static const char *mbox_btn_map1[] = { "\222SD UMS", "\222刷写Linux", "\222刷写Android", "\221确定", "" };
+	static const char *mbox_btn_map2[] = { "\222SD UMS", "\222刷写Linux", "\221确定", "" };
+	static const char *mbox_btn_map3[] = { "\222SD UMS", "\222刷写Android", "\221确定", "" };
 	lv_obj_t *mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
@@ -1625,7 +1625,7 @@ static lv_res_t _sd_create_mbox_start_partitioning()
 	u32 text_idx = strlen(txt_buf);
 	while (seconds)
 	{
-		s_printf(txt_buf + text_idx, "%d 秒后结束...", seconds);
+		s_printf(txt_buf + text_idx, "%d秒后结束...", seconds);
 		lv_mbox_set_text(mbox, txt_buf);
 		manual_system_maintenance(true);
 		msleep(1000);
@@ -1696,7 +1696,7 @@ static lv_res_t _sd_create_mbox_start_partitioning()
 		if (part_info.backup_possible)
 			lv_label_set_text(lbl_status, "#FFDD00 错误:# 备份文件失败!");
 		else
-			lv_label_set_text(lbl_status, "#FFDD00 错误:# 备份文件失败!\nBootloader文件夹超过1.2GB或被污染!");
+			lv_label_set_text(lbl_status, "#FFDD00 错误:# 备份文件失败!\nBootloader文件夹超过1.2 GB或已损坏!");
 
 		goto error;
 	}
@@ -1870,9 +1870,9 @@ static lv_res_t _emmc_create_mbox_start_partitioning()
 	lv_obj_set_size(dark_bg, LV_HOR_RES, LV_VER_RES);
 
 	static const char *mbox_btn_map[] =  { "\251", "\222确定", "\251", "" };
-	static const char *mbox_btn_map1[] = { "\222刷写 Linux", "\222刷写 Android", "\221确定", "" };
-	static const char *mbox_btn_map2[] = { "\222刷写 Linux", "\221确定", "" };
-	static const char *mbox_btn_map3[] = { "\222刷写 Android", "\221确定", "" };
+	static const char *mbox_btn_map1[] = { "\222刷写Linux", "\222刷写Android", "\221确定", "" };
+	static const char *mbox_btn_map2[] = { "\222刷写Linux", "\221确定", "" };
+	static const char *mbox_btn_map3[] = { "\222刷写Android", "\221确定", "" };
 	lv_obj_t *mbox = lv_mbox_create(dark_bg, NULL);
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
@@ -1892,7 +1892,7 @@ static lv_res_t _emmc_create_mbox_start_partitioning()
 	u32 text_idx = strlen(txt_buf);
 	while (seconds)
 	{
-		s_printf(txt_buf + text_idx, "%d 秒后结束...", seconds);
+		s_printf(txt_buf + text_idx, "%d秒后结束...", seconds);
 		lv_mbox_set_text(mbox, txt_buf);
 		manual_system_maintenance(true);
 		msleep(1000);
@@ -1902,7 +1902,7 @@ static lv_res_t _emmc_create_mbox_start_partitioning()
 	lv_mbox_set_text(mbox,
 		"#FF8000 eMMC分区管理器#\n\n"
 		"#FFDD00 警告: 真的要继续吗?!#\n\n"
-		"按 #FF8000 电源键# to 继续.\n按 #FF8000 音量键# 中止.");
+		"按 #FF8000 电源键# 继续.\n按 #FF8000 音量键# 中止.");
 	lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
 	manual_system_maintenance(true);
 
@@ -1963,7 +1963,7 @@ static lv_res_t _emmc_create_mbox_start_partitioning()
 	if (!user_part)
 	{
 no_hos_user_part:
-		s_printf(txt_buf, "#FF0000 官方系统USER分区不存在!#\n请先恢复官方系统...");
+		s_printf(txt_buf, "#FF0000 HOS USER分区不存在!#\n请先恢复HOS备份...");
 		lv_label_set_text(lbl_extra, txt_buf);
 
 		emmc_gpt_free(&gpt);
@@ -2122,7 +2122,7 @@ static lv_res_t _create_mbox_partitioning_warn()
 
 	if (!part_info.emmc)
 	{
-		s_printf(txt_buf, "#FFDD00 警告: 这将对SD卡进行分区!#\n\n");
+		s_printf(txt_buf, "#FFDD00 警告: 即将对SD卡进行分区!#\n\n");
 
 		if (part_info.backup_possible)
 		{
@@ -2133,7 +2133,7 @@ static lv_res_t _create_mbox_partitioning_warn()
 		{
 			strcat(txt_buf, "#FFDD00 您的文件将被擦除!#\n"
 				"#FFDD00 任何其他分区也将被擦除!#\n"
-				"#FFDD00 使用USB UMS将它们备份好!#");
+				"#FFDD00 请使用USB UMS将它们复制出来!#");
 		}
 
 		lv_label_set_text(lbl_status, txt_buf);
@@ -2145,7 +2145,7 @@ static lv_res_t _create_mbox_partitioning_warn()
 	}
 	else
 	{
-		s_printf(txt_buf, "#FFDD00 警告: 这将对eMMC进行分区!#\n\n"
+		s_printf(txt_buf, "#FFDD00 警告: 即将对eMMC进行分区!#\n\n"
 						  "#FFDD00 USER分区将被格式化!#");
 		lv_label_set_text(lbl_status, txt_buf);
 		lv_mbox_add_btns(mbox, mbox_btn_map1, _create_mbox_partitioning_option1);
@@ -2316,7 +2316,7 @@ static lv_res_t _action_slider_emu(lv_obj_t *slider)
 			if (slide_val != EMU_SLIDER_1X_FULL)
 				s_printf(lbl_text, "#FF3C28 %4d GiB#", size >> 10);
 			else
-				s_printf(lbl_text, "#FF3C28 %d 全部#", size >> 10);
+				s_printf(lbl_text, "#FF3C28 完整 %d GiB#", size >> 10);
 		}
 		else
 			s_printf(lbl_text, "#FFDD00 2x##FF3C28 %d GiB#", size >> 11);
@@ -2505,7 +2505,7 @@ static void _create_mbox_check_files_total_size()
 	lv_mbox_set_recolor_text(mbox, true);
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
 
-	lv_mbox_set_text(mbox, "分析SD卡的使用情况. 这可能需要一段时间...");
+	lv_mbox_set_text(mbox, "正在分析SD卡的使用情况, 可能需要一段时间...");
 
 	lv_obj_align(mbox, NULL, LV_ALIGN_CENTER, 0, 0);
 	lv_obj_set_top(mbox, true);
@@ -2651,7 +2651,7 @@ static lv_res_t _action_fix_mbr_gpt(lv_obj_t *btn)
 	lv_mbox_set_recolor_text(mbox, true);
 
 	lv_obj_set_width(mbox, LV_HOR_RES / 9 * 6);
-	lv_mbox_set_text(mbox, "#FF8000 修复混合MBR#");
+	lv_mbox_set_text(mbox, "#FF8000 修复Hybrid MBR#");
 
 	lv_obj_t *lbl_status = lv_label_create(mbox, NULL);
 	lv_label_set_recolor(lbl_status, true);
@@ -2804,7 +2804,7 @@ static lv_res_t _action_fix_mbr_gpt(lv_obj_t *btn)
 check_changes:
 	if (!hybrid_mbr_changed && !has_mbr_attributes && !gpt_emummc_migrate_no)
 	{
-		lv_label_set_text(lbl_status, "#96FF00 警告:# 混合MBR分区表无需更改!#");
+		lv_label_set_text(lbl_status, "#96FF00 警告:# Hybrid MBR分区表无需更改!#");
 		goto out;
 	}
 
@@ -2842,9 +2842,9 @@ check_changes:
 		if (has_mbr_attributes)
 			s_printf(txt_buf + strlen(txt_buf), "- MBR属性\n");
 		if (gpt_emummc_migrate_no)
-			s_printf(txt_buf + strlen(txt_buf), "- emuMMC GPT 分区地址和大小\n");
+			s_printf(txt_buf + strlen(txt_buf), "- emuMMC GPT分区地址和大小\n");
 		if (gpt_oob_empty_part_no)
-			s_printf(txt_buf + strlen(txt_buf), "- GPT OOB/空分区(移除)\n");
+			s_printf(txt_buf + strlen(txt_buf), "- GPT OOB/空分区 (移除)\n");
 	}
 
 	lv_label_set_text(lbl_status, txt_buf);
@@ -2955,10 +2955,10 @@ check_changes:
 
 		sd_unmount();
 
-		lv_label_set_text(lbl_status, "#96FF00 新的混合MBR写入成功!#");
+		lv_label_set_text(lbl_status, "#96FF00 新的Hybrid MBR写入成功!#");
 	}
 	else
-		lv_label_set_text(lbl_status, "#FFDD00 警告: 混合MBR修复已取消!#");
+		lv_label_set_text(lbl_status, "#FFDD00 警告: Hybrid MBR修复已取消!#");
 
 out:
 	free(gpt);
@@ -2978,7 +2978,7 @@ lv_res_t create_window_partition_manager(bool emmc)
 	if (!emmc)
 	{
 		win = nyx_create_standard_window(SYMBOL_SD" SD分区管理器", NULL);
-		lv_win_add_btn(win, NULL, SYMBOL_MODULES_ALT" 修复混合MBR/GPT", _action_fix_mbr_gpt);
+		lv_win_add_btn(win, NULL, SYMBOL_MODULES_ALT" 修复Hybrid MBR/GPT", _action_fix_mbr_gpt);
 	}
 	else
 		win = nyx_create_standard_window(SYMBOL_CHIP" eMMC分区管理器", NULL);
@@ -3176,7 +3176,7 @@ lv_res_t create_window_partition_manager(bool emmc)
 	lv_obj_set_width(cont_lbl_hos, LV_DPI * 17 / 7);
 	lv_obj_t *lbl_hos = lv_label_create(cont_lbl_hos, NULL);
 	lv_label_set_recolor(lbl_hos, true);
-	lv_label_set_static_text(lbl_hos, !emmc ? "#96FF00 "SYMBOL_DOT" 官方系统(FAT32):#" :
+	lv_label_set_static_text(lbl_hos, !emmc ? "#96FF00 "SYMBOL_DOT" HOS (FAT32):#" :
 											  "#96FF00 "SYMBOL_DOT" eMMC (USER):#");
 	lv_obj_align(lbl_hos, bar_hos, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 2);
 
@@ -3289,17 +3289,17 @@ lv_res_t create_window_partition_manager(bool emmc)
 	if (!emmc)
 	{
 		lv_label_set_static_text(lbl_notes,
-			"注1: 最多只能备份#C7EA46 1.2GB#数据. 如果超过此容量, 您将被要求在下一步手动备份.\n"
-			"注2: 调整emuMMC的大小会格式化用户分区. 可以使用存档数据管理器将它们移动到其他分区.\n"
-			"注3: 如果找到合适的分区和安装程序文件, #C7EA46 刷写Linux# 和 #C7EA46 刷写Android# 将会刷入文件.\n");
+			"注1: 最多只能备份#C7EA46 1.2GB#数据. 如果超过此容量, 下一步需要手动备份.\n"
+			"注2: 调整emuMMC的大小会格式化USER分区. 可以使用存档数据管理器将它们移动到其他分区.\n"
+			"注3: 检测到合适的分区和安装程序文件后, #C7EA46 刷写Linux# 和 #C7EA46 刷写Android# 会刷入文件.\n");
 		lv_obj_align(lbl_notes, lbl_and, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 6 * 2);
 	}
 	else
 	{
 		lv_label_set_static_text(lbl_notes,
 			"注1: 在所选分区之后存在的任何分区都会从表中移除.\n"
-			"注2: 官方系统用户分区将被格式化. 可以使用存档数据管理器将它们移动到其他分区.\n"
-			"注3: 如果找到合适的分区和安装程序文件, #C7EA46 刷写Linux# 和 #C7EA46 刷写Android# 将会刷入文件.\n");
+			"注2: HOS USER分区将被格式化. 可以使用存档数据管理器将它们移动到其他分区.\n"
+			"注3: 检测到合适的分区和安装程序文件后, #C7EA46 刷写Linux# 和 #C7EA46 刷写Android# 会刷入文件.\n");
 		lv_obj_align(lbl_notes, lbl_and, LV_ALIGN_OUT_BOTTOM_LEFT, 0, LV_DPI / 6 * 4);
 	}
 

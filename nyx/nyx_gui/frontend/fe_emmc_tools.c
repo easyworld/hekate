@@ -169,8 +169,8 @@ static int _emmc_sd_copy_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, 
 				f_close(&fp);
 
 				s_printf(gui->txt_buf,
-						"\n#FF0000 哈希文件无法写入(错误 %d)!#\n"
-						"#FF0000 中断中..#\n", res);
+						"\n#FF0000 无法写入哈希文件(错误%d)!#\n"
+						"#FF0000 正在中止..#\n", res);
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -307,7 +307,7 @@ static int _emmc_sd_copy_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, 
 			// Check for cancellation combo.
 			if (btn_read_vol() == (BTN_VOL_UP | BTN_VOL_DOWN))
 			{
-				strcpy(gui->txt_buf, "#FFDD00 校验被取消!#\n");
+				strcpy(gui->txt_buf, "#FFDD00 校验已取消!#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -333,7 +333,7 @@ static int _emmc_sd_copy_verify(emmc_tool_gui_t *gui, sdmmc_storage_t *storage, 
 	}
 	else
 	{
-		strcpy(gui->txt_buf, "\n#FFDD00 文件未找到或无法加载!#\n#FFDD00 校验失败..#\n");
+		strcpy(gui->txt_buf, "\n#FFDD00 未找到文件或无法加载!#\n#FFDD00 校验失败..#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -376,7 +376,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 		_get_valid_partition(&sector_start, &sector_size, &part_idx, true);
 		if (!part_idx || !sector_size)
 		{
-			strcpy(gui->txt_buf, "\n#FFDD00 找不到分区...#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 未找到分区...#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -420,7 +420,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 
 		if (!maxSplitParts)
 		{
-			strcpy(gui->txt_buf, "#FFDD00 部分备份的剩余空间不足!#\n");
+			strcpy(gui->txt_buf, "#FFDD00 可用空间不足, 无法进行分卷备份!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -430,7 +430,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 	// Check if we are continuing a previous raw eMMC or USER partition backup in progress.
 	if (f_open(&partialIdxFp, partialIdxFilename, FA_READ) == FR_OK && totalSectors > (FAT32_FILESIZE_LIMIT / EMMC_BLOCKSIZE))
 	{
-		strcpy(gui->txt_buf, "\n#AEFD14 正在进行部分备份. 进行中...#\n");
+		strcpy(gui->txt_buf, "\n#AEFD14 分卷备份正在进行. 继续...#\n");
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -443,7 +443,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 
 		if (!maxSplitParts)
 		{
-			strcpy(gui->txt_buf, "\n#FFDD00 部分备份的剩余空间不足!#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 可用空间不足, 无法进行分卷备份!#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -455,7 +455,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 	}
 	else if (isSmallSdCard)
 	{
-		s_printf(gui->txt_buf, "\n#FFBA00 启用部分备份 (%d MiB 分块)...#\n", multipartSplitSize >> 20);
+		s_printf(gui->txt_buf, "\n#FFBA00 已启用分卷备份 (%d MiB分卷)...#\n", multipartSplitSize >> 20);
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 	}
@@ -498,7 +498,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 	res = f_open(&fp, outFilename, FA_CREATE_ALWAYS | FA_WRITE);
 	if (res)
 	{
-		s_printf(gui->txt_buf, "\n#FF0000 错误 (%d) #\n创建 #FFDD00 %s# 文件错误\n", res, outFilename);
+		s_printf(gui->txt_buf, "\n#FF0000 创建文件时出错 (%d) #\n#FFDD00 %s#\n", res, outFilename);
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
@@ -576,7 +576,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 				}
 				else
 				{
-					strcpy(gui->txt_buf, "\n#FF0000 创建partial.idx文件时出现错误!#\n");
+					strcpy(gui->txt_buf, "\n#FF0000 创建partial.idx文件时出错!#\n");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -587,9 +587,9 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 				if (currPartIdx >= maxSplitParts)
 				{
 					create_mbox_text(
-						"#96FF00 部分备份正在进行中!#\n\n"
+						"#96FF00 分卷备份正在进行!#\n\n"
 						"#96FF00 1.# 点击OK卸载SD卡.\n"
-						"#96FF00 2.# 取出SD卡并将文件移动到可用空间.\n"
+						"#96FF00 2.# 取出SD卡并将文件移到有可用空间的位置.\n"
 						"#FFDD00 请勿移动partial.idx文件!#\n"
 						"#96FF00 3.# 重新插入SD卡.\n"
 						"#96FF00 4.# 再次选择相同选项以继续.", true);
@@ -611,7 +611,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 			res = f_open(&fp, outFilename, FA_CREATE_ALWAYS | FA_WRITE);
 			if (res)
 			{
-				s_printf(gui->txt_buf, "\n#FF0000 错误 (%d) #\n创建 #FFDD00 %s# 文件错误\n", res, outFilename);
+				s_printf(gui->txt_buf, "\n#FF0000 创建文件时出错 (%d) #\n#FFDD00 %s#\n", res, outFilename);
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -638,14 +638,14 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 			if (!gui->raw_emummc)
 			{
 				s_printf(gui->txt_buf,
-					"\n#FFDD00 从eMMC读取%d个块时出现错误,#\n"
+					"\n#FFDD00 从eMMC读取%d个块时出错,#\n"
 					"#FFDD00 LBA为%08X, (第%d次重试).#",
 					num, lba_curr, ++retryCount);
 			}
 			else
 			{
 				s_printf(gui->txt_buf,
-					"\n#FFDD00 从emuMMC读取%d个块时出现错误, LBA %08X,#\n"
+					"\n#FFDD00 从emuMMC读取%d个块时出错, LBA %08X,#\n"
 					"#FFDD00 emuMMC %08X (第%d次重试).#",
 					num, lba_curr + sd_sector_off, lba_curr, ++retryCount);
 			}
@@ -683,7 +683,7 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 
 		if (res)
 		{
-			s_printf(gui->txt_buf, "\n#FF0000 写入SD卡时发生致命错误(%d)#\n请重试...\n", res);
+			s_printf(gui->txt_buf, "\n#FF0000 写入SD卡时发生严重错误(%d)#\n请重试...\n", res);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -763,8 +763,8 @@ static int _dump_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_part,
 		f_unlink(partialIdxFilename);
 
 		create_mbox_text(
-			"#96FF00 部分备份已完成!#\n\n"
-			"如果需要, 您现在可以将文件合并\n以获取完整的 eMMC RAW GPP备份.", true);
+			"#96FF00 分卷备份完成!#\n\n"
+			"如果需要, 您现在可以将文件合并\n以获取完整的eMMC RAW GPP备份.", true);
 
 		partial_sd_full_unmount = true;
 	}
@@ -947,11 +947,11 @@ void dump_emmc_selected(emmcPartType_t dumpType, emmc_tool_gui_t *gui)
 	emmc_end();
 
 	if (!res && n_cfg.verification && !gui->raw_emummc)
-		s_printf(txt_buf, "耗时: %d分 %d秒.\n#96FF00 已完成并验证通过!#", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗时: %d分%d秒.\n#96FF00 已完成并验证通过!#", timer / 60, timer % 60);
 	else if (!res)
-		s_printf(txt_buf, "耗时: %d分 %d秒.\n完成!", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗时: %d分%d秒.\n完成!", timer / 60, timer % 60);
 	else
-		s_printf(txt_buf, "耗时: %d分 %d秒.", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗时: %d分%d秒.", timer / 60, timer % 60);
 
 	lv_label_set_text(gui->label_finish, txt_buf);
 
@@ -1028,7 +1028,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 			if ((u32)((u64)totalCheckFileSize >> (u64)9) > totalSectors)
 			{
-				strcpy(gui->txt_buf, "\n#FF8000 SD卡分割备份的大小超过了所选的#\n#FF8000 eMMC分区大小!#\n#FFDD00 操作已中止...#");
+				strcpy(gui->txt_buf, "\n#FF8000 SD卡分卷备份大小超过所选#\n#FF8000 eMMC分区大小!#\n#FFDD00 操作已中止...#");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1038,7 +1038,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 			{
 				if (!gui->raw_emummc)
 				{
-					s_printf(gui->txt_buf, "\n#FFDD00 错误 文件未找到#\n#FFDD00 %s.#\n\n", outFilename);
+					s_printf(gui->txt_buf, "\n#FFDD00 错误: 未找到文件#\n#FFDD00 %s.#\n\n", outFilename);
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -1070,7 +1070,7 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 
 				if (check_4MB_aligned && (((u64)fno.fsize) % SZ_4M))
 				{
-					strcpy(gui->txt_buf, "\n#FFDD00 分割文件大小必须是#\n#FFDD00 4 MiB的整数倍.#\n#FFDD00 中断中...#");
+					strcpy(gui->txt_buf, "\n#FFDD00 分卷文件大小必须是#\n#FFDD00 4 MiB的整数倍.#\n#FFDD00 正在中止...#");
 					lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 					manual_system_maintenance(true);
 
@@ -1083,22 +1083,22 @@ static int _restore_emmc_part(emmc_tool_gui_t *gui, char *sd_path, int active_pa
 			numSplitParts++;
 		}
 
-		s_printf(gui->txt_buf, "共计 %X 个扇区.\n", (u32)((u64)totalCheckFileSize >> (u64)9));
+		s_printf(gui->txt_buf, "共计%X个扇区.\n", (u32)((u64)totalCheckFileSize >> (u64)9));
 		lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 		manual_system_maintenance(true);
 
 		if ((u32)((u64)totalCheckFileSize >> (u64)9) != totalSectors)
 		{
 			lv_obj_t *warn_mbox_bg = create_mbox_text(
-				"#FF8000 SD卡分割备份文件大小与#\n#FF8000 所选的eMMC部分大小不匹配!#\n\n"
-				"#FFDD00 备份文件可能已损坏#\n#FFDD00 或缺少文件!#\n#FFDD00 建议中断本次操作!#\n\n"
-				"按 #FF8000 电源键# 继续.\n按#FF8000 音量键# 中断.", false);
+				"#FF8000 SD卡分卷备份文件大小与#\n#FF8000 所选的eMMC部分大小不匹配!#\n\n"
+				"#FFDD00 备份文件可能已损坏#\n#FFDD00 或缺少文件!#\n#FFDD00 建议中止本次操作!#\n\n"
+				"按 #FF8000 电源键# 继续.\n按 #FF8000 音量键# 中止.", false);
 			manual_system_maintenance(true);
 
 			if (!(btn_wait() & BTN_POWER))
 			{
 				lv_obj_del(warn_mbox_bg);
-				strcpy(gui->txt_buf, "\n#FF0000 SD卡分割文件大小与#\n#FF0000 所选的eMMC部分的大小不匹配!#\n");
+				strcpy(gui->txt_buf, "\n#FF0000 SD卡分卷文件大小与#\n#FF0000 所选的eMMC部分大小不匹配!#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1137,13 +1137,13 @@ multipart_not_allowed:
 	{
 		if (res != FR_NO_FILE)
 		{
-			s_printf(gui->txt_buf, "\n#FF0000 错误(%d) 打开文件时出错. 继续中...#\n", res);
+			s_printf(gui->txt_buf, "\n#FF0000 错误 (%d) 打开文件失败. 继续...#\n", res);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 		}
 		else
 		{
-			s_printf(gui->txt_buf, "\n#FFDD00 错误(%d) 文件未找到. 继续中...#\n", res);
+			s_printf(gui->txt_buf, "\n#FFDD00 错误 (%d) 未找到文件. 继续...#\n", res);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 		}
@@ -1154,7 +1154,7 @@ multipart_not_allowed:
 	{
 		if (((u32)((u64)f_size(&fp) >> (u64)9)) > totalSectors)
 		{
-			strcpy(gui->txt_buf, "\n#FF8000 SD卡备份的大小超过了#\n#FF8000 所选的eMMC部分大小!#\n#FFDD00 中断中...#");
+			strcpy(gui->txt_buf, "\n#FF8000 SD卡备份大小超过了#\n#FF8000 所选的eMMC部分大小!#\n#FFDD00 正在中止...#");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -1166,8 +1166,8 @@ multipart_not_allowed:
 		{
 			lv_obj_t *warn_mbox_bg = create_mbox_text(
 				"#FF8000 SD卡备份文件大小与#\n#FF8000 所选的eMMC部分大小不匹配!#\n\n"
-				"#FFDD00 备份文件可能已损坏!#\n#FFDD00 建议中断本次操作!#\n\n"
-				"按#FF8000 电源键# 继续.\n按#FF8000 音量键# 中断.", false);
+				"#FFDD00 备份文件可能已损坏!#\n#FFDD00 建议中止本次操作!#\n\n"
+				"按 #FF8000 电源键# 继续.\n按 #FF8000 音量键# 中止.", false);
 			manual_system_maintenance(true);
 
 			if (!(btn_wait() & BTN_POWER))
@@ -1217,7 +1217,7 @@ multipart_not_allowed:
 		_get_valid_partition(&sector_start, &sector_size, &part_idx, false);
 		if (!part_idx || !sector_size)
 		{
-			strcpy(gui->txt_buf, "\n#FFDD00 找不到分区...#\n");
+			strcpy(gui->txt_buf, "\n#FFDD00 未找到分区...#\n");
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
 
@@ -1276,7 +1276,7 @@ multipart_not_allowed:
 			res = f_open(&fp, outFilename, FA_READ);
 			if (res)
 			{
-				s_printf(gui->txt_buf, "\n#FF0000 错误 (%d) 打开文件#\n#FFDD00 %s错误!#\n", res, outFilename);
+				s_printf(gui->txt_buf, "\n#FF0000 打开文件时出错 (%d)#\n#FFDD00 %s!#\n", res, outFilename);
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 				manual_system_maintenance(true);
 
@@ -1296,7 +1296,7 @@ multipart_not_allowed:
 		if (res)
 		{
 			s_printf(gui->txt_buf,
-				"\n#FF0000 读取SD卡发生致命错误 错误 (%d)!#\n"
+				"\n#FF0000 读取SD卡时发生严重错误 (%d)!#\n"
 				"#FF0000 此设备可能处于非工作状态!#\n"
 				"#FFDD00 请立刻重试!#\n", res);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
@@ -1316,8 +1316,8 @@ multipart_not_allowed:
 		while (res)
 		{
 			s_printf(gui->txt_buf,
-				"\n#FFDD00 从eMMC写入%d个块 @ LBA %08X#\n"
-				"#FFDD00 错误 (第 %d 次重试). #",
+				"\n#FFDD00 向eMMC写入%d个块时出错 @ LBA %08X#\n"
+				"#FFDD00 第%d次重试. #",
 				num, lba_curr, ++retryCount);
 			lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
 			manual_system_maintenance(true);
@@ -1325,7 +1325,7 @@ multipart_not_allowed:
 			msleep(150);
 			if (retryCount >= 3)
 			{
-				strcpy(gui->txt_buf, "#FF0000 中断中...#\n"
+				strcpy(gui->txt_buf, "#FF0000 正在中止...#\n"
 					"#FF0000 这个设备可能处于无法操作的状态!#\n"
 					"#FFDD00 请立刻重试!#\n");
 				lv_label_ins_text(gui->label_log, LV_LABEL_POS_LAST, gui->txt_buf);
@@ -1419,18 +1419,18 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 	manual_system_maintenance(true);
 
 	if (!gui->raw_emummc)
-		strcpy(txt_buf, "#FFDD00 这可能会使设备无法工作!#");
+		strcpy(txt_buf, "#FFDD00 可能会导致设备无法正常工作!#");
 	else
-		strcpy(txt_buf, "#FFDD00 这可能会使emuMMC无法工作!#");
+		strcpy(txt_buf, "#FFDD00 可能会导致emuMMC无法正常工作!#");
 	strcat(txt_buf, "\n\n#FFDD00 你确定要继续吗?#");
 
 	if (gui->raw_emummc)
-		strcat(txt_buf, "\n\n只有找到的第一个emuMMC可以被恢复!");
+		strcat(txt_buf, "\n\n只能恢复检测到的第一个emuMMC!");
 	if ((restoreType & PART_BOOT) || (restoreType & PART_GP_ALL))
 	{
 		strcat(txt_buf,
-			"\n\n您选择的模式\n仅会恢复它能够找到的分区.\n"
-			"如果没有找到, \n则会跳过该分区并继续下一个分区.");
+			"\n\n您选择的模式\n只会恢复检测到的分区.\n"
+			"未检测到的分区会被跳过, \n并继续处理下一个分区.");
 	}
 
 	u32 orig_msg_len = strlen(txt_buf);
@@ -1454,7 +1454,7 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 
 	if (!(btn_wait() & BTN_POWER))
 	{
-		lv_label_set_text(gui->label_info, "#FFDD00 恢复操作已被中断!#");
+		lv_label_set_text(gui->label_info, "#FFDD00 恢复操作已中止!#");
 		lv_obj_del(warn_mbox_bg);
 		goto out;
 	}
@@ -1605,11 +1605,11 @@ void restore_emmc_selected(emmcPartType_t restoreType, emmc_tool_gui_t *gui)
 	emmc_end();
 
 	if (!res && n_cfg.verification && !gui->raw_emummc)
-		s_printf(txt_buf, "耗时: %d分 %d秒.\n#96FF00 完成并通过校验!#", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗时: %d分%d秒.\n#96FF00 完成并通过校验!#", timer / 60, timer % 60);
 	else if (!res)
-		s_printf(txt_buf, "耗时: %d分 %d秒.\n完成!", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗时: %d分%d秒.\n完成!", timer / 60, timer % 60);
 	else
-		s_printf(txt_buf, "耗时: %d分 %d秒.", timer / 60, timer % 60);
+		s_printf(txt_buf, "耗时: %d分%d秒.", timer / 60, timer % 60);
 
 	lv_label_set_text(gui->label_finish, txt_buf);
 

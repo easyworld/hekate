@@ -625,7 +625,7 @@ static int _scsi_write(usbd_gadget_ums_t *ums, bulk_ctxt_t *bulk_ctxt)
 				ums->lun.sense_data_info = lba_offset;
 				ums->lun.info_valid      = 1;
 
-				s_printf(txt_buf, "#FFDD00 错误:# 写入 - 通讯失败 %d!", bulk_ctxt->bulk_out_status);
+				s_printf(txt_buf, "#FFDD00 错误:# 写入 - 通信失败%d!", bulk_ctxt->bulk_out_status);
 				ums->set_text(ums->label, txt_buf);
 				break;
 			}
@@ -729,7 +729,7 @@ DPRINTF("File read %X @ %X\n", amount, lba_offset);
 
 		if (!amount)
 		{
-			ums->set_text(ums->label, "#FFDD00 错误:# 文件检验错误!");
+			ums->set_text(ums->label, "#FFDD00 错误:# 文件校验错误!");
 			ums->lun.sense_data      = SS_UNRECOVERED_READ_ERROR;
 			ums->lun.sense_data_info = lba_offset;
 			ums->lun.info_valid      = 1;
@@ -1058,7 +1058,7 @@ static int _scsi_start_stop(usbd_gadget_ums_t *ums)
 	// Check if we are allowed to unload the media.
 	if (ums->lun.prevent_medium_removal)
 	{
-		ums->set_text(ums->label, "#C7EA46 状态:# 卸载尝试被阻止");
+		ums->set_text(ums->label, "#C7EA46 状态:# 已阻止卸载尝试");
 		ums->lun.sense_data = SS_MEDIUM_REMOVAL_PREVENTED;
 
 		return UMS_RES_INVALID_ARG;
@@ -1466,7 +1466,7 @@ static int _finish_reply(usbd_gadget_ums_t *ums, bulk_ctxt_t *bulk_ctxt)
 		{
 			_set_ep_stall(bulk_ctxt->bulk_out);
 			rc = _set_ep_stall(bulk_ctxt->bulk_in);
-			ums->set_text(ums->label, "#FFDD00 错误:# 传输方向未知. 两端EP均停止工作!");
+			ums->set_text(ums->label, "#FFDD00 错误:# 传输方向未知. 两端EP已停止响应主机请求!");
 		} // Else do nothing.
 		break;
 
@@ -1487,7 +1487,7 @@ static int _finish_reply(usbd_gadget_ums_t *ums, bulk_ctxt_t *bulk_ctxt)
 			{
 				_transfer_start(ums, bulk_ctxt, bulk_ctxt->bulk_in, USB_XFER_SYNCED_DATA);
 				rc = _set_ep_stall(bulk_ctxt->bulk_in);
-				ums->set_text(ums->label, "#FFDD00 错误:#数据残留. EP IN已停止!");
+				ums->set_text(ums->label, "#FFDD00 错误:# 数据残留. EP IN已停止响应主机请求!");
 			}
 			else
 				rc = _pad_with_zeros(ums, bulk_ctxt);
@@ -1631,7 +1631,7 @@ static int _received_cbw(usbd_gadget_ums_t *ums, bulk_ctxt_t *bulk_ctxt)
 		{
 			_set_ep_stall(bulk_ctxt->bulk_out);
 			_set_ep_stall(bulk_ctxt->bulk_in);
-			ums->set_text(ums->label, "#FFDD00 错误:# 未知的CBW - 两端EP均停止工作!");
+			ums->set_text(ums->label, "#FFDD00 错误:# 未知的CBW - 两端EP已停止响应主机请求!");
 		}
 
 		return UMS_RES_INVALID_ARG;
@@ -1918,7 +1918,7 @@ int usb_device_gadget_ums(usb_ctxt_t *usbs)
 		{
 			// Check if we are allowed to unload the media.
 			if (ums.lun.prevent_medium_removal)
-				ums.set_text(ums.label, "#C7EA46 状态:# 卸载尝试被阻止");
+				ums.set_text(ums.label, "#C7EA46 状态:# 已阻止卸载尝试");
 			else
 				break;
 		}
@@ -1950,7 +1950,7 @@ int usb_device_gadget_ums(usb_ctxt_t *usbs)
 	} while (ums.state != UMS_STATE_TERMINATED);
 
 	if (ums.lun.prevent_medium_removal)
-		ums.set_text(ums.label, "#FFDD00 错误:# 磁盘不安全地弹出");
+		ums.set_text(ums.label, "#FFDD00 错误:# 磁盘未安全弹出");
 	else
 		ums.set_text(ums.label, "#C7EA46 状态:# 磁盘已弹出");
 	goto exit;
