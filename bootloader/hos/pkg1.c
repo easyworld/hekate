@@ -141,7 +141,7 @@ static const u8 sec_map_100[3] = { PK11_SECTION_SM, PK11_SECTION_LD, PK11_SECTIO
 static const u8 sec_map_2xx[3] = { PK11_SECTION_WB, PK11_SECTION_LD, PK11_SECTION_SM };
 static const u8 sec_map_4xx[3] = { PK11_SECTION_LD, PK11_SECTION_SM, PK11_SECTION_WB };
 
-	// Timestamp  MK  FU   TSEC    PK11     SECMON     Warmboot
+//     Timestamp  MK  FU   TSEC    PK11     SECMON     Warmboot
 static const pkg1_id_t _pkg1_ids[] = {
 	{ "20161121",  0,  1, 0x1900, 0x3FE0, SM_100_ADR, 0x8000D000, _secmon_1_patchset }, // 1.0.0 (Patched relocator).
 	{ "20170210",  0,  2, 0x1900, 0x3FE0, 0x4002D000, 0x8000D000, _secmon_2_patchset }, // 2.0.0 - 2.3.0.
@@ -172,7 +172,8 @@ static const pkg1_id_t _pkg1_ids[] = {
 	{ "20240808", 18, 20, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 19.0.0 - 19.0.1.
 	{ "20250206", 19, 21, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 20.0.0 - 20.5.0.
 	{ "20251009", 20, 22, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 21.0.0 - 21.2.0.
-	{ "20260123", 21, 23, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 22.0.0+
+	{ "20260123", 21, 23, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 22.0.0 - 22.5.0.
+	{ "20260730", 22, 24, 0x0E00, 0x6FE0, 0x40030000, 0x4003E000, NULL }, // 23.0.0+
 };
 
 const pkg1_id_t *pkg1_get_latest()

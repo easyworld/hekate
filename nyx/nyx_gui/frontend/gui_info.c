@@ -735,89 +735,38 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 	u8 burnt_fuses_6 = bit_count(fuse_read_odm(6));
 
 	// Check if overburnt.
-	u8 burnt_fuses_hos = (fuse_read_odm(7) & ~bit_count_mask(burnt_fuses_7)) ? 255 : burnt_fuses_7;
+	u8 burnt_fuses_hos = (fuse_read_odm(7) & ~bit_count_mask(burnt_fuses_7)) ? 64 : burnt_fuses_7;
 
 	//! TODO: Update on anti-downgrade fuses change.
 	switch (burnt_fuses_hos)
 	{
-	case 0:
-		strcpy(fuses_hos_version, "#96FF00 Golden sample#");
-		break;
-	case 1:
-		strcpy(fuses_hos_version, "1.0.0");
-		break;
-	case 2:
-		strcpy(fuses_hos_version, "2.0.0 - 2.3.0");
-		break;
-	case 3:
-		strcpy(fuses_hos_version, "3.0.0");
-		break;
-	case 4:
-		strcpy(fuses_hos_version, "3.0.1 - 3.0.2");
-		break;
-	case 5:
-		strcpy(fuses_hos_version, "4.0.0 - 4.1.0");
-		break;
-	case 6:
-		strcpy(fuses_hos_version, "5.0.0 - 5.1.0");
-		break;
-	case 7:
-		strcpy(fuses_hos_version, "6.0.0 - 6.1.0");
-		break;
-	case 8:
-		strcpy(fuses_hos_version, "6.2.0");
-		break;
-	case 9:
-		strcpy(fuses_hos_version, "7.0.0 - 8.0.1");
-		break;
-	case 10:
-		strcpy(fuses_hos_version, "8.1.0 - 8.1.1");
-		break;
-	case 11:
-		strcpy(fuses_hos_version, "9.0.0 - 9.0.1");
-		break;
-	case 12:
-		strcpy(fuses_hos_version, "9.1.0 - 9.2.0");
-		break;
-	case 13:
-		strcpy(fuses_hos_version, "10.0.0 - 10.2.0");
-		break;
-	case 14:
-		strcpy(fuses_hos_version, "11.0.0 - 12.0.1");
-		break;
-	case 15:
-		strcpy(fuses_hos_version, "12.0.2 - 13.2.0");
-		break;
-	case 16:
-		strcpy(fuses_hos_version, "13.2.1 - 14.1.2");
-		break;
-	case 17:
-		strcpy(fuses_hos_version, "15.0.0 - 15.0.1");
-		break;
-	case 18:
-		strcpy(fuses_hos_version, "16.0.0 - 16.1.0");
-		break;
-	case 19:
-		strcpy(fuses_hos_version, "17.0.0 - 18.1.0");
-		break;
-	case 20:
-		strcpy(fuses_hos_version, "19.0.0 - 19.0.1");
-		break;
-	case 21:
-		strcpy(fuses_hos_version, "20.0.0 - 20.5.0");
-		break;
-	case 22:
-		strcpy(fuses_hos_version, "21.0.0 - 21.2.0");
-		break;
-	case 23:
-		strcpy(fuses_hos_version, "22.0.0+");
-		break;
-	case 255:
-		strcpy(fuses_hos_version, "#FFD000 Overburnt#");
-		break;
-	default:
-		strcpy(fuses_hos_version, "#FF8000 Unknown#");
-		break;
+	case 0:  strcpy(fuses_hos_version, "#96FF00 Golden#");    break;
+	case 1:  strcpy(fuses_hos_version, "1.0.0");              break;
+	case 2:  strcpy(fuses_hos_version, "2.0.0 - 2.3.0");      break;
+	case 3:  strcpy(fuses_hos_version, "3.0.0");              break;
+	case 4:  strcpy(fuses_hos_version, "3.0.1 - 3.0.2");      break;
+	case 5:  strcpy(fuses_hos_version, "4.0.0 - 4.1.0");      break;
+	case 6:  strcpy(fuses_hos_version, "5.0.0 - 5.1.0");      break;
+	case 7:  strcpy(fuses_hos_version, "6.0.0 - 6.1.0");      break;
+	case 8:  strcpy(fuses_hos_version, "6.2.0");              break;
+	case 9:  strcpy(fuses_hos_version, "7.0.0 - 8.0.1");      break;
+	case 10: strcpy(fuses_hos_version, "8.1.0 - 8.1.1");      break;
+	case 11: strcpy(fuses_hos_version, "9.0.0 - 9.0.1");      break;
+	case 12: strcpy(fuses_hos_version, "9.1.0 - 9.2.0");      break;
+	case 13: strcpy(fuses_hos_version, "10.0.0 - 10.2.0");    break;
+	case 14: strcpy(fuses_hos_version, "11.0.0 - 12.0.1");    break;
+	case 15: strcpy(fuses_hos_version, "12.0.2 - 13.2.0");    break;
+	case 16: strcpy(fuses_hos_version, "13.2.1 - 14.1.2");    break;
+	case 17: strcpy(fuses_hos_version, "15.0.0 - 15.0.1");    break;
+	case 18: strcpy(fuses_hos_version, "16.0.0 - 16.1.0");    break;
+	case 19: strcpy(fuses_hos_version, "17.0.0 - 18.1.0");    break;
+	case 20: strcpy(fuses_hos_version, "19.0.0 - 19.0.1");    break;
+	case 21: strcpy(fuses_hos_version, "20.0.0 - 20.5.0");    break;
+	case 22: strcpy(fuses_hos_version, "21.0.0 - 21.2.0");    break;
+	case 23: strcpy(fuses_hos_version, "22.0.0 - 22.5.0");    break;
+	case 24: strcpy(fuses_hos_version, "23.0.0+");            break;
+	case 64: strcpy(fuses_hos_version, "#FFD000 Overburnt#"); break;
+	default: strcpy(fuses_hos_version, "#FF8000 Unknown#");   break;
 	}
 
 	u32 fab = FUSE(FUSE_OPT_FAB_CODE);
