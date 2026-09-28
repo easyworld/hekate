@@ -735,7 +735,7 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 	u8 burnt_fuses_6 = bit_count(fuse_read_odm(6));
 
 	// Check if overburnt.
-	u8 burnt_fuses_hos = (fuse_read_odm(7) & ~bit_count_mask(burnt_fuses_7)) ? 255 : burnt_fuses_7;
+	u8 burnt_fuses_hos = (fuse_read_odm(7) & ~bit_count_mask(burnt_fuses_7)) ? 64 : burnt_fuses_7;
 
 	//! TODO: Update on anti-downgrade fuses change.
 	switch (burnt_fuses_hos)
@@ -810,9 +810,12 @@ static lv_res_t _create_window_hw_info_status(lv_obj_t *btn)
 		strcpy(fuses_hos_version, "21.0.0 - 21.2.0");
 		break;
 	case 23:
-		strcpy(fuses_hos_version, "22.0.0+");
+		strcpy(fuses_hos_version, "22.0.0 - 22.5.0");
 		break;
-	case 255:
+	case 24:
+		strcpy(fuses_hos_version, "23.0.0+");
+		break;
+	case 64:
 		strcpy(fuses_hos_version, "#FFD000 超出正常熔斷次數#");
 		break;
 	default:
